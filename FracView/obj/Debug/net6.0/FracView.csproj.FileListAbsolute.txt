@@ -1,0 +1,12 @@
+C:\Users\benja\code\fractal\FracViewCmd\FracView\bin\Debug\net6.0\FracView.deps.json
+C:\Users\benja\code\fractal\FracViewCmd\FracView\bin\Debug\net6.0\FracView.dll
+C:\Users\benja\code\fractal\FracViewCmd\FracView\bin\Debug\net6.0\FracView.pdb
+C:\Users\benja\code\fractal\FracViewCmd\FracView\obj\Debug\net6.0\FracView.csproj.AssemblyReference.cache
+C:\Users\benja\code\fractal\FracViewCmd\FracView\obj\Debug\net6.0\FracView.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\benja\code\fractal\FracViewCmd\FracView\obj\Debug\net6.0\FracView.AssemblyInfoInputs.cache
+C:\Users\benja\code\fractal\FracViewCmd\FracView\obj\Debug\net6.0\FracView.AssemblyInfo.cs
+C:\Users\benja\code\fractal\FracViewCmd\FracView\obj\Debug\net6.0\FracView.csproj.CoreCompileInputs.cache
+C:\Users\benja\code\fractal\FracViewCmd\FracView\obj\Debug\net6.0\FracView.dll
+C:\Users\benja\code\fractal\FracViewCmd\FracView\obj\Debug\net6.0\refint\FracView.dll
+C:\Users\benja\code\fractal\FracViewCmd\FracView\obj\Debug\net6.0\FracView.pdb
+C:\Users\benja\code\fractal\FracViewCmd\FracView\obj\Debug\net6.0\ref\FracView.dll
