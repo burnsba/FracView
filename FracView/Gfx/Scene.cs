@@ -1,12 +1,11 @@
-﻿using FracView.Algorithms;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FracView.Algorithms;
+using SkiaSharp;
 
 namespace FracView.Gfx
 {
@@ -15,7 +14,7 @@ namespace FracView.Gfx
         private bool _isInit = false;
         private object _lockObject = new object();
 
-        private Bitmap? _bmp = null;
+        private SKBitmap? _bmp = null;
 
         public int RenderWidth { get; set; }
         public int RenderHeight { get; set; }
@@ -47,7 +46,7 @@ namespace FracView.Gfx
 
             try
             {
-                _bmp = new Bitmap(RenderWidth, RenderHeight, PixelFormat.Format16bppArgb1555);
+                _bmp = new SKBitmap(RenderWidth, RenderHeight);
             }
             catch (Exception ex)
             {
@@ -182,11 +181,11 @@ namespace FracView.Gfx
 
                 Parallel.ForEach(points, x =>
                 {
-                    Color pixelColor = Color.White;
+                    SKColor pixelColor = ColorRef.White;
 
                     if (x.IsStable == true)
                     {
-                        pixelColor = Color.Black;
+                        pixelColor = ColorRef.Black;
                     }
                     else
                     {
@@ -220,11 +219,11 @@ namespace FracView.Gfx
 
                 Parallel.ForEach(points, x =>
                 {
-                    Color pixelColor = Color.White;
+                    SKColor pixelColor = ColorRef.White;
 
                     if (x.IsStable == true)
                     {
-                        pixelColor = Color.Black;
+                        pixelColor = ColorRef.Black;
                     }
                     else
                     {
@@ -254,7 +253,7 @@ namespace FracView.Gfx
             }
         }
 
-        public Bitmap GetImage()
+        public SKBitmap GetImage()
         {
             if (object.ReferenceEquals(null, _bmp))
             {
@@ -273,7 +272,7 @@ namespace FracView.Gfx
             }
         }
 
-        public Color ResolveColorByPercent(double percent)
+        public SKColor ResolveColorByPercent(double percent)
         {
             if (percent < 0)
             {
@@ -287,7 +286,7 @@ namespace FracView.Gfx
             return ColorRamp.InterpolateFromKeyframes(percent);
         }
 
-        public Color ResolveColorByIterations(int iterationCount, int maxIterations)
+        public SKColor ResolveColorByIterations(int iterationCount, int maxIterations)
         {
             double percent;
 

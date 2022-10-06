@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SkiaSharp;
 
 namespace FracView.Gfx
 {
     public class ColorRamp
     {
-        public List<Keyframe<Color, double>> Keyframes { get; set; } = new List<Keyframe<Color, double>>();
+        public List<Keyframe<SKColor, double>> Keyframes { get; set; } = new List<Keyframe<SKColor, double>>();
 
-        public Color InterpolateFromKeyframes(double value)
+        public SKColor InterpolateFromKeyframes(double value)
         {
             if (value < 0)
             {
@@ -28,7 +28,7 @@ namespace FracView.Gfx
                 throw new InvalidOperationException("keyframe not found for value");
             }
 
-            int rval = (int)((double)(kf.ValueEnd.R - kf.ValueStart.R) * value) + kf.ValueStart.R;
+            int rval = (int)((double)(kf.ValueEnd.Red - kf.ValueStart.Red) * value) + kf.ValueStart.Red;
             if (rval < 0)
             {
                 rval = 0;
@@ -38,7 +38,7 @@ namespace FracView.Gfx
                 rval = 255;
             }
 
-            int gval = (int)((double)(kf.ValueEnd.G - kf.ValueStart.G) * value) + kf.ValueStart.G;
+            int gval = (int)((double)(kf.ValueEnd.Green - kf.ValueStart.Green) * value) + kf.ValueStart.Green;
             if (gval < 0)
             {
                 gval = 0;
@@ -48,7 +48,7 @@ namespace FracView.Gfx
                 gval = 255;
             }
 
-            int bval = (int)((double)(kf.ValueEnd.B - kf.ValueStart.B) * value) + kf.ValueStart.B;
+            int bval = (int)((double)(kf.ValueEnd.Blue - kf.ValueStart.Blue) * value) + kf.ValueStart.Blue;
             if (bval < 0)
             {
                 bval = 0;
@@ -58,7 +58,7 @@ namespace FracView.Gfx
                 bval = 255;
             }
 
-            return Color.FromArgb(rval, gval, bval);
+            return new SKColor((byte)rval, (byte)gval, (byte)bval);
         }
     }
 }

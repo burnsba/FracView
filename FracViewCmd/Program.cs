@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SkiaSharp;
 using FracView.Algorithms;
 using FracView.Gfx;
 
@@ -20,9 +20,9 @@ namespace FracViewCmd
                 Origin = (0.29999999799999, 0.4491),
                 FractalWidth = 0.0250,
                 FractalHeight = 0.0250,
-                StepWidth = 4096,
-                StepHeight = 4096,
-                MaxIterations = 2000,
+                StepWidth = 512,
+                StepHeight = 512,
+                MaxIterations = 500,
             };
 
             var scene = new Scene(algorithm.MaxIterations)
@@ -31,33 +31,33 @@ namespace FracViewCmd
                 RenderHeight = algorithm.StepHeight,
             };
 
-            scene.ColorRamp.Keyframes.Add(new Keyframe<Color, double>()
+            scene.ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
             {
                 IntervalStart = 0,
                 IntervalEnd = 0.88,
-                ValueStart = Color.FromArgb(20, 20, 240), // blue
-                ValueEnd = Color.FromArgb(20, 250, 250), // cyan
+                ValueStart = new SKColor(20, 20, 240), // blue
+                ValueEnd = new SKColor(20, 250, 250), // cyan
             });
-            scene.ColorRamp.Keyframes.Add(new Keyframe<Color, double>()
+            scene.ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
             {
                 IntervalStart = 0.88,
                 IntervalEnd = 0.93,
-                ValueStart = Color.FromArgb(20, 250, 250), // cyan
-                ValueEnd = Color.FromArgb(255, 255, 40), // yellow
+                ValueStart = new SKColor(20, 250, 250), // cyan
+                ValueEnd = new SKColor(255, 255, 40), // yellow
             });
-            scene.ColorRamp.Keyframes.Add(new Keyframe<Color, double>()
+            scene.ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
             {
                 IntervalStart = 0.93,
                 IntervalEnd = 0.97,
-                ValueStart = Color.FromArgb(255, 255, 40), // yellow
-                ValueEnd = Color.FromArgb(250, 128, 0), // orange
+                ValueStart = new SKColor(255, 255, 40), // yellow
+                ValueEnd = new SKColor(250, 128, 0), // orange
             });
-            scene.ColorRamp.Keyframes.Add(new Keyframe<Color, double>()
+            scene.ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
             {
                 IntervalStart = 0.97,
                 IntervalEnd = 1,
-                ValueStart = Color.FromArgb(250, 128, 0), // orange
-                ValueEnd = Color.FromArgb(120, 60, 0), // orange
+                ValueStart = new SKColor(250, 128, 0), // orange
+                ValueEnd = new SKColor(120, 60, 0), // orange
             });
 
             algorithm.Init(_outputIntervalSec, PrintProgress);
@@ -70,7 +70,14 @@ namespace FracViewCmd
             scene.ProcessPointsToPixels(algorithm, _outputIntervalSec, PrintProgress);
 
             var bmp = scene.GetImage();
-            bmp.Save("output2.png");
+            //bmp.Save("output2.png");
+            using (MemoryStream memStream = new MemoryStream())
+            using (SKManagedWStream wstream = new SKManagedWStream(memStream))
+            {
+                bmp.Encode(wstream, SKEncodedImageFormat.Png, 100);
+                byte[] data = memStream.ToArray();
+                System.IO.File.WriteAllBytes("output2.png", data);
+            }
         }
 
         static void PrintProgress(ProgressReport progress)
