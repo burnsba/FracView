@@ -7,7 +7,7 @@ using FracView.World;
 
 namespace FracView.Algorithms
 {
-    public record ProgressReport(double elapsedSeconds, int currentStep, int totalSteps, ComplexPoint currentPoint)
+    public record ProgressReport(double ElapsedSeconds, int CurrentStep, int TotalSteps, ComplexPoint CurrentPoint, string? CurrentWorkName)
     {
     }
 }

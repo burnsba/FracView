@@ -20,24 +20,33 @@ namespace FracView.Algorithms
 
         public override bool IsStable(EvalComplexUnit eu)
         {
-            ComplexPoint pa = eu.WorldPos;
-            ComplexPoint pb;
+            // convert to native types for performance. Avoids runtime overhead of creating so many records.
+
+            double pa_x = eu.WorldPos.Real;
+            double pa_y = eu.WorldPos.Imag;
+            double pb_x = 0;
+            double pb_y = 0;
+            double break_value;
 
             for (eu.IterationCount = 1; eu.IterationCount < MaxIterations; eu.IterationCount++)
             {
-                pb = pa * pa;
-                pa = pb + eu.WorldPos;
+                pb_x = pa_x * pa_x - pa_y * pa_y;
+                pb_y = pa_x * pa_y + pa_y * pa_x;
 
-                var break_value = pa.Abs();
+                pa_x = pb_x + eu.WorldPos.Real;
+                pa_y = pb_y + eu.WorldPos.Imag;
+
+                break_value = Math.Sqrt((pa_x * pa_x) + (pa_y * pa_y));
+
                 if (break_value > IterationBreak.Value || break_value <= 0.0)
                 {
-                    eu.LastPos = pa;
+                    eu.LastPos = (pa_x, pa_y);
 
                     return false;
                 }
             }
 
-            eu.LastPos = pa;
+            eu.LastPos = (pa_x, pa_y);
 
             return true;
         }

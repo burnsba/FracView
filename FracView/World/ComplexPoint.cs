@@ -8,6 +8,10 @@ namespace FracView.World
 {
     public record ComplexPoint
     {
+        private static ComplexPoint _zero = new ComplexPoint(0, 0);
+        private static ComplexPoint _one = new ComplexPoint(1, 0);
+        private static ComplexPoint _i = new ComplexPoint(0, 1);
+
         public ComplexPoint(double real, double imag)
         {
             Real = real;
@@ -22,9 +26,9 @@ namespace FracView.World
             return Math.Sqrt((Real * Real) + (Imag * Imag));
         }
 
-        public static ComplexPoint Zero => new ComplexPoint(0, 0);
-        public static ComplexPoint One => new ComplexPoint(1, 0);
-        public static ComplexPoint I => new ComplexPoint(0, 1);
+        public static ComplexPoint Zero => _zero;
+        public static ComplexPoint One => _one;
+        public static ComplexPoint I => _i;
 
         public static implicit operator ComplexPoint(ValueTuple<double, double> d)
         {

@@ -8,6 +8,8 @@ namespace FracView.World
 {
     public record Point2DInt
     {
+        private static Point2DInt _zero = new Point2DInt(0, 0);
+
         public Point2DInt(int x, int y)
         {
             X = x;
@@ -17,7 +19,7 @@ namespace FracView.World
         public int X { get; }
         public int Y { get; }
 
-        public static Point2DInt Zero => new Point2DInt(0, 0);
+        public static Point2DInt Zero => _zero;
 
         public static implicit operator Point2DInt(ValueTuple<int, int> d)
         {

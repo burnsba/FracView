@@ -11,6 +11,8 @@ namespace FracViewCmd
 {
     internal class Program
     {
+        private static int _outputIntervalSec = 4;
+
         static void Main(string[] args)
         {
             var algorithm = new Mandelbrot()
@@ -18,9 +20,9 @@ namespace FracViewCmd
                 Origin = (0.29999999799999, 0.4491),
                 FractalWidth = 0.0250,
                 FractalHeight = 0.0250,
-                StepWidth = 512,
-                StepHeight = 512,
-                MaxIterations = 1000,
+                StepWidth = 4096,
+                StepHeight = 4096,
+                MaxIterations = 2000,
             };
 
             var scene = new Scene(algorithm.MaxIterations)
@@ -58,17 +60,27 @@ namespace FracViewCmd
                 ValueEnd = Color.FromArgb(120, 60, 0), // orange
             });
 
-            algorithm.Init();
+            algorithm.Init(_outputIntervalSec, PrintProgress);
             scene.Init();
 
             var cancellationToken = new CancellationTokenSource();
 
-            algorithm.EvaluatePoints(cancellationToken.Token);
+            algorithm.EvaluatePoints(cancellationToken.Token, _outputIntervalSec, PrintProgress);
 
-            scene.ProcessPointsToPixels(algorithm);
+            scene.ProcessPointsToPixels(algorithm, _outputIntervalSec, PrintProgress);
 
             var bmp = scene.GetImage();
             bmp.Save("output2.png");
+        }
+
+        static void PrintProgress(ProgressReport progress)
+        {
+            double donePercent = 100.0 * (double)progress.CurrentStep / (double)progress.TotalSteps;
+            Console.WriteLine($"work: {progress.CurrentWorkName}");
+            Console.WriteLine($"elapsed: {progress.ElapsedSeconds:N2} sec");
+            Console.WriteLine($"pixels: {progress.CurrentStep} / {progress.TotalSteps} = {donePercent:N2}%");
+            Console.WriteLine($"point: [{progress.CurrentPoint.Real}, {progress.CurrentPoint.Imag}]");
+            Console.WriteLine();
         }
     }
 }

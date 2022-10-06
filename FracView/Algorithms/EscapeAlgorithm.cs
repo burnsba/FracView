@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -54,7 +55,7 @@ namespace FracView.Algorithms
         {
         }
 
-        public void Init()
+        public void Init(int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
         {
             if (_isInit)
             {
@@ -91,6 +92,9 @@ namespace FracView.Algorithms
                 throw new ArgumentException($"{nameof(MaxIterations)} must be positive");
             }
 
+            var reportTimer = Stopwatch.StartNew();
+            var totalTimer = Stopwatch.StartNew();
+
             try
             {
                 _consideredPoints = new List<EvalComplexUnit>(TotalSteps);
@@ -105,6 +109,7 @@ namespace FracView.Algorithms
 
                 y = startY;
                 x = startX;
+                int currentStepCount = 0;
 
                 for (int j = 0; j < StepHeight; j++)
                 {
@@ -116,7 +121,24 @@ namespace FracView.Algorithms
 
                         _consideredPoints.Add(eu);
 
+                        lock(_lockObject)
+                        {
+                            if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
+                            {
+                                progressCallback(new ProgressReport(
+                                    totalTimer.Elapsed.TotalSeconds,
+                                    currentStepCount,
+                                    TotalSteps,
+                                    new(x,y),
+                                    $"{nameof(EscapeAlgorithm)}.{nameof(Init)}"
+                                    ));
+
+                                reportTimer.Restart();
+                            }
+                        }
+
                         x += stepX;
+                        currentStepCount++;
                     }
 
                     y += stepY;
@@ -135,7 +157,7 @@ namespace FracView.Algorithms
 
         public abstract bool IsStable(EvalComplexUnit eu);
 
-        public bool EvaluatePoints(CancellationToken token, int elapsedSecondsProgress = 0, Action<ProgressReport>? progressCallback = null)
+        public bool EvaluatePoints(CancellationToken token, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
         {
             if (!_isInit)
             {
@@ -143,8 +165,8 @@ namespace FracView.Algorithms
             }
 
             bool interrupted = false;
-            var startTime = DateTime.Now;
-            var lastProgressOutput = DateTime.Now.AddYears(1);
+            var reportTimer = Stopwatch.StartNew();
+            var totalTimer = Stopwatch.StartNew();
             int stepCount = 0;
 
             _pointsEvaluated = false;
@@ -157,20 +179,19 @@ namespace FracView.Algorithms
                     loopState.Break();
                 }
 
-                if (elapsedSecondsProgress > 0 && progressCallback != null)
+                lock(_lockObject)
                 {
-                    lock (_lockObject)
+                    if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
                     {
-                        if (Math.Abs((DateTime.Now - lastProgressOutput).TotalSeconds) > (double)elapsedSecondsProgress)
-                        {
-                            lastProgressOutput = DateTime.Now;
-                            progressCallback(new ProgressReport(
-                                (DateTime.Now - startTime).TotalSeconds,
-                                stepCount,
-                                TotalSteps,
-                                evalPoint.WorldPos
-                                ));
-                        }
+                        progressCallback(new ProgressReport(
+                            totalTimer.Elapsed.TotalSeconds,
+                            stepCount,
+                            TotalSteps,
+                            evalPoint.WorldPos,
+                            $"{nameof(EscapeAlgorithm)}.{nameof(EvaluatePoints)}"
+                            ));
+
+                        reportTimer.Restart();
                     }
                 }
 

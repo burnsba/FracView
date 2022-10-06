@@ -1,6 +1,7 @@
 ﻿using FracView.Algorithms;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace FracView.Gfx
     public class Scene : IDisposable
     {
         private bool _isInit = false;
+        private object _lockObject = new object();
 
         private Bitmap? _bmp = null;
 
@@ -73,7 +75,7 @@ namespace FracView.Gfx
             _isInit = true;
         }
 
-        public void ProcessPointsToPixels(EscapeAlgorithm algorithm)
+        public void ProcessPointsToPixels(EscapeAlgorithm algorithm, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
         {
             if (!_isInit)
             {
@@ -86,6 +88,9 @@ namespace FracView.Gfx
             }
 
             var points = algorithm.ConsideredPoints;
+            var reportTimer = Stopwatch.StartNew();
+            var totalTimer = Stopwatch.StartNew();
+            int iterationCount = 0;
 
             if (UseHistogram)
             {
@@ -103,6 +108,9 @@ namespace FracView.Gfx
                     throw new InvalidOperationException($"There are more iterations to evaluate than space in {nameof(NumIterationsPerPixel)}.");
                 }
 
+                iterationCount = 0;
+                reportTimer.Restart();
+
                 points.ForEach(x =>
                 {
                     if (x.IterationCount > 0 && x.IterationCount < minIterationCount)
@@ -116,6 +124,22 @@ namespace FracView.Gfx
                     }
 
                     NumIterationsPerPixel[x.IterationCount]++;
+
+                    // not parallel, no need to lock.
+                    if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
+                    {
+                        progressCallback(new ProgressReport(
+                            totalTimer.Elapsed.TotalSeconds,
+                            iterationCount,
+                            points.Count,
+                            x.WorldPos,
+                            $"{nameof(Scene)}.{nameof(ProcessPointsToPixels)} ({nameof(UseHistogram)}==true, loop=1)"
+                            ));
+
+                        reportTimer.Restart();
+                    }
+
+                    iterationCount++;
                 });
 
                 for (int i = 0; i < HistogramMaxIterations; i++)
@@ -123,17 +147,40 @@ namespace FracView.Gfx
                     iterationsTotal += NumIterationsPerPixel[i];
                 }
 
-                points.ForEach(x =>
+                iterationCount = 0;
+                reportTimer.Restart();
+
+                Parallel.ForEach(points, x =>
                 {
                     for (int i = 0; i < x.IterationCount; i++)
                     {
                         x.HistogramValue += (double)NumIterationsPerPixel[i] / (double)iterationsTotal;
+
+                    }
+
+                    lock (_lockObject)
+                    {
+                        if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
+                        {
+                            progressCallback(new ProgressReport(
+                                totalTimer.Elapsed.TotalSeconds,
+                                iterationCount,
+                                points.Count,
+                                x.WorldPos,
+                                $"{nameof(Scene)}.{nameof(ProcessPointsToPixels)} ({nameof(UseHistogram)}==true, loop=3)"
+                                ));
+
+                            reportTimer.Restart();
+                        }
+
+                        iterationCount++;
                     }
                 });
 
-                Console.WriteLine("Writing image ");
+                iterationCount = 0;
+                reportTimer.Restart();
 
-                points.ForEach(x =>
+                Parallel.ForEach(points, x =>
                 {
                     Color pixelColor = Color.White;
 
@@ -146,12 +193,32 @@ namespace FracView.Gfx
                         pixelColor = ResolveColorByPercent(x.HistogramValue);
                     }
 
-                    _bmp.SetPixel(x.Index.X, algorithm.StepHeight - 1 - x.Index.Y, pixelColor);
+                    lock (_lockObject)
+                    {
+                        _bmp.SetPixel(x.Index.X, algorithm.StepHeight - 1 - x.Index.Y, pixelColor);
+
+                        if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
+                        {
+                            progressCallback(new ProgressReport(
+                                totalTimer.Elapsed.TotalSeconds,
+                                iterationCount,
+                                points.Count,
+                                x.WorldPos,
+                                $"{nameof(Scene)}.{nameof(ProcessPointsToPixels)} ({nameof(UseHistogram)}==true) writing image"
+                                ));
+
+                            reportTimer.Restart();
+                        }
+
+                        iterationCount++;
+                    }
                 });
             }
             else
             {
-                points.ForEach(x =>
+                iterationCount = 0;
+
+                Parallel.ForEach(points, x =>
                 {
                     Color pixelColor = Color.White;
 
@@ -164,7 +231,25 @@ namespace FracView.Gfx
                         pixelColor = ResolveColorByIterations(x.IterationCount, algorithm.MaxIterations);
                     }
 
-                    _bmp.SetPixel(x.Index.X, algorithm.StepHeight - 1 - x.Index.Y, pixelColor);
+                    lock (_lockObject)
+                    {
+                        _bmp.SetPixel(x.Index.X, algorithm.StepHeight - 1 - x.Index.Y, pixelColor);
+
+                        if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
+                        {
+                            progressCallback(new ProgressReport(
+                                totalTimer.Elapsed.TotalSeconds,
+                                iterationCount,
+                                points.Count,
+                                x.WorldPos,
+                                $"{nameof(Scene)}.{nameof(ProcessPointsToPixels)} ({nameof(UseHistogram)}==false) writing image"
+                                ));
+
+                            reportTimer.Restart();
+                        }
+
+                        iterationCount++;
+                    }
                 });
             }
         }
