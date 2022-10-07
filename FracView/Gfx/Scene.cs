@@ -46,7 +46,7 @@ namespace FracView.Gfx
 
             try
             {
-                _bmp = new SKBitmap(RenderWidth, RenderHeight);
+                _bmp = new SKBitmap(RenderWidth, RenderHeight, SKColorType.Rgba8888, SKAlphaType.Opaque);
             }
             catch (Exception ex)
             {
@@ -194,7 +194,17 @@ namespace FracView.Gfx
 
                     lock (_lockObject)
                     {
-                        _bmp.SetPixel(x.Index.X, algorithm.StepHeight - 1 - x.Index.Y, pixelColor);
+                        // see comments in other section about speed.
+                        unsafe
+                        {
+                            IntPtr pixelsAddr = _bmp.GetPixels();
+                            byte* ptr = (byte*)pixelsAddr.ToPointer();
+                            ptr += (algorithm.StepWidth * (algorithm.StepHeight - 1 - x.Index.Y) + (x.Index.X)) * 4;
+                            *ptr++ = pixelColor.Red;   // red
+                            *ptr++ = pixelColor.Green; // green
+                            *ptr++ = pixelColor.Blue;  // blue
+                            *ptr++ = 0xFF;             // alpha
+                        }
 
                         if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
                         {
@@ -217,6 +227,8 @@ namespace FracView.Gfx
             {
                 iterationCount = 0;
 
+                //var writeTime = Stopwatch.StartNew();
+
                 Parallel.ForEach(points, x =>
                 {
                     SKColor pixelColor = ColorRef.White;
@@ -232,7 +244,28 @@ namespace FracView.Gfx
 
                     lock (_lockObject)
                     {
-                        _bmp.SetPixel(x.Index.X, algorithm.StepHeight - 1 - x.Index.Y, pixelColor);
+                        /** writing pixels for (1024 x 1024) image.
+                         * 
+                         * slow: ~ 8.5 sec
+                         * _bmp.SetPixel(x.Index.X, algorithm.StepHeight - 1 - x.Index.Y, pixelColor);
+                         * 
+                         * fast (below) ~ 0.5 sec
+                         * 
+                         * https://learn.microsoft.com/en-us/xamarin/xamarin-forms/user-interface/graphics/skiasharp/bitmaps/pixel-bits
+                         */
+
+                        // fast:
+                        unsafe
+                        {
+                            IntPtr pixelsAddr = _bmp.GetPixels();
+                            byte* ptr = (byte*)pixelsAddr.ToPointer();
+                            // ((vertical offset times width) + horizontal offset) * size of pixel
+                            ptr += (algorithm.StepWidth * (algorithm.StepHeight - 1 - x.Index.Y) + (x.Index.X)) * 4;
+                            *ptr++ = pixelColor.Red;   // red
+                            *ptr++ = pixelColor.Green; // green
+                            *ptr++ = pixelColor.Blue;  // blue
+                            *ptr++ = 0xFF;             // alpha
+                        }
 
                         if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
                         {
@@ -250,6 +283,8 @@ namespace FracView.Gfx
                         iterationCount++;
                     }
                 });
+
+                //Console.WriteLine($"write image: {writeTime.Elapsed.TotalSeconds:N2} sec");
             }
         }
 

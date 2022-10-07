@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using SkiaSharp;
 using FracView.Algorithms;
 using FracView.Gfx;
+using MultiPrecision;
 
 namespace FracViewCmd
 {
@@ -20,9 +21,9 @@ namespace FracViewCmd
                 Origin = (0.29999999799999, 0.4491),
                 FractalWidth = 0.0250,
                 FractalHeight = 0.0250,
-                StepWidth = 512,
-                StepHeight = 512,
-                MaxIterations = 500,
+                StepWidth = 1024,
+                StepHeight = 1024,
+                MaxIterations = 1200,
             };
 
             var scene = new Scene(algorithm.MaxIterations)
@@ -81,6 +82,16 @@ namespace FracViewCmd
         }
 
         static void PrintProgress(ProgressReport progress)
+        {
+            double donePercent = 100.0 * (double)progress.CurrentStep / (double)progress.TotalSteps;
+            Console.WriteLine($"work: {progress.CurrentWorkName}");
+            Console.WriteLine($"elapsed: {progress.ElapsedSeconds:N2} sec");
+            Console.WriteLine($"pixels: {progress.CurrentStep} / {progress.TotalSteps} = {donePercent:N2}%");
+            Console.WriteLine($"point: [{progress.CurrentPoint.Real}, {progress.CurrentPoint.Imag}]");
+            Console.WriteLine();
+        }
+
+        static void PrintProgress<T>(ProgressReportMp<T> progress) where T : struct, MultiPrecision.IConstant
         {
             double donePercent = 100.0 * (double)progress.CurrentStep / (double)progress.TotalSteps;
             Console.WriteLine($"work: {progress.CurrentWorkName}");
