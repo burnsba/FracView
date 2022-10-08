@@ -4,33 +4,42 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FracView.Gfx;
 using FracView.World;
 
 namespace FracView.Algorithms
 {
-    public abstract class EscapeAlgorithm
+    public abstract class EscapeAlgorithm : IEscapeAlgorithm
     {
         private bool _isInit = false;
         private bool _pointsEvaluated = false;
         private object _lockObject = new object();
         private List<EvalComplexUnit>? _consideredPoints = null;
 
-        public abstract string AlgorithmName { get; }
-        public abstract string AlgorithmDescription { get; }
+        public (decimal, decimal) Origin { get; set; }
 
-        public ComplexPoint Origin { get; set; } = ComplexPoint.Zero;
+        public decimal FractalWidth { get; set; }
+        public decimal FractalHeight { get; set; }
 
-        public double FractalWidth { get; set; }
-        public double FractalHeight { get; set; }
-
+        /// <summary>
+        /// Number of steps to divide world range into, used as number of pixels.
+        /// </summary>
         public int StepWidth { get; set; }
+
+        /// <summary>
+        /// Number of steps to divide world range into, used as number of pixels.
+        /// </summary>
         public int StepHeight { get; set; }
 
         protected int TotalSteps => StepWidth * StepHeight;
 
+        protected int[]? NumIterationsPerPixel = null;
+
         public int MaxIterations { get; set; }
 
-        public double? IterationBreak { get; set; } = null;
+        public decimal? IterationBreak { get; set; } = null;
+
+        public bool UseHistogram { get; set; }
 
         public List<EvalComplexUnit> ConsideredPoints
         {
@@ -51,20 +60,74 @@ namespace FracView.Algorithms
             }
         }
 
-        public EscapeAlgorithm()
+        public int ProgressCallbackIntervalSec { get; set; }
+        public Action<ProgressReport>? ProgressCallback { get; set; }
+
+        public EscapeAlgorithm(int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
         {
+            ProgressCallbackIntervalSec = progressCallbackIntervalSec;
+            ProgressCallback = progressCallback;
+        }
+       
+        public abstract bool IsStable(EvalComplexUnit eu);
+
+        public bool EvaluatePoints(CancellationToken token)
+        {
+            Init();
+
+            bool interrupted = false;
+            var reportTimer = Stopwatch.StartNew();
+            var totalTimer = Stopwatch.StartNew();
+            int stepCount = 0;
+
+            _pointsEvaluated = false;
+
+            Parallel.ForEach(_consideredPoints, (evalPoint, loopState) => {
+
+                if (token.IsCancellationRequested)
+                {
+                    interrupted = true;
+                    loopState.Break();
+                }
+
+                lock(_lockObject)
+                {
+                    if (ProgressCallback != null && ProgressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > ProgressCallbackIntervalSec)
+                    {
+                        ProgressCallback(new ProgressReport(
+                            totalTimer.Elapsed.TotalSeconds,
+                            stepCount,
+                            TotalSteps,
+                            $"{nameof(EscapeAlgorithm)}.{nameof(EvaluatePoints)}"
+                            ));
+
+                        reportTimer.Restart();
+                    }
+                }
+
+                evalPoint.IsStable = IsStable(evalPoint);
+
+                lock (_lockObject)
+                {
+                    stepCount++;
+                }
+            });
+
+            _pointsEvaluated = true;
+
+            if (UseHistogram)
+            {
+                ComputeHistogram(token);
+            }
+
+            return !interrupted;
         }
 
-        public void Init(int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+        private void Init()
         {
             if (_isInit)
             {
                 return;
-            }
-
-            if (!IterationBreak.HasValue)
-            {
-                throw new ArgumentException($"{nameof(IterationBreak)} requires value");
             }
 
             if (FractalWidth <= 0)
@@ -99,13 +162,13 @@ namespace FracView.Algorithms
             {
                 _consideredPoints = new List<EvalComplexUnit>(TotalSteps);
 
-                double startX = Origin.Real - (FractalWidth / 2);
-                double stepX = FractalWidth / (double)StepWidth;
-                double x;
+                decimal startX = Origin.Item1 - (FractalWidth / 2);
+                decimal stepX = FractalWidth / StepWidth;
+                decimal x;
 
-                double startY = Origin.Imag - (FractalHeight / 2);
-                double stepY = FractalHeight / (double)StepHeight;
-                double y;
+                decimal startY = Origin.Item2 - (FractalHeight / 2);
+                decimal stepY = FractalHeight / StepHeight;
+                decimal y;
 
                 y = startY;
                 x = startX;
@@ -121,15 +184,14 @@ namespace FracView.Algorithms
 
                         _consideredPoints.Add(eu);
 
-                        lock(_lockObject)
+                        lock (_lockObject)
                         {
-                            if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
+                            if (ProgressCallback != null && ProgressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > ProgressCallbackIntervalSec)
                             {
-                                progressCallback(new ProgressReport(
+                                ProgressCallback(new ProgressReport(
                                     totalTimer.Elapsed.TotalSeconds,
                                     currentStepCount,
                                     TotalSteps,
-                                    new(x,y),
                                     $"{nameof(EscapeAlgorithm)}.{nameof(Init)}"
                                     ));
 
@@ -155,57 +217,99 @@ namespace FracView.Algorithms
             _isInit = true;
         }
 
-        public abstract bool IsStable(EvalComplexUnit eu);
 
-        public bool EvaluatePoints(CancellationToken token, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+        private void ComputeHistogram(CancellationToken token)
         {
             if (!_isInit)
             {
                 throw new InvalidOperationException($"Call {nameof(Init)} first");
             }
 
-            bool interrupted = false;
+            if (MaxIterations < 1)
+            {
+                throw new InvalidOperationException($"{nameof(MaxIterations)} not set");
+            }
+
+            try
+            {
+                NumIterationsPerPixel = Enumerable.Repeat(0, MaxIterations + 1).ToArray();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unable to allocate evaluation numIterationsPerPixel container.");
+                Console.WriteLine(ex.Message);
+
+                throw;
+            }
+
+            if (object.ReferenceEquals(null, NumIterationsPerPixel))
+            {
+                throw new NullReferenceException($"{nameof(NumIterationsPerPixel)} is null, call {nameof(Init)} first");
+            }
+
+            if (MaxIterations > NumIterationsPerPixel.Length)
+            {
+                throw new InvalidOperationException($"There are more iterations to evaluate than space in {nameof(NumIterationsPerPixel)}.");
+            }
+
+            int iterationCount = 0;
+            long iterationsTotal = 0;
+
             var reportTimer = Stopwatch.StartNew();
             var totalTimer = Stopwatch.StartNew();
-            int stepCount = 0;
 
-            _pointsEvaluated = false;
+            _consideredPoints.ForEach(x =>
+            {
+                NumIterationsPerPixel[x.IterationCount]++;
 
-            Parallel.ForEach(_consideredPoints, (evalPoint, loopState) => {
-
-                if (token.IsCancellationRequested)
+                // not parallel, no need to lock.
+                if (ProgressCallback != null && ProgressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > ProgressCallbackIntervalSec)
                 {
-                    interrupted = true;
-                    loopState.Break();
+                    ProgressCallback(new ProgressReport(
+                        totalTimer.Elapsed.TotalSeconds,
+                        iterationCount,
+                        _consideredPoints.Count,
+                        $"{nameof(EscapeAlgorithm)}.{nameof(ComputeHistogram)}, loop=1)"
+                        ));
+
+                    reportTimer.Restart();
                 }
 
-                lock(_lockObject)
+                iterationCount++;
+            });
+
+            for (int i = 0; i < MaxIterations; i++)
+            {
+                iterationsTotal += NumIterationsPerPixel[i];
+            }
+
+            iterationCount = 0;
+            reportTimer.Restart();
+
+            Parallel.ForEach(_consideredPoints, x =>
+            {
+                for (int i = 0; i < x.IterationCount; i++)
                 {
-                    if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
+                    x.HistogramValue += (double)NumIterationsPerPixel[i] / (double)iterationsTotal;
+                }
+
+                lock (_lockObject)
+                {
+                    if (ProgressCallback != null && ProgressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > ProgressCallbackIntervalSec)
                     {
-                        progressCallback(new ProgressReport(
+                        ProgressCallback(new ProgressReport(
                             totalTimer.Elapsed.TotalSeconds,
-                            stepCount,
-                            TotalSteps,
-                            evalPoint.WorldPos,
-                            $"{nameof(EscapeAlgorithm)}.{nameof(EvaluatePoints)}"
+                            iterationCount,
+                            _consideredPoints.Count,
+                            $"{nameof(EscapeAlgorithm)}.{nameof(ComputeHistogram)}, loop=3)"
                             ));
 
                         reportTimer.Restart();
                     }
-                }
 
-                evalPoint.IsStable = IsStable(evalPoint);
-
-                lock (_lockObject)
-                {
-                    stepCount++;
+                    iterationCount++;
                 }
             });
-
-            _pointsEvaluated = true;
-
-            return !interrupted;
         }
     }
 }

@@ -56,6 +56,6 @@ namespace FracView.World
         /// </summary>
         public ComplexPoint LastPos { get; set; } = ComplexPoint.Zero;
 
-        public double HistogramValue { get; set; } = 0.0;
+        public double HistogramValue { get; set; } = 0;
     }
 }

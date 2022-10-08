@@ -1,31 +1,28 @@
-﻿using System;
+﻿using FracView.World;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FracView.World;
-using MultiPrecision;
 
 namespace FracView.Algorithms
 {
-    public class MandelbrotMp<T> : EscapeAlgorithmMp<T> where T : struct, MultiPrecision.IConstant
+    public class OldMandelbrot
     {
-        public override string AlgorithmName => "Mandelbrot";
-
-        public override string AlgorithmDescription => "Mandelbrot";
-
-        public MandelbrotMp()
+        public OldMandelbrot()
         {
-            IterationBreak = 12;
+            //IterationBreak = 12;
         }
 
-        public override bool IsStable(EvalComplexUnitMp<T> eu)
+        public bool IsStable()
         {
-            MultiPrecision<T> pa_x = eu.WorldPos.Real;
-            MultiPrecision<T> pa_y = eu.WorldPos.Imag;
-            MultiPrecision<T> pb_x = 0;
-            MultiPrecision<T> pb_y = 0;
-            MultiPrecision<T> break_value;
+            // convert to native types for performance. Avoids runtime overhead of creating so many records.
+            /*
+            double pa_x = eu.WorldPos.Real;
+            double pa_y = eu.WorldPos.Imag;
+            double pb_x = 0;
+            double pb_y = 0;
+            double break_value;
 
             for (eu.IterationCount = 1; eu.IterationCount < MaxIterations; eu.IterationCount++)
             {
@@ -35,7 +32,7 @@ namespace FracView.Algorithms
                 pa_x = pb_x + eu.WorldPos.Real;
                 pa_y = pb_y + eu.WorldPos.Imag;
 
-                break_value = MultiPrecision<T>.Sqrt((pa_x * pa_x) + (pa_y * pa_y));
+                break_value = Math.Sqrt((pa_x * pa_x) + (pa_y * pa_y));
 
                 if (break_value > IterationBreak.Value || break_value <= 0.0)
                 {
@@ -46,6 +43,7 @@ namespace FracView.Algorithms
             }
 
             eu.LastPos = (pa_x, pa_y);
+            */
 
             return true;
         }

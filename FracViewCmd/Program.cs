@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using SkiaSharp;
 using FracView.Algorithms;
 using FracView.Gfx;
-using MultiPrecision;
+using FracView;
 
 namespace FracViewCmd
 {
@@ -16,21 +16,25 @@ namespace FracViewCmd
 
         static void Main(string[] args)
         {
-            var algorithm = new Mandelbrot()
+            var algorithm = new Mandelbrot(
+                _outputIntervalSec,
+                PrintProgress)
             {
-                Origin = (0.29999999799999, 0.4491),
-                FractalWidth = 0.0250,
-                FractalHeight = 0.0250,
+                /*
+                Origin = (decimal.Parse("0.29999999799999"), decimal.Parse("0.4491000000000016")),
+                FractalWidth = decimal.Parse("0.00000000000000250"),
+                FractalHeight = decimal.Parse("0.00000000000000250"),
+                */
+                Origin = (decimal.Parse("0.29999999799999"), decimal.Parse("0.4491000000000016")),
+                FractalWidth = decimal.Parse("0.00000000000000250"),
+                FractalHeight = decimal.Parse("0.00000000000000250"),
                 StepWidth = 1024,
                 StepHeight = 1024,
-                MaxIterations = 1200,
+                MaxIterations = 5000,
+                UseHistogram = true,
             };
 
-            var scene = new Scene(algorithm.MaxIterations)
-            {
-                RenderWidth = algorithm.StepWidth,
-                RenderHeight = algorithm.StepHeight,
-            };
+            var scene = new Scene();
 
             scene.ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
             {
@@ -61,24 +65,11 @@ namespace FracViewCmd
                 ValueEnd = new SKColor(120, 60, 0), // orange
             });
 
-            algorithm.Init(_outputIntervalSec, PrintProgress);
-            scene.Init();
-
             var cancellationToken = new CancellationTokenSource();
 
-            algorithm.EvaluatePoints(cancellationToken.Token, _outputIntervalSec, PrintProgress);
+            algorithm.EvaluatePoints(cancellationToken.Token);
 
-            scene.ProcessPointsToPixels(algorithm, _outputIntervalSec, PrintProgress);
-
-            var bmp = scene.GetImage();
-            //bmp.Save("output2.png");
-            using (MemoryStream memStream = new MemoryStream())
-            using (SKManagedWStream wstream = new SKManagedWStream(memStream))
-            {
-                bmp.Encode(wstream, SKEncodedImageFormat.Png, 100);
-                byte[] data = memStream.ToArray();
-                System.IO.File.WriteAllBytes("output2.png", data);
-            }
+            scene.ProcessPointsToPixels(algorithm, "output2.png", _outputIntervalSec, PrintProgress);
         }
 
         static void PrintProgress(ProgressReport progress)
@@ -87,17 +78,6 @@ namespace FracViewCmd
             Console.WriteLine($"work: {progress.CurrentWorkName}");
             Console.WriteLine($"elapsed: {progress.ElapsedSeconds:N2} sec");
             Console.WriteLine($"pixels: {progress.CurrentStep} / {progress.TotalSteps} = {donePercent:N2}%");
-            Console.WriteLine($"point: [{progress.CurrentPoint.Real}, {progress.CurrentPoint.Imag}]");
-            Console.WriteLine();
-        }
-
-        static void PrintProgress<T>(ProgressReportMp<T> progress) where T : struct, MultiPrecision.IConstant
-        {
-            double donePercent = 100.0 * (double)progress.CurrentStep / (double)progress.TotalSteps;
-            Console.WriteLine($"work: {progress.CurrentWorkName}");
-            Console.WriteLine($"elapsed: {progress.ElapsedSeconds:N2} sec");
-            Console.WriteLine($"pixels: {progress.CurrentStep} / {progress.TotalSteps} = {donePercent:N2}%");
-            Console.WriteLine($"point: [{progress.CurrentPoint.Real}, {progress.CurrentPoint.Imag}]");
             Console.WriteLine();
         }
     }

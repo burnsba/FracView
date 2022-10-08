@@ -7,7 +7,12 @@ using FracView.World;
 
 namespace FracView.Algorithms
 {
-    public record ProgressReport(double ElapsedSeconds, int CurrentStep, int TotalSteps, string? CurrentWorkName)
+    public interface IEscapeAlgorithm : IAlgorithm
     {
+        bool UseHistogram { get; }
+
+        int MaxIterations { get; }
+
+        bool EvaluatePoints(CancellationToken token);
     }
 }

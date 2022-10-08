@@ -1,44 +1,48 @@
-﻿using FracView.World;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FracView.World;
 
 namespace FracView.Algorithms
 {
     public class Mandelbrot : EscapeAlgorithm
     {
-        public override string AlgorithmName => "Mandelbrot";
-
-        public override string AlgorithmDescription => "Mandelbrot";
-
-        public Mandelbrot()
+        public Mandelbrot(int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+            : base(progressCallbackIntervalSec, progressCallback)
         {
             IterationBreak = 12;
         }
 
         public override bool IsStable(EvalComplexUnit eu)
         {
-            // convert to native types for performance. Avoids runtime overhead of creating so many records.
+            decimal pa_x = eu.WorldPos.Real;
+            decimal pa_y = eu.WorldPos.Imag;
+            decimal pb_x = 0;
+            decimal pb_y = 0;
+            decimal break_value;
 
-            double pa_x = eu.WorldPos.Real;
-            double pa_y = eu.WorldPos.Imag;
-            double pb_x = 0;
-            double pb_y = 0;
-            double break_value;
+            decimal iterationBreakSquare = 0;
+
+            if (IterationBreak != null)
+            {
+                iterationBreakSquare = IterationBreak.Value * IterationBreak.Value;
+            }
 
             for (eu.IterationCount = 1; eu.IterationCount < MaxIterations; eu.IterationCount++)
             {
+                //convert to native types for performance.Avoids runtime overhead of creating so many records.
+
                 pb_x = pa_x * pa_x - pa_y * pa_y;
                 pb_y = pa_x * pa_y + pa_y * pa_x;
 
                 pa_x = pb_x + eu.WorldPos.Real;
                 pa_y = pb_y + eu.WorldPos.Imag;
 
-                break_value = Math.Sqrt((pa_x * pa_x) + (pa_y * pa_y));
+                break_value = (pa_x * pa_x) + (pa_y * pa_y);
 
-                if (break_value > IterationBreak.Value || break_value <= 0.0)
+                if ((IterationBreak != null && (break_value >= iterationBreakSquare)) || break_value <= 0)
                 {
                     eu.LastPos = (pa_x, pa_y);
 

@@ -6,47 +6,27 @@ using System.Text;
 using System.Threading.Tasks;
 using FracView.Algorithms;
 using SkiaSharp;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace FracView.Gfx
 {
-    public class Scene : IDisposable
+    public class Scene
     {
-        private bool _isInit = false;
         private object _lockObject = new object();
-
-        private SKBitmap? _bmp = null;
-
-        public int RenderWidth { get; set; }
-        public int RenderHeight { get; set; }
-
-        public bool UseHistogram => HistogramMaxIterations > 0;
 
         public ColorRamp ColorRamp { get; set; } = new ColorRamp();
 
-        protected int[]? NumIterationsPerPixel = null;
-
-        public int HistogramMaxIterations { get; set; }
-
-        public Scene(int histogramMaxIterations)
+        public Scene()
         {
-            HistogramMaxIterations = histogramMaxIterations;
-
-            if (HistogramMaxIterations < 1)
-            {
-                HistogramMaxIterations = 0;
-            }
         }
 
-        public void Init()
+        private SKBitmap AllocateBitmap(IEscapeAlgorithm algorithm)
         {
-            if (_isInit)
-            {
-                return;
-            }
+            SKBitmap bmp;
 
             try
             {
-                _bmp = new SKBitmap(RenderWidth, RenderHeight, SKColorType.Rgba8888, SKAlphaType.Opaque);
+                bmp = new SKBitmap(algorithm.StepWidth, algorithm.StepHeight, SKColorType.Rgba8888, SKAlphaType.Opaque);
             }
             catch (Exception ex)
             {
@@ -56,126 +36,30 @@ namespace FracView.Gfx
                 throw;
             }
 
-            if (UseHistogram)
-            {
-                try
-                {
-                    NumIterationsPerPixel = Enumerable.Repeat(0, HistogramMaxIterations + 1).ToArray();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Unable to allocate evaluation numIterationsPerPixel container.");
-                    Console.WriteLine(ex.Message);
-
-                    throw;
-                }
-            }
-
-            _isInit = true;
+            return bmp;
         }
 
-        public void ProcessPointsToPixels(EscapeAlgorithm algorithm, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+        public void ProcessPointsToPixels(IEscapeAlgorithm algorithm, string saveToFilename, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
         {
-            if (!_isInit)
-            {
-                throw new InvalidOperationException($"Call {nameof(Init)} first");
-            }
-
             if (!ColorRamp.Keyframes.Any())
             {
                 throw new InvalidOperationException($"{nameof(ColorRamp)} needs at least one keyframe defined");
             }
+
+            var bmp = AllocateBitmap(algorithm);
 
             var points = algorithm.ConsideredPoints;
             var reportTimer = Stopwatch.StartNew();
             var totalTimer = Stopwatch.StartNew();
             int iterationCount = 0;
 
-            if (UseHistogram)
+            if (!points.Any())
             {
-                int minIterationCount = int.MaxValue;
-                int maxIterationCount = 1;
-                long iterationsTotal = 0;
+                throw new InvalidOperationException($"algorithm has no points to render");
+            }
 
-                if (object.ReferenceEquals(null, NumIterationsPerPixel))
-                {
-                    throw new NullReferenceException($"{nameof(NumIterationsPerPixel)} is null, call {nameof(Init)} first");
-                }
-
-                if (HistogramMaxIterations > NumIterationsPerPixel.Length)
-                {
-                    throw new InvalidOperationException($"There are more iterations to evaluate than space in {nameof(NumIterationsPerPixel)}.");
-                }
-
-                iterationCount = 0;
-                reportTimer.Restart();
-
-                points.ForEach(x =>
-                {
-                    if (x.IterationCount > 0 && x.IterationCount < minIterationCount)
-                    {
-                        minIterationCount = x.IterationCount;
-                    }
-
-                    if (x.IterationCount > 1 && x.IterationCount > maxIterationCount)
-                    {
-                        maxIterationCount = x.IterationCount;
-                    }
-
-                    NumIterationsPerPixel[x.IterationCount]++;
-
-                    // not parallel, no need to lock.
-                    if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
-                    {
-                        progressCallback(new ProgressReport(
-                            totalTimer.Elapsed.TotalSeconds,
-                            iterationCount,
-                            points.Count,
-                            x.WorldPos,
-                            $"{nameof(Scene)}.{nameof(ProcessPointsToPixels)} ({nameof(UseHistogram)}==true, loop=1)"
-                            ));
-
-                        reportTimer.Restart();
-                    }
-
-                    iterationCount++;
-                });
-
-                for (int i = 0; i < HistogramMaxIterations; i++)
-                {
-                    iterationsTotal += NumIterationsPerPixel[i];
-                }
-
-                iterationCount = 0;
-                reportTimer.Restart();
-
-                Parallel.ForEach(points, x =>
-                {
-                    for (int i = 0; i < x.IterationCount; i++)
-                    {
-                        x.HistogramValue += (double)NumIterationsPerPixel[i] / (double)iterationsTotal;
-
-                    }
-
-                    lock (_lockObject)
-                    {
-                        if (progressCallback != null && progressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > progressCallbackIntervalSec)
-                        {
-                            progressCallback(new ProgressReport(
-                                totalTimer.Elapsed.TotalSeconds,
-                                iterationCount,
-                                points.Count,
-                                x.WorldPos,
-                                $"{nameof(Scene)}.{nameof(ProcessPointsToPixels)} ({nameof(UseHistogram)}==true, loop=3)"
-                                ));
-
-                            reportTimer.Restart();
-                        }
-
-                        iterationCount++;
-                    }
-                });
-
+            if (algorithm.UseHistogram)
+            {
                 iterationCount = 0;
                 reportTimer.Restart();
 
@@ -197,7 +81,7 @@ namespace FracView.Gfx
                         // see comments in other section about speed.
                         unsafe
                         {
-                            IntPtr pixelsAddr = _bmp.GetPixels();
+                            IntPtr pixelsAddr = bmp.GetPixels();
                             byte* ptr = (byte*)pixelsAddr.ToPointer();
                             ptr += (algorithm.StepWidth * (algorithm.StepHeight - 1 - x.Index.Y) + (x.Index.X)) * 4;
                             *ptr++ = pixelColor.Red;   // red
@@ -212,8 +96,7 @@ namespace FracView.Gfx
                                 totalTimer.Elapsed.TotalSeconds,
                                 iterationCount,
                                 points.Count,
-                                x.WorldPos,
-                                $"{nameof(Scene)}.{nameof(ProcessPointsToPixels)} ({nameof(UseHistogram)}==true) writing image"
+                                $"{nameof(Scene)}.{nameof(ProcessPointsToPixels)} ({nameof(IEscapeAlgorithm.UseHistogram)}==true) writing image"
                                 ));
 
                             reportTimer.Restart();
@@ -257,7 +140,7 @@ namespace FracView.Gfx
                         // fast:
                         unsafe
                         {
-                            IntPtr pixelsAddr = _bmp.GetPixels();
+                            IntPtr pixelsAddr = bmp.GetPixels();
                             byte* ptr = (byte*)pixelsAddr.ToPointer();
                             // ((vertical offset times width) + horizontal offset) * size of pixel
                             ptr += (algorithm.StepWidth * (algorithm.StepHeight - 1 - x.Index.Y) + (x.Index.X)) * 4;
@@ -273,8 +156,7 @@ namespace FracView.Gfx
                                 totalTimer.Elapsed.TotalSeconds,
                                 iterationCount,
                                 points.Count,
-                                x.WorldPos,
-                                $"{nameof(Scene)}.{nameof(ProcessPointsToPixels)} ({nameof(UseHistogram)}==false) writing image"
+                                $"{nameof(Scene)}.{nameof(ProcessPointsToPixels)} ({nameof(IEscapeAlgorithm.UseHistogram)}==false) writing image"
                                 ));
 
                             reportTimer.Restart();
@@ -286,24 +168,13 @@ namespace FracView.Gfx
 
                 //Console.WriteLine($"write image: {writeTime.Elapsed.TotalSeconds:N2} sec");
             }
-        }
 
-        public SKBitmap GetImage()
-        {
-            if (object.ReferenceEquals(null, _bmp))
+            using (MemoryStream memStream = new MemoryStream())
+            using (SKManagedWStream wstream = new SKManagedWStream(memStream))
             {
-                throw new InvalidOperationException($"Call {nameof(ProcessPointsToPixels)} first");
-            }
-
-            return _bmp;
-        }
-
-        public void Dispose()
-        {
-            if (!object.ReferenceEquals(null, _bmp))
-            {
-                _bmp.Dispose();
-                _bmp = null;
+                bmp.Encode(wstream, SKEncodedImageFormat.Png, 100);
+                byte[] data = memStream.ToArray();
+                System.IO.File.WriteAllBytes(saveToFilename, data);
             }
         }
 
