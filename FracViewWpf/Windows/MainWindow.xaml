@@ -21,8 +21,61 @@
             </MenuItem>
         </Menu>
 
+        <ToolBar DockPanel.Dock="Top">
+            <ToolBar Band="1" BandIndex="1">
+                <Button>
+                    <TextBlock>Zoom Out</TextBlock>
+                </Button>
+                <Button>
+                    <TextBlock>Reset</TextBlock>
+                </Button>
+                <Button>
+                    <TextBlock>Zoom In</TextBlock>
+                </Button>
+                <Button>
+                    <TextBlock>Recenter</TextBlock>
+                </Button>
+            </ToolBar>
+        </ToolBar>
+
         <StatusBar DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
-            <TextBlock x:Name="StatusBarText" Text="{Binding Path=StatusBarText}"></TextBlock>
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition MinWidth="100" Width="Auto" MaxWidth="200"/>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="130" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="100" />
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+
+            <StatusBarItem Grid.Column="0">
+                <TextBlock x:Name="StatusBarCurrentWork" Text="{Binding Path=StatusBarCurrentWork}"></TextBlock>
+            </StatusBarItem>
+            
+            <Separator Grid.Column="1" />
+
+            <StatusBarItem Grid.Column="2">
+                <TextBlock x:Name="StatusBarStepText" Text="{Binding Path=StatusBarStepText}"></TextBlock>
+            </StatusBarItem>
+
+            <StatusBarItem Grid.Column="3">
+                <ProgressBar x:Name="StatusBarProgressBar" Value="{Binding Path=StatusBarProgressValue, Mode=OneWay}" Width="90" Height="16" />
+            </StatusBarItem>
+
+            <StatusBarItem Grid.Column="4">
+                <TextBlock x:Name="StatusBarElapsedText" Text="{Binding Path=StatusBarElapsedText}"></TextBlock>
+            </StatusBarItem>
+
+            <Separator Grid.Column="5" />
         </StatusBar>
 
         <Grid >
@@ -33,13 +86,19 @@
 
             <Grid.ColumnDefinitions></Grid.ColumnDefinitions>
 
-            <Grid Grid.Row="0" Name="ImageGridContainer">
-                <Border VerticalAlignment="Top" BorderThickness="2" BorderBrush="#FFBDBDBD" Width="{Binding Path=ImageWidth}" Height="{Binding Path=ImageHeight}">
+            <Grid Grid.Row="0" Name="ImageGridContainer" MinWidth="128" MinHeight="128">
+                <Border VerticalAlignment="Top" BorderThickness="2" BorderBrush="#FFBDBDBD" Width="{Binding Path=ImageWidth}" Height="{Binding Path=ImageHeight}" MinWidth="128" MinHeight="128">
                     <Image
+                        MinWidth="128"
+                        MinHeight="128"
                         Source="{Binding Path=ImageSource}"
                         Width="{Binding Path=ImageWidth}"
                         Height="{Binding Path=ImageHeight}"
-                       />
+                        RenderTransformOrigin="0.5,0.5">
+                        <Image.RenderTransform>
+                            <ScaleTransform/>
+                        </Image.RenderTransform>
+                    </Image>
                 </Border>
             </Grid>
 

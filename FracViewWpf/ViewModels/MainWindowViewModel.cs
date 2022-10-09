@@ -22,7 +22,7 @@ namespace FracViewWpf.ViewModels
         private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
         private ComputeState _computeState = ComputeState.NotRunning;
 
-        private int _outputIntervalSec = 4;
+        private int _outputIntervalSec = 1;
 
         private Stopwatch _algorithmTimer;
 
@@ -233,7 +233,10 @@ namespace FracViewWpf.ViewModels
 
         public string ComputeCommandText { get; private set; }
 
-        public string StatusBarText { get; private set; }
+        public string StatusBarCurrentWork { get; private set; }
+        public string StatusBarStepText { get; private set; }
+        public double StatusBarProgressValue { get; private set; }
+        public string StatusBarElapsedText { get; private set; }
 
         public ICommand ComputeCommand { get; set; }
 
@@ -289,8 +292,7 @@ namespace FracViewWpf.ViewModels
                 ComputeCommandText = GetComputeCommandText();
                 OnPropertyChanged(nameof(ComputeCommandText));
 
-                StatusBarText = "Cancelled";
-                OnPropertyChanged(nameof(StatusBarText));
+                UiStatusCancelRun();
             }
             else
             {
@@ -302,8 +304,7 @@ namespace FracViewWpf.ViewModels
                 ComputeCommandText = GetComputeCommandText();
                 OnPropertyChanged(nameof(ComputeCommandText));
 
-                StatusBarText = "Started";
-                OnPropertyChanged(nameof(StatusBarText));
+                UiStatusStartRun();
             }
         }
 
@@ -352,38 +353,56 @@ namespace FracViewWpf.ViewModels
                 });
         }
 
+        private void UiStatusCancelRun()
+        {
+            UiUpdateProgress(new ProgressReport(_algorithmTimer.Elapsed.TotalSeconds, 0, 0, "Cancelled."));
+        }
+
+        private void UiStatusStartRun()
+        {
+            UiUpdateProgress(new ProgressReport(_algorithmTimer.Elapsed.TotalSeconds, 0, 0, "Started."));
+        }
+
         private void UiStatusFinishRunSuccess()
         {
-            var sb = new StringBuilder();
-
-            sb.Append("Done.");
-
-            var elapsedMinutes = (int)_algorithmTimer.Elapsed.TotalMinutes;
-            var elapsedSecondsD = _algorithmTimer.Elapsed.TotalSeconds;
-
-            if (elapsedMinutes > 0)
-            {
-                sb.Append($" {elapsedMinutes} min");
-
-                elapsedSecondsD -= elapsedMinutes * 60;
-            }
-
-            sb.Append($" {elapsedSecondsD:N2} sec");
-
-            StatusBarText = sb.ToString();
-            OnPropertyChanged(nameof(StatusBarText));
+            UiUpdateProgress(new ProgressReport(_algorithmTimer.Elapsed.TotalSeconds, 0, 0, "Done."));
         }
 
         private void UiUpdateProgress(ProgressReport progress)
         {
             var sb = new StringBuilder();
-            double donePercent = 100.0 * (double)progress.CurrentStep / (double)progress.TotalSteps;
-            sb.Append($"work: {progress.CurrentWorkName}; ");
-            sb.Append($"elapsed: {progress.ElapsedSeconds:N2} sec; ");
-            sb.Append($"pixels: {progress.CurrentStep} / {progress.TotalSteps} = {donePercent:N2}%");
+            double donePercent = 0;
+            
+            if (progress.TotalSteps > 0)
+            {
+                donePercent = 100.0 * (double)progress.CurrentStep / (double)progress.TotalSteps;
+                StatusBarStepText = $"{progress.CurrentStep} / {progress.TotalSteps}";
+            }
+            else
+            {
+                StatusBarStepText = String.Empty;
+            }
 
-            StatusBarText = sb.ToString();
-            OnPropertyChanged(nameof(StatusBarText));
+            var elapsedMinutes = (int)(progress.ElapsedSeconds / 60);
+            var elapsedSecondsD = progress.ElapsedSeconds;
+
+            if (elapsedMinutes > 0)
+            {
+                sb.Append($"{elapsedMinutes} min ");
+                elapsedSecondsD -= elapsedMinutes * 60;
+            }
+
+            sb.Append($"{elapsedSecondsD:N2} sec");
+
+            StatusBarCurrentWork = progress.CurrentWorkName ?? String.Empty;
+            
+            StatusBarProgressValue = donePercent;
+            StatusBarElapsedText = sb.ToString();
+
+            OnPropertyChanged(nameof(StatusBarCurrentWork));
+            OnPropertyChanged(nameof(StatusBarStepText));
+            OnPropertyChanged(nameof(StatusBarProgressValue));
+            OnPropertyChanged(nameof(StatusBarElapsedText));
         }
 
         private void SetSceneKeyframes(Scene scene)
@@ -482,6 +501,16 @@ namespace FracViewWpf.ViewModels
                 // ui display height is larger, width needs to shrink to accomodate
                 ImageWidth = (int)(displayGridImageWidth) - 1;
                 ImageHeight = (int)((double)ImageWidth * worldPixelRatio) - 1;
+            }
+
+            if (ImageWidth <= 0)
+            {
+                ImageWidth = 0;
+            }
+
+            if (ImageHeight <= 0)
+            {
+                ImageHeight = 0;
             }
 
             OnPropertyChanged(nameof(ImageHeight));
