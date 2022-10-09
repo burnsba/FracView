@@ -39,7 +39,7 @@ namespace FracView.Gfx
             return bmp;
         }
 
-        public void ProcessPointsToPixels(IEscapeAlgorithm algorithm, string saveToFilename, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+        public SKBitmap ProcessPointsToPixels(IEscapeAlgorithm algorithm, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
         {
             if (!ColorRamp.Keyframes.Any())
             {
@@ -169,13 +169,7 @@ namespace FracView.Gfx
                 //Console.WriteLine($"write image: {writeTime.Elapsed.TotalSeconds:N2} sec");
             }
 
-            using (MemoryStream memStream = new MemoryStream())
-            using (SKManagedWStream wstream = new SKManagedWStream(memStream))
-            {
-                bmp.Encode(wstream, SKEncodedImageFormat.Png, 100);
-                byte[] data = memStream.ToArray();
-                System.IO.File.WriteAllBytes(saveToFilename, data);
-            }
+            return bmp;
         }
 
         public SKColor ResolveColorByPercent(double percent)

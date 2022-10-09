@@ -82,6 +82,13 @@ namespace FracView.Algorithms
 
             _pointsEvaluated = false;
 
+            ProgressCallback(new ProgressReport(
+                0,
+                0,
+                TotalSteps,
+                $"{nameof(EscapeAlgorithm)}.{nameof(EvaluatePoints)}"
+                ));
+
             Parallel.ForEach(_consideredPoints, (evalPoint, loopState) => {
 
                 if (token.IsCancellationRequested)
@@ -257,6 +264,13 @@ namespace FracView.Algorithms
 
             var reportTimer = Stopwatch.StartNew();
             var totalTimer = Stopwatch.StartNew();
+
+            ProgressCallback(new ProgressReport(
+                0,
+                0,
+                _consideredPoints.Count,
+                $"{nameof(EscapeAlgorithm)}.{nameof(ComputeHistogram)}, loop=1)"
+                ));
 
             _consideredPoints.ForEach(x =>
             {

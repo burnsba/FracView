@@ -26,11 +26,11 @@ namespace FracViewCmd
                 FractalHeight = decimal.Parse("0.00000000000000250"),
                 */
                 Origin = (decimal.Parse("0.29999999799999"), decimal.Parse("0.4491000000000016")),
-                FractalWidth = decimal.Parse("0.00000000000000250"),
+                FractalWidth = decimal.Parse("0.00000000000000500"),
                 FractalHeight = decimal.Parse("0.00000000000000250"),
-                StepWidth = 1024,
-                StepHeight = 1024,
-                MaxIterations = 5000,
+                StepWidth = 16384,
+                StepHeight = 8192,
+                MaxIterations = 6000,
                 UseHistogram = true,
             };
 
@@ -69,7 +69,15 @@ namespace FracViewCmd
 
             algorithm.EvaluatePoints(cancellationToken.Token);
 
-            scene.ProcessPointsToPixels(algorithm, "output2.png", _outputIntervalSec, PrintProgress);
+            var bmp = scene.ProcessPointsToPixels(algorithm, _outputIntervalSec, PrintProgress);
+
+            using (MemoryStream memStream = new MemoryStream())
+            using (SKManagedWStream wstream = new SKManagedWStream(memStream))
+            {
+                bmp.Encode(wstream, SKEncodedImageFormat.Png, 100);
+                byte[] data = memStream.ToArray();
+                System.IO.File.WriteAllBytes("output2.png", data);
+            }
         }
 
         static void PrintProgress(ProgressReport progress)

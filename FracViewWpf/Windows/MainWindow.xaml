@@ -1,0 +1,98 @@
+﻿<Window x:Class="FracViewWpf.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FracViewWpf.Windows"
+        mc:Ignorable="d"
+        xmlns:viewmodels="clr-namespace:FracViewWpf.ViewModels"
+        d:DataContext="{d:DesignInstance Type=viewmodels:MainWindowViewModel}"
+        Title="MainWindow" Height="450" Width="800"
+        SizeChanged="MainWindow_SizeChanged"
+        >
+
+    <DockPanel>
+
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open"/>
+                <MenuItem Header="_Close"/>
+                <MenuItem Header="_Save"/>
+            </MenuItem>
+        </Menu>
+
+        <StatusBar DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
+            <TextBlock x:Name="StatusBarText" Text="{Binding Path=StatusBarText}"></TextBlock>
+        </StatusBar>
+
+        <Grid >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="130px" MinHeight="130px"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <Grid.ColumnDefinitions></Grid.ColumnDefinitions>
+
+            <Grid Grid.Row="0" Name="ImageGridContainer">
+                <Border VerticalAlignment="Top" BorderThickness="2" BorderBrush="#FFBDBDBD" Width="{Binding Path=ImageWidth}" Height="{Binding Path=ImageHeight}">
+                    <Image
+                        Source="{Binding Path=ImageSource}"
+                        Width="{Binding Path=ImageWidth}"
+                        Height="{Binding Path=ImageHeight}"
+                       />
+                </Border>
+            </Grid>
+
+            <Grid
+                Grid.Row="1"
+                VerticalAlignment="Bottom">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="3*"></RowDefinition>
+                    <RowDefinition Height="3*"></RowDefinition>
+                    <RowDefinition Height="3*"></RowDefinition>
+                    <RowDefinition Height="3*"></RowDefinition>
+                    <RowDefinition Height="3*"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"></ColumnDefinition>
+                    <ColumnDefinition Width="3*"></ColumnDefinition>
+                    <ColumnDefinition Width="1*"></ColumnDefinition>
+                    <ColumnDefinition Width="3*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">Origin.X</Label>
+                <TextBox Grid.Row="0" Grid.Column="1" x:Name="UiOriginX" VerticalAlignment="Center" Text="{Binding Path=TextOriginX}"></TextBox>
+                <Label Grid.Row="0" Grid.Column="2" VerticalAlignment="Center">Origin.Y</Label>
+                <TextBox Grid.Row="0" Grid.Column="3" x:Name="UiOriginY" VerticalAlignment="Center" Text="{Binding Path=TextOriginY}"></TextBox>
+
+                <Label Grid.Row="1" Grid.Column="0" VerticalAlignment="Center">Fractal Width</Label>
+                <TextBox Grid.Row="1" Grid.Column="1" x:Name="UiOriginFractalWidth" VerticalAlignment="Center" Text="{Binding Path=TextFractalWidth}"></TextBox>
+                <Label Grid.Row="1" Grid.Column="2" VerticalAlignment="Center">Fractal Height</Label>
+                <TextBox Grid.Row="1" Grid.Column="3" x:Name="UiOriginFractalHeight" VerticalAlignment="Center" Text="{Binding Path=TextFractalHeight}"></TextBox>
+
+                <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center">Pixel Width</Label>
+                <TextBox Grid.Row="2" Grid.Column="1" x:Name="UiPixelWidth" VerticalAlignment="Center" Text="{Binding Path=TextStepWidth}"></TextBox>
+                <Label Grid.Row="2" Grid.Column="2" VerticalAlignment="Center">Pixel Height</Label>
+                <TextBox Grid.Row="2" Grid.Column="3" x:Name="UiPixelHeight" VerticalAlignment="Center" Text="{Binding Path=TextStepHeight}"></TextBox>
+
+                <Label Grid.Row="3" Grid.Column="0" VerticalAlignment="Center">Max Iterations</Label>
+                <TextBox Grid.Row="3" Grid.Column="1" x:Name="UiMaxIterations" VerticalAlignment="Center" Text="{Binding Path=TextMaxIterations}"></TextBox>
+                <Label Grid.Row="3" Grid.Column="2" VerticalAlignment="Center">Histogram</Label>
+                <CheckBox Grid.Row="3" Grid.Column="3" x:Name="UiUseHistogram" VerticalAlignment="Center" IsChecked="{Binding Path=UseHistogram}"></CheckBox>
+
+                <Label Grid.Row="4" Grid.Column="0" VerticalAlignment="Center">Colors</Label>
+                <Label Grid.Row="4" Grid.Column="2" VerticalAlignment="Center"></Label>
+
+                <StackPanel Grid.Row="4" Grid.Column="3" Orientation="Horizontal">
+                    <Button MinWidth="32" Command="{Binding Path=ComputeCommand}">
+                        <TextBlock Text="{Binding Path=ComputeCommandText}" Padding="6,0,6,0"></TextBlock></Button>
+                </StackPanel>
+
+            </Grid>
+
+        </Grid> 
+
+    </DockPanel>
+</Window>
