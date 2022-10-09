@@ -87,19 +87,37 @@
             <Grid.ColumnDefinitions></Grid.ColumnDefinitions>
 
             <Grid Grid.Row="0" Name="ImageGridContainer" MinWidth="128" MinHeight="128">
-                <Border VerticalAlignment="Top" BorderThickness="2" BorderBrush="#FFBDBDBD" Width="{Binding Path=ImageWidth}" Height="{Binding Path=ImageHeight}" MinWidth="128" MinHeight="128">
-                    <Image
-                        MinWidth="128"
-                        MinHeight="128"
-                        Source="{Binding Path=ImageSource}"
-                        Width="{Binding Path=ImageWidth}"
-                        Height="{Binding Path=ImageHeight}"
-                        RenderTransformOrigin="0.5,0.5">
-                        <Image.RenderTransform>
-                            <ScaleTransform/>
-                        </Image.RenderTransform>
-                    </Image>
-                </Border>
+                    <Border VerticalAlignment="Top"
+                            BorderThickness="2"
+                            BorderBrush="#FFBDBDBD"
+                            Width="{Binding Path=ImageWidth}"
+                            Height="{Binding Path=ImageHeight}"
+                            MinWidth="128"
+                            MinHeight="128"
+                            >
+                        <ScrollViewer
+                            Name="MainDisplayImageScrollViewer"
+                            HorizontalScrollBarVisibility="Hidden"
+                            VerticalScrollBarVisibility="Hidden"
+                            MouseWheel="MainDisplayImageScrollViewer_MouseWheel"
+                            >
+                            <Image
+                                Name="MainDisplayImage"
+                                RenderOptions.BitmapScalingMode="HighQuality"
+                                MinWidth="128"
+                                MinHeight="128"
+                                Source="{Binding Path=ImageSource}"
+                                Width="{Binding Path=ImageWidth}"
+                                Height="{Binding Path=ImageHeight}"
+                                RenderTransformOrigin="0.5,0.5"
+                                MouseWheel="Image_MouseWheel"
+                                >
+                                <Image.RenderTransform>
+                                    <ScaleTransform/>
+                                </Image.RenderTransform>
+                            </Image>
+                        </ScrollViewer>
+                    </Border>
             </Grid>
 
             <Grid
