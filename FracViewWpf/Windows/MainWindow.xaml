@@ -160,6 +160,11 @@
                 <CheckBox Grid.Row="3" Grid.Column="3" x:Name="UiUseHistogram" VerticalAlignment="Center" IsChecked="{Binding Path=UseHistogram}"></CheckBox>
 
                 <Label Grid.Row="4" Grid.Column="0" VerticalAlignment="Center">Colors</Label>
+                <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+                    <Button MinWidth="32" Command="{Binding Path=ShowColorsWindowCommand}">
+                        <TextBlock Padding="6,0,6,0">Manage</TextBlock>
+                    </Button>
+                </StackPanel>
                 <Label Grid.Row="4" Grid.Column="2" VerticalAlignment="Center"></Label>
 
                 <StackPanel Grid.Row="4" Grid.Column="3" Orientation="Horizontal">

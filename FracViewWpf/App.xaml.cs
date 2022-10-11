@@ -67,7 +67,9 @@ namespace FracViewWpf
         private void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
             services.AddSingleton<MainWindowViewModel>();
+            services.AddTransient<ColorWindowViewModel>();
             services.AddTransient<MainWindow>();
+            services.AddTransient<ColorWindow>();
         }
 
         /// <summary>

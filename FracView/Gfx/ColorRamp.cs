@@ -11,6 +11,16 @@ namespace FracView.Gfx
     {
         public List<Keyframe<SKColor, double>> Keyframes { get; set; } = new List<Keyframe<SKColor, double>>();
 
+        public ColorRamp Clone()
+        {
+            var keyframeClone = Keyframes.Select(KeyFrameClone).ToList();
+
+            return new ColorRamp()
+            {
+                Keyframes = keyframeClone,
+            };
+        }
+
         public SKColor InterpolateFromKeyframes(double value)
         {
             if (value < 0)
@@ -59,6 +69,17 @@ namespace FracView.Gfx
             }
 
             return new SKColor((byte)rval, (byte)gval, (byte)bval);
+        }
+
+        private Keyframe<SKColor, double> KeyFrameClone(Keyframe<SKColor, double> kf)
+        {
+            return new Keyframe<SKColor, double>()
+            {
+                IntervalStart = kf.IntervalStart,
+                IntervalEnd = kf.IntervalEnd,
+                ValueStart = new SKColor((uint)kf.ValueStart),
+                ValueEnd = new SKColor((uint)kf.ValueEnd),
+            };
         }
     }
 }

@@ -1,0 +1,27 @@
+﻿<Window x:Class="FracViewWpf.Windows.ColorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
+        xmlns:local="clr-namespace:FracViewWpf.Windows"
+        mc:Ignorable="d"
+        xmlns:viewmodels="clr-namespace:FracViewWpf.ViewModels"
+        d:DataContext="{d:DesignInstance Type=viewmodels:ColorWindowViewModel}"
+        Title="ColorWindow" Height="450" Width="800" Closing="Window_Closing">
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="380"></RowDefinition>
+        </Grid.RowDefinitions>
+        
+        <colorpicker:PortableColorPicker
+            Grid.Row="0"
+            ColorState="{Binding ElementName=main, Path=ColorState, Mode=TwoWay}" Width="40" Height="40"/>
+        
+        <colorpicker:StandardColorPicker
+            Grid.Row="1"
+            x:Name="main" Width="200" Height="380"/>
+    </Grid>
+</Window>

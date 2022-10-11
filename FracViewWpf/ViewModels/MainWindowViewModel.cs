@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using FracView.Algorithms;
 using FracView.Gfx;
 using FracViewWpf.Mvvm;
+using FracViewWpf.Windows;
 using SkiaSharp;
 using static System.Formats.Asn1.AsnWriter;
 
@@ -240,6 +241,8 @@ namespace FracViewWpf.ViewModels
 
         public ICommand ComputeCommand { get; set; }
 
+        public ICommand ShowColorsWindowCommand { get; set; }
+
         public ImageSource ImageSource => _imageSource;
 
         public Func<double>? GetParentDisplayGridImageWidth { get; set; } = null;
@@ -273,6 +276,7 @@ namespace FracViewWpf.ViewModels
             UseHistogram = true;
 
             ComputeCommand = new CommandHandler(ComputeCommandHandler);
+            ShowColorsWindowCommand = new CommandHandler(ShowColorsWindowCommandHandler);
 
             ComputeCommandText = GetComputeCommandText();
         }
@@ -308,6 +312,38 @@ namespace FracViewWpf.ViewModels
             }
         }
 
+        private void ShowColorsWindowCommandHandler()
+        {
+            var svm = (ColorWindowViewModel)Workspace.Instance.ServiceProvider.GetService(typeof(ColorWindowViewModel));
+
+            if (!object.ReferenceEquals(null, _scene))
+            {
+                if (!object.ReferenceEquals(null, _scene.ColorRamp))
+                {
+                    svm.LoadColorRamp(_scene.ColorRamp);
+                }
+            }
+
+            svm.ColorRampChanged += Svm_ColorRampChanged;
+
+            Workspace.Instance.RecreateSingletonWindow<ColorWindow>(svm);
+        }
+
+        private void Svm_ColorRampChanged(object? sender, ColorRampEventArgs e)
+        {
+            if (object.ReferenceEquals(null, e.ColorRamp))
+            {
+                return;
+            }
+
+            if (object.ReferenceEquals(null, _scene))
+            {
+                _scene = new Scene();
+            }
+
+            _scene.ColorRamp = e.ColorRamp.Clone();
+        }
+
         private string GetComputeCommandText()
         {
             return _computeState switch
@@ -340,13 +376,13 @@ namespace FracViewWpf.ViewModels
                 })
                 .ContinueWith(t1 =>
                 {
-                    _computeState = ComputeState.NotRunning;
-                    _algorithmTimer.Stop();
-                    UiStatusFinishRunSuccess();
+                    RenderImageSource();
                 })
                 .ContinueWith(t2 =>
                 {
-                    RenderImageSource();
+                    _computeState = ComputeState.NotRunning;
+                    _algorithmTimer.Stop();
+                    UiStatusFinishRunSuccess();
 
                     ComputeCommandText = GetComputeCommandText();
                     OnPropertyChanged(nameof(ComputeCommandText));
@@ -453,23 +489,18 @@ namespace FracViewWpf.ViewModels
             // get a stream over the encoded data
             Stream stream = encoded.AsStream();
 
-            //using (MemoryStream stream = new MemoryStream())
-            //{
-                //bitmap.Save(stream, ImageFormat.Bmp);
+            stream.Position = 0;
+            BitmapImage result = new BitmapImage();
+            result.BeginInit();
+            // According to MSDN, "The default OnDemand cache option retains access to the stream until the image is needed."
+            // Force the bitmap to load right now so we can dispose the stream.
+            result.CacheOption = BitmapCacheOption.OnLoad;
+            result.StreamSource = stream;
+            result.EndInit();
+            result.Freeze();
 
-                stream.Position = 0;
-                BitmapImage result = new BitmapImage();
-                result.BeginInit();
-                // According to MSDN, "The default OnDemand cache option retains access to the stream until the image is needed."
-                // Force the bitmap to load right now so we can dispose the stream.
-                result.CacheOption = BitmapCacheOption.OnLoad;
-                result.StreamSource = stream;
-                result.EndInit();
-                result.Freeze();
-
-                _imageSource = result;
+            _imageSource = result;
             OnPropertyChanged(nameof(ImageSource));
-            //}
         }
 
         public void RecomputeImageScreenDimensions()
