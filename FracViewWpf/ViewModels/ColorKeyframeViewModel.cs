@@ -15,10 +15,36 @@ namespace FracViewWpf.ViewModels
     {
         private System.Windows.Media.Color _valueStart;
         private System.Windows.Media.Color _valueEnd;
+        private double _intervalStart;
+        private double _intervalEnd;
 
         public int Index { get; set; }
-        public double IntervalStart { get; set; }
-        public double IntervalEnd { get; set; }
+
+        public double IntervalStart
+        {
+            get => _intervalStart;
+
+            set
+            {
+                _intervalStart = value;
+                OnPropertyChanged(nameof(IntervalStart));
+                OnIntervalStartChanged();
+                OnPostChanged();
+            }
+        }
+
+        public double IntervalEnd
+        {
+            get => _intervalEnd;
+
+            set
+            {
+                _intervalEnd = value;
+                OnPropertyChanged(nameof(IntervalEnd));
+                OnIntervalEndChanged();
+                OnPostChanged();
+            }
+        }
 
         public System.Windows.Media.Color ValueStart
         {
@@ -31,7 +57,7 @@ namespace FracViewWpf.ViewModels
             {
                 _valueStart = value;
                 OnPropertyChanged(nameof(ValueStart));
-                OnIntervalStartChanged();
+                OnPostChanged();
             }
         }
 
@@ -46,12 +72,13 @@ namespace FracViewWpf.ViewModels
             {
                 _valueEnd = value;
                 OnPropertyChanged(nameof(ValueEnd));
-                OnIntervalEndChanged();
+                OnPostChanged();
             }
         }
 
         public event EventHandler<EventArgs>? IntervalStartChanged;
         public event EventHandler<EventArgs>? IntervalEndChanged;
+        public event EventHandler<EventArgs>? PostChanged;
 
         public ColorKeyframeViewModel()
         {
@@ -85,6 +112,21 @@ namespace FracViewWpf.ViewModels
         protected void OnIntervalEndChanged()
         {
             IntervalEndChanged?.Invoke(this, new EventArgs());
+        }
+
+        /// <summary>
+        /// Fired when any property changes value. Fires after specific property changed events.
+        /// </summary>
+        protected void OnPostChanged()
+        {
+            PostChanged?.Invoke(this, new EventArgs());
+        }
+
+        public override string ToString()
+        {
+            var start = Converters.ColorConverters.WindowsMedia.ToHexSeven(ValueStart);
+            var end = Converters.ColorConverters.WindowsMedia.ToHexSeven(ValueEnd);
+            return $"{IntervalStart}->{IntervalEnd}; {start}->{end}";
         }
     }
 }

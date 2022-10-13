@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using FracViewWpf.Mvvm;
 using FracViewWpf.ViewModels;
 
 namespace FracViewWpf.Windows
@@ -18,7 +19,7 @@ namespace FracViewWpf.Windows
     /// <summary>
     /// Interaction logic for ColorWindow.xaml
     /// </summary>
-    public partial class ColorWindow : Window
+    public partial class ColorWindow : Window, ICloseable
     {
         private ColorWindowViewModel _vm = null;
 

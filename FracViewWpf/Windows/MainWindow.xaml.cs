@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml.Linq;
+using FracViewWpf.Mvvm;
 using FracViewWpf.ViewModels;
 
 namespace FracViewWpf.Windows
@@ -21,7 +22,7 @@ namespace FracViewWpf.Windows
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, ICloseable
     {
         private MainWindowViewModel _vm = null;
 

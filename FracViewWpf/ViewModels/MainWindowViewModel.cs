@@ -22,6 +22,7 @@ namespace FracViewWpf.ViewModels
     {
         private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
         private ComputeState _computeState = ComputeState.NotRunning;
+        private bool _hasRunData = false;
 
         private int _outputIntervalSec = 1;
 
@@ -242,6 +243,7 @@ namespace FracViewWpf.ViewModels
         public ICommand ComputeCommand { get; set; }
 
         public ICommand ShowColorsWindowCommand { get; set; }
+        public ICommand RecolorCommand { get; set; }
 
         public ImageSource ImageSource => _imageSource;
 
@@ -277,8 +279,54 @@ namespace FracViewWpf.ViewModels
 
             ComputeCommand = new CommandHandler(ComputeCommandHandler);
             ShowColorsWindowCommand = new CommandHandler(ShowColorsWindowCommandHandler);
+            RecolorCommand = new CommandHandler(RecolorCommandHandler);
 
             ComputeCommandText = GetComputeCommandText();
+        }
+
+        public void RecomputeImageScreenDimensions()
+        {
+            if (GetParentDisplayGridImageWidth == null || GetParentDisplayGridImageHeight == null)
+            {
+                return;
+            }
+
+            var displayGridImageHeight = GetParentDisplayGridImageHeight();
+            var displayGridImageWidth = GetParentDisplayGridImageWidth();
+
+            if (StepHeight == 0 || displayGridImageHeight == 0)
+            {
+                return;
+            }
+
+            var worldPixelRatio = (double)StepWidth / (double)StepHeight;
+            var uiPixelRatio = (double)displayGridImageWidth / (double)displayGridImageHeight;
+
+            if (uiPixelRatio >= 1)
+            {
+                // ui display width is larger, height needs to shrink to accomodate
+                ImageHeight = (int)(displayGridImageHeight) - 1;
+                ImageWidth = (int)((double)ImageHeight * worldPixelRatio) - 1;
+            }
+            else
+            {
+                // ui display height is larger, width needs to shrink to accomodate
+                ImageWidth = (int)(displayGridImageWidth) - 1;
+                ImageHeight = (int)((double)ImageWidth * worldPixelRatio) - 1;
+            }
+
+            if (ImageWidth <= 0)
+            {
+                ImageWidth = 0;
+            }
+
+            if (ImageHeight <= 0)
+            {
+                ImageHeight = 0;
+            }
+
+            OnPropertyChanged(nameof(ImageHeight));
+            OnPropertyChanged(nameof(ImageWidth));
         }
 
         private void ComputeCommandHandler()
@@ -369,10 +417,12 @@ namespace FracViewWpf.ViewModels
             };
 
             _algorithmTimer = Stopwatch.StartNew();
+            _hasRunData = false;
 
             Task.Factory.StartNew(() =>
                 {
                     _algorithm.EvaluatePoints(_cancellationToken.Token);
+                    _hasRunData = true;
                 })
                 .ContinueWith(t1 =>
                 {
@@ -503,49 +553,26 @@ namespace FracViewWpf.ViewModels
             OnPropertyChanged(nameof(ImageSource));
         }
 
-        public void RecomputeImageScreenDimensions()
+        private void RecolorCommandHandler()
         {
-            if (GetParentDisplayGridImageWidth == null || GetParentDisplayGridImageHeight == null)
+            if (_computeState == ComputeState.NotRunning && _hasRunData)
             {
-                return;
+                _algorithmTimer = Stopwatch.StartNew();
+
+                Task.Factory.StartNew(() =>
+                {
+                    RenderImageSource();
+                })
+                .ContinueWith(t2 =>
+                {
+                    _computeState = ComputeState.NotRunning;
+                    _algorithmTimer.Stop();
+                    UiStatusFinishRunSuccess();
+
+                    ComputeCommandText = GetComputeCommandText();
+                    OnPropertyChanged(nameof(ComputeCommandText));
+                });
             }
-
-            var displayGridImageHeight = GetParentDisplayGridImageHeight();
-            var displayGridImageWidth = GetParentDisplayGridImageWidth();
-
-            if (StepHeight == 0 || displayGridImageHeight == 0)
-            {
-                return;
-            }
-
-            var worldPixelRatio = (double)StepWidth / (double)StepHeight;
-            var uiPixelRatio = (double)displayGridImageWidth / (double)displayGridImageHeight;
-
-            if (uiPixelRatio >= 1)
-            {
-                // ui display width is larger, height needs to shrink to accomodate
-                ImageHeight = (int)(displayGridImageHeight) - 1;
-                ImageWidth = (int)((double)ImageHeight * worldPixelRatio) - 1;
-            }
-            else
-            {
-                // ui display height is larger, width needs to shrink to accomodate
-                ImageWidth = (int)(displayGridImageWidth) - 1;
-                ImageHeight = (int)((double)ImageWidth * worldPixelRatio) - 1;
-            }
-
-            if (ImageWidth <= 0)
-            {
-                ImageWidth = 0;
-            }
-
-            if (ImageHeight <= 0)
-            {
-                ImageHeight = 0;
-            }
-
-            OnPropertyChanged(nameof(ImageHeight));
-            OnPropertyChanged(nameof(ImageWidth));
         }
 
         private enum ComputeState

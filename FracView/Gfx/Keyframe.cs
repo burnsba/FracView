@@ -14,5 +14,10 @@ namespace FracView.Gfx
         public TInterval IntervalEnd { get; set; }
         public TKey ValueStart { get; set; }
         public TKey ValueEnd { get; set; }
+
+        public override string ToString()
+        {
+            return $"{IntervalStart}->{IntervalEnd}; {ValueStart}->{ValueEnd}";
+        }
     }
 }

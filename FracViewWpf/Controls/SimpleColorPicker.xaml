@@ -1,0 +1,46 @@
+﻿<UserControl x:Class="FracViewWpf.Controls.SimpleColorPicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:FracViewWpf.Controls"
+             xmlns:converters="clr-namespace:FracViewWpf.Converters"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             x:Name="self">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:BoolToInvertedBoolConverter x:Key="BoolToInvertedBoolConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border BorderThickness="1" BorderBrush="Silver" CornerRadius="2" Padding="2" Background="AliceBlue">
+        <Grid MinWidth="70">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <Button Grid.Row="0" x:Name="ColorButton" IsTabStop="True" Focusable="True">
+                <Button.Background>
+                    <SolidColorBrush Color="{Binding Path=SelectedColor, ElementName=self}"></SolidColorBrush>
+                </Button.Background>
+            </Button>
+
+            <Canvas x:Name="CanvasColor" Focusable="True">
+                <Canvas.Background>
+                    <SolidColorBrush Color="{Binding Path=SelectedColor, ElementName=self}"></SolidColorBrush>
+                </Canvas.Background>
+            </Canvas>
+
+            <TextBox x:Name="InputTextBox" Grid.Row="1"
+                     Text="{Binding Path=SelectedColorText, ElementName=self}" TextChanged="InputTextBox_TextChanged"
+                     FontFamily="Courier New">
+                <TextBox.Background>
+                    <SolidColorBrush Color="{Binding Path=ValidationColor, ElementName=self}"></SolidColorBrush>
+                </TextBox.Background>
+            </TextBox>
+        </Grid>
+    </Border>
+</UserControl>

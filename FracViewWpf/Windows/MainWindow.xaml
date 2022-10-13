@@ -164,6 +164,9 @@
                     <Button MinWidth="32" Command="{Binding Path=ShowColorsWindowCommand}">
                         <TextBlock Padding="6,0,6,0">Manage</TextBlock>
                     </Button>
+                    <Button MinWidth="32" Command="{Binding Path=RecolorCommand}" Margin="14,0,0,0">
+                        <TextBlock Padding="6,0,6,0">Recolor</TextBlock>
+                    </Button>
                 </StackPanel>
                 <Label Grid.Row="4" Grid.Column="2" VerticalAlignment="Center"></Label>
 
