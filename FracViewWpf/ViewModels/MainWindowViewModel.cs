@@ -13,6 +13,7 @@ using FracView.Algorithms;
 using FracView.Gfx;
 using FracViewWpf.Mvvm;
 using FracViewWpf.Windows;
+using Microsoft.Extensions.DependencyInjection;
 using SkiaSharp;
 using static System.Formats.Asn1.AsnWriter;
 
@@ -29,7 +30,7 @@ namespace FracViewWpf.ViewModels
         private Stopwatch _algorithmTimer;
 
         private IEscapeAlgorithm _algorithm;
-        private Scene _scene;
+        private IScene _scene;
 
         private ImageSource _imageSource;
 
@@ -250,7 +251,7 @@ namespace FracViewWpf.ViewModels
         public Func<double>? GetParentDisplayGridImageWidth { get; set; } = null;
         public Func<double>? GetParentDisplayGridImageHeight { get; set; } = null;
 
-        public MainWindowViewModel()
+        public MainWindowViewModel(IScene scene)
         {
             OriginX = decimal.Parse("0.29999999799999");
             _textOriginX = OriginX.ToString();
@@ -282,6 +283,13 @@ namespace FracViewWpf.ViewModels
             RecolorCommand = new CommandHandler(RecolorCommandHandler);
 
             ComputeCommandText = GetComputeCommandText();
+
+            _scene = scene;
+
+            if (!_scene.ColorRamp.Keyframes.Any())
+            {
+                _scene.AddDefaultSceneKeyframes();
+            }
         }
 
         public void RecomputeImageScreenDimensions()
@@ -362,34 +370,9 @@ namespace FracViewWpf.ViewModels
 
         private void ShowColorsWindowCommandHandler()
         {
-            var svm = (ColorWindowViewModel)Workspace.Instance.ServiceProvider.GetService(typeof(ColorWindowViewModel));
-
-            if (!object.ReferenceEquals(null, _scene))
-            {
-                if (!object.ReferenceEquals(null, _scene.ColorRamp))
-                {
-                    svm.LoadColorRamp(_scene.ColorRamp);
-                }
-            }
-
-            svm.ColorRampChanged += Svm_ColorRampChanged;
+            var svm = ActivatorUtilities.CreateInstance<ColorWindowViewModel>(Workspace.Instance.ServiceProvider, this._scene);
 
             Workspace.Instance.RecreateSingletonWindow<ColorWindow>(svm);
-        }
-
-        private void Svm_ColorRampChanged(object? sender, ColorRampEventArgs e)
-        {
-            if (object.ReferenceEquals(null, e.ColorRamp))
-            {
-                return;
-            }
-
-            if (object.ReferenceEquals(null, _scene))
-            {
-                _scene = new Scene();
-            }
-
-            _scene.ColorRamp = e.ColorRamp.Clone();
         }
 
         private string GetComputeCommandText()
@@ -491,46 +474,8 @@ namespace FracViewWpf.ViewModels
             OnPropertyChanged(nameof(StatusBarElapsedText));
         }
 
-        private void SetSceneKeyframes(Scene scene)
-        {
-            scene.ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
-            {
-                IntervalStart = 0,
-                IntervalEnd = 0.88,
-                ValueStart = new SKColor(20, 20, 240), // blue
-                ValueEnd = new SKColor(20, 250, 250), // cyan
-            });
-            scene.ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
-            {
-                IntervalStart = 0.88,
-                IntervalEnd = 0.93,
-                ValueStart = new SKColor(20, 250, 250), // cyan
-                ValueEnd = new SKColor(255, 255, 40), // yellow
-            });
-            scene.ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
-            {
-                IntervalStart = 0.93,
-                IntervalEnd = 0.97,
-                ValueStart = new SKColor(255, 255, 40), // yellow
-                ValueEnd = new SKColor(250, 128, 0), // orange
-            });
-            scene.ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
-            {
-                IntervalStart = 0.97,
-                IntervalEnd = 1,
-                ValueStart = new SKColor(250, 128, 0), // orange
-                ValueEnd = new SKColor(120, 60, 0), // orange
-            });
-        }
-
         private void RenderImageSource()
         {
-            if (object.ReferenceEquals(null, _scene))
-            {
-                _scene = new Scene();
-                SetSceneKeyframes(_scene);
-            }
-
             var bmp = _scene.ProcessPointsToPixels(_algorithm, _outputIntervalSec, UiUpdateProgress);
             // create an image WRAPPER
             SKImage image = SKImage.FromPixels(bmp.PeekPixels());

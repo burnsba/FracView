@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
+using FracView.Gfx;
 using FracViewWpf.ViewModels;
 using FracViewWpf.Windows;
 using Microsoft.Extensions.Configuration;
@@ -67,9 +68,9 @@ namespace FracViewWpf
         private void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
             services.AddSingleton<MainWindowViewModel>();
-            services.AddTransient<ColorWindowViewModel>();
             services.AddTransient<MainWindow>();
             services.AddTransient<ColorWindow>();
+            services.AddTransient<IScene, Scene>();
         }
 
         /// <summary>

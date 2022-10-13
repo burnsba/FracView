@@ -34,7 +34,6 @@ namespace FracViewWpf.Windows
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            _vm.OnColorRampChanged();
         }
     }
 }

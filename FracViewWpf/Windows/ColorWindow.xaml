@@ -21,51 +21,70 @@
         <Grid Grid.Row="0">
 
             <Grid.RowDefinitions>
-                <RowDefinition Height="40"></RowDefinition>
+                <RowDefinition Height="80"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
             </Grid.RowDefinitions>
 
-            <Button Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Right" Padding="6" Margin="0,0,9,0">
-                <TextBlock>Add</TextBlock>
-            </Button>
+            <GroupBox Grid.Row="0" Header="Bounded">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="90"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <ctl:SimpleColorPicker Grid.Column="0" SelectedColor="{Binding Path=SceneStableColor, Mode=TwoWay}"></ctl:SimpleColorPicker>
+                </Grid>
+            </GroupBox>
+            <GroupBox Grid.Row="1" Header="Escaped Color Ramp">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="40"></RowDefinition>
+                        <RowDefinition Height="*"></RowDefinition>
+                    </Grid.RowDefinitions>
 
-            <ListBox
-                Grid.Row="1"
-                x:Name="KeyFrameList"
-                ItemsSource="{Binding Path=Keyframes}"
-                HorizontalContentAlignment="Stretch"
-                >
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Grid MinHeight="38" HorizontalAlignment="Stretch">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                <ColumnDefinition Width="*"></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
+                    <Button Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Right" Padding="6" Margin="0,0,9,0">
+                        <TextBlock>Add</TextBlock>
+                    </Button>
 
-                            <ctl:SimpleColorPicker Grid.Column="0" SelectedColor="{Binding Path=ValueStart, Mode=TwoWay}"></ctl:SimpleColorPicker>
+                    <ListBox
+                        Grid.Row="1"
+                        x:Name="KeyFrameList"
+                        ItemsSource="{Binding Path=SceneKeyframes}"
+                        HorizontalContentAlignment="Stretch"
+                        >
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid MinHeight="38" HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
 
-                            <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding Path=IntervalStart, Mode=TwoWay}" MinWidth="60" Margin="8"></TextBox>
-                            <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="8">to</TextBlock>
-                            <TextBox Grid.Column="3" VerticalAlignment="Center" Text="{Binding Path=IntervalEnd, Mode=TwoWay}" MinWidth="60" Margin="8"></TextBox>
+                                    <ctl:SimpleColorPicker Grid.Column="0" SelectedColor="{Binding Path=ValueStart, Mode=TwoWay}"></ctl:SimpleColorPicker>
 
-                            <ctl:SimpleColorPicker Grid.Column="4" SelectedColor="{Binding Path=ValueEnd, Mode=TwoWay}"></ctl:SimpleColorPicker>
-                            
-                            <Label Grid.Column="5"></Label>
+                                    <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding Path=IntervalStart, Mode=TwoWay}" MinWidth="60" Margin="8"></TextBox>
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="8">to</TextBlock>
+                                    <TextBox Grid.Column="3" VerticalAlignment="Center" Text="{Binding Path=IntervalEnd, Mode=TwoWay}" MinWidth="60" Margin="8"></TextBox>
 
-                            <Button Grid.Column="6" VerticalAlignment="Center" HorizontalAlignment="Right" Padding="6">
-                                <TextBlock>Remove</TextBlock>
-                            </Button>
+                                    <ctl:SimpleColorPicker Grid.Column="4" SelectedColor="{Binding Path=ValueEnd, Mode=TwoWay}"></ctl:SimpleColorPicker>
 
-                        </Grid>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                                    <Label Grid.Column="5"></Label>
+
+                                    <Button Grid.Column="6" VerticalAlignment="Center" HorizontalAlignment="Right" Padding="6">
+                                        <TextBlock>Remove</TextBlock>
+                                    </Button>
+
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </GroupBox>
+
         </Grid>
 
         <Grid Grid.Row="1">
@@ -93,7 +112,7 @@
                 <Label VerticalAlignment="Center" Margin="0,0,20,0"></Label>
 
                 <Button VerticalAlignment="Center" Padding="6" Margin="0,8,0,8"
-                        Command="{Binding Path=CloseCommand}"
+                        Command="{Binding Path=ApplyCloseCommand}"
                         CommandParameter="{Binding ElementName=TheColorWindow}">
                     <TextBlock>
                         <TextBlock.Text>Save &amp; close</TextBlock.Text>

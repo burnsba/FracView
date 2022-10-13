@@ -10,9 +10,11 @@ using static System.Formats.Asn1.AsnWriter;
 
 namespace FracView.Gfx
 {
-    public class Scene
+    public class Scene : IScene
     {
         private object _lockObject = new object();
+
+        public SKColor StableColor { get; set; } = ColorRef.Black;
 
         public ColorRamp ColorRamp { get; set; } = new ColorRamp();
 
@@ -69,7 +71,7 @@ namespace FracView.Gfx
 
                     if (x.IsStable == true)
                     {
-                        pixelColor = ColorRef.Black;
+                        pixelColor = StableColor;
                     }
                     else
                     {
@@ -118,7 +120,7 @@ namespace FracView.Gfx
 
                     if (x.IsStable == true)
                     {
-                        pixelColor = ColorRef.Black;
+                        pixelColor = StableColor;
                     }
                     else
                     {
@@ -202,6 +204,38 @@ namespace FracView.Gfx
             }
 
             return ColorRamp.InterpolateFromKeyframes(percent);
+        }
+
+        public void AddDefaultSceneKeyframes()
+        {
+            ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
+            {
+                IntervalStart = 0,
+                IntervalEnd = 0.88,
+                ValueStart = new SKColor(20, 20, 240), // blue
+                ValueEnd = new SKColor(20, 250, 250), // cyan
+            });
+            ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
+            {
+                IntervalStart = 0.88,
+                IntervalEnd = 0.93,
+                ValueStart = new SKColor(20, 250, 250), // cyan
+                ValueEnd = new SKColor(255, 255, 40), // yellow
+            });
+            ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
+            {
+                IntervalStart = 0.93,
+                IntervalEnd = 0.97,
+                ValueStart = new SKColor(255, 255, 40), // yellow
+                ValueEnd = new SKColor(250, 128, 0), // orange
+            });
+            ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()
+            {
+                IntervalStart = 0.97,
+                IntervalEnd = 1,
+                ValueStart = new SKColor(250, 128, 0), // orange
+                ValueEnd = new SKColor(120, 60, 0), // orange
+            });
         }
     }
 }
