@@ -11,6 +11,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <converters:BoolToInvertedBoolConverter x:Key="BoolToInvertedBoolConverter" />
+            <converters:BoolToValidationColorConverter x:Key="BoolToValidationColorConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -38,7 +39,7 @@
                      Text="{Binding Path=SelectedColorText, ElementName=self}" TextChanged="InputTextBox_TextChanged"
                      FontFamily="Courier New">
                 <TextBox.Background>
-                    <SolidColorBrush Color="{Binding Path=ValidationColor, ElementName=self}"></SolidColorBrush>
+                    <SolidColorBrush Color="{Binding Path=IsValid, ElementName=self, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
                 </TextBox.Background>
             </TextBox>
         </Grid>

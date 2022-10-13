@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using SD = System.Drawing;
@@ -11,6 +12,8 @@ namespace FracViewWpf.Converters
 {
     public static class ColorConverters
     {
+        private static Regex _sixDigits = new Regex("^[0-9a-fA-F]{6}$");
+
         public static class Drawing
         {
             public static SD.Color FromHtmlHex(string value)
@@ -111,7 +114,7 @@ namespace FracViewWpf.Converters
 
                     return new ValueTuple<byte, byte, byte>((byte)r, (byte)g, (byte)b);
                 }
-                else if (trimmed.Length == 6)
+                else if (_sixDigits.IsMatch(trimmed))
                 {
                     r = Convert.ToInt32(value.Substring(0, 2), 16);
                     g = Convert.ToInt32(value.Substring(2, 2), 16);
@@ -191,6 +194,15 @@ namespace FracViewWpf.Converters
                     r = Convert.ToInt32(values[0]);
                     g = Convert.ToInt32(values[1]);
                     b = Convert.ToInt32(values[2]);
+
+                    return new ValueTuple<byte, byte, byte>((byte)r, (byte)g, (byte)b);
+                }
+                else if (_sixDigits.IsMatch(trimmed))
+                {
+                    // two digit hex values
+                    r = Convert.ToInt32(trimmed.Substring(0, 2), 16);
+                    g = Convert.ToInt32(trimmed.Substring(2, 2), 16);
+                    b = Convert.ToInt32(trimmed.Substring(4, 2), 16);
 
                     return new ValueTuple<byte, byte, byte>((byte)r, (byte)g, (byte)b);
                 }

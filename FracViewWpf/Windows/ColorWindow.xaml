@@ -6,11 +6,20 @@
         xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
         xmlns:ctl="clr-namespace:FracViewWpf.Controls"
         xmlns:local="clr-namespace:FracViewWpf.Windows"
+        xmlns:converters="clr-namespace:FracViewWpf.Converters"
         mc:Ignorable="d"
         xmlns:viewmodels="clr-namespace:FracViewWpf.ViewModels"
         d:DataContext="{d:DesignInstance Type=viewmodels:ColorWindowViewModel}"
         Title="ColorWindow" Height="450" Width="800" Closing="Window_Closing"
         x:Name="TheColorWindow">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <converters:BoolToInvertedBoolConverter x:Key="BoolToInvertedBoolConverter" />
+            <converters:BoolToValidationColorConverter x:Key="BoolToValidationColorConverter" />
+        </ResourceDictionary>
+    </Window.Resources>
+    
     <Grid>
 
         <Grid.RowDefinitions>
@@ -66,9 +75,19 @@
 
                                     <ctl:SimpleColorPicker Grid.Column="0" SelectedColor="{Binding Path=ValueStart, Mode=TwoWay}"></ctl:SimpleColorPicker>
 
-                                    <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding Path=IntervalStart, Mode=TwoWay}" MinWidth="60" Margin="8"></TextBox>
+                                    <TextBox Grid.Column="1" VerticalAlignment="Center" Text="{Binding Path=IntervalStartText, Mode=TwoWay}" MinWidth="60" Margin="8">
+                                        <TextBox.Background>
+                                            <SolidColorBrush Color="{Binding Path=IntervalStartIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                                        </TextBox.Background>
+                                    </TextBox>
+                                    
                                     <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="8">to</TextBlock>
-                                    <TextBox Grid.Column="3" VerticalAlignment="Center" Text="{Binding Path=IntervalEnd, Mode=TwoWay}" MinWidth="60" Margin="8"></TextBox>
+                                    
+                                    <TextBox Grid.Column="3" VerticalAlignment="Center" Text="{Binding Path=IntervalEndText, Mode=TwoWay}" MinWidth="60" Margin="8">
+                                        <TextBox.Background>
+                                            <SolidColorBrush Color="{Binding Path=IntervalEndIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                                        </TextBox.Background>
+                                    </TextBox>
 
                                     <ctl:SimpleColorPicker Grid.Column="4" SelectedColor="{Binding Path=ValueEnd, Mode=TwoWay}"></ctl:SimpleColorPicker>
 

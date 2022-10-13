@@ -25,6 +25,7 @@ namespace FracViewWpf.Controls
     {
         private bool _initDone = false;
         private bool _useInitText = true;
+        private bool _isValid = true;
 
         public static readonly DependencyProperty SelectedColorProperty =
             DependencyProperty.Register(nameof(SelectedColor), typeof(Color), typeof(SimpleColorPicker),
@@ -55,6 +56,16 @@ namespace FracViewWpf.Controls
         {
             get => (string)GetValue(SelectedColorTextProperty);
             set => SetValue(SelectedColorTextProperty, value);
+        }
+
+        public static readonly DependencyProperty IsValidProperty =
+            DependencyProperty.Register(nameof(IsValid), typeof(bool), typeof(SimpleColorPicker),
+                new PropertyMetadata(true, OnIsValidPropertyChange));
+
+        public bool IsValid
+        {
+            get => (bool)GetValue(IsValidProperty);
+            set => SetValue(IsValidProperty, value);
         }
 
         public SimpleColorPicker()
@@ -88,6 +99,11 @@ namespace FracViewWpf.Controls
 
         }
 
+        private static void OnIsValidPropertyChange(DependencyObject d, DependencyPropertyChangedEventArgs args)
+        {
+
+        }
+
         private void UpdateValue(Color c, string displayText)
         {
             SelectedColor = c;
@@ -98,11 +114,11 @@ namespace FracViewWpf.Controls
         {
             if (isValid)
             {
-                ValidationColor = Colors.White;
+                ValidationColor = Constants.Ui.ValidTextBackgroundColor;
             }
             else
             {
-                ValidationColor = Color.FromArgb(255, 255, 191, 191);
+                ValidationColor = Constants.Ui.InvalidTextBackgroundColor;
             }
         }
 
@@ -117,10 +133,13 @@ namespace FracViewWpf.Controls
 
             var text = ((TextBox)e.Source).Text?.Trim() ?? string.Empty;
 
-            SetValidation(false);
-
             if (string.IsNullOrEmpty(text) || text.Length < 3)
             {
+                if (IsValid)
+                {
+                    IsValid = false;
+                }
+
                 return;
             }
 
@@ -132,12 +151,20 @@ namespace FracViewWpf.Controls
                     var result = Color.FromArgb(255, drawingColor.R, drawingColor.G, drawingColor.B);
                     UpdateValue(result, text);
                     e.Handled = true;
-                    SetValidation(true);
+                    if (!IsValid)
+                    {
+                        IsValid = true;
+                    }
                     return;
                 }
                 catch
                 {
                 }
+            }
+
+            if (IsValid)
+            {
+                IsValid = false;
             }
         }
     }

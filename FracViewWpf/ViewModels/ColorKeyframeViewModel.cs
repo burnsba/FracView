@@ -15,34 +15,94 @@ namespace FracViewWpf.ViewModels
     {
         private System.Windows.Media.Color _valueStart;
         private System.Windows.Media.Color _valueEnd;
+
         private double _intervalStart;
         private double _intervalEnd;
 
+        private bool _intervalStartIsValid = true;
+        private bool _intervalEndIsValid = true;
+
         public int Index { get; set; }
 
-        public double IntervalStart
+        public string IntervalStartText
         {
-            get => _intervalStart;
+            get => _intervalStart.ToString();
 
             set
             {
-                _intervalStart = value;
-                OnPropertyChanged(nameof(IntervalStart));
-                OnIntervalStartChanged();
-                OnPostChanged();
+                double d;
+                if (double.TryParse(value, out d))
+                {
+                    if (d >= 0 && d <= 1)
+                    {
+                        _intervalStart = d;
+                        OnPropertyChanged(nameof(IntervalStartText));
+                        OnIntervalStartChanged();
+                        OnPostChanged();
+
+                        IntervalStartIsValid = true;
+                    }
+                    else
+                    {
+                        IntervalStartIsValid = false;
+                    }
+                }
+                else
+                {
+                    IntervalStartIsValid = false;
+                }
             }
         }
 
-        public double IntervalEnd
+        public bool IntervalStartIsValid
         {
-            get => _intervalEnd;
+            get => _intervalStartIsValid;
 
             set
             {
-                _intervalEnd = value;
-                OnPropertyChanged(nameof(IntervalEnd));
-                OnIntervalEndChanged();
-                OnPostChanged();
+                _intervalStartIsValid = value;
+                OnPropertyChanged(nameof(IntervalStartIsValid));
+            }
+        }
+
+        public string IntervalEndText
+        {
+            get => _intervalEnd.ToString();
+
+            set
+            {
+                double d;
+                if (double.TryParse(value, out d))
+                {
+                    if (d >= 0 && d <= 1)
+                    {
+                        _intervalEnd = d;
+                        OnPropertyChanged(nameof(IntervalEndText));
+                        OnIntervalEndChanged();
+                        OnPostChanged();
+
+                        IntervalEndIsValid = true;
+                    }
+                    else
+                    {
+                        IntervalEndIsValid = false;
+                    }
+                }
+                else
+                {
+                    IntervalEndIsValid = false;
+                }
+            }
+        }
+
+        public bool IntervalEndIsValid
+        {
+            get => _intervalEndIsValid;
+
+            set
+            {
+                _intervalEndIsValid = value;
+                OnPropertyChanged(nameof(IntervalEndIsValid));
             }
         }
 
@@ -86,8 +146,8 @@ namespace FracViewWpf.ViewModels
 
         public ColorKeyframeViewModel(Keyframe<SKColor, double> keyframe)
         {
-            IntervalStart = keyframe.IntervalStart;
-            IntervalEnd = keyframe.IntervalEnd;
+            _intervalStart = keyframe.IntervalStart;
+            _intervalEnd = keyframe.IntervalEnd;
 
             _valueStart = System.Windows.Media.Color.FromArgb(255, keyframe.ValueStart.Red, keyframe.ValueStart.Green, keyframe.ValueStart.Blue);
             _valueEnd = System.Windows.Media.Color.FromArgb(255, keyframe.ValueEnd.Red, keyframe.ValueEnd.Green, keyframe.ValueEnd.Blue);
@@ -97,8 +157,8 @@ namespace FracViewWpf.ViewModels
         {
             return new Keyframe<SKColor, double>()
             {
-                IntervalStart = IntervalStart,
-                IntervalEnd = IntervalEnd,
+                IntervalStart = _intervalStart,
+                IntervalEnd = _intervalEnd,
                 ValueStart = new SKColor(ValueStart.R, ValueStart.G, ValueStart.B),
                 ValueEnd = new SKColor(ValueEnd.R, ValueEnd.G, ValueEnd.B),
             };
@@ -126,7 +186,7 @@ namespace FracViewWpf.ViewModels
         {
             var start = Converters.ColorConverters.WindowsMedia.ToHexSeven(ValueStart);
             var end = Converters.ColorConverters.WindowsMedia.ToHexSeven(ValueEnd);
-            return $"{IntervalStart}->{IntervalEnd}; {start}->{end}";
+            return $"{_intervalStart}->{_intervalEnd}; {start}->{end}";
         }
     }
 }
