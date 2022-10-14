@@ -175,6 +175,8 @@ namespace FracViewWpf.ViewModels
 
         public ColorKeyframeViewModel()
         {
+            ValueStart = Colors.Black;
+            ValueEnd = Colors.Black;
         }
 
         public ColorKeyframeViewModel(Keyframe<SKColor, double> keyframe)

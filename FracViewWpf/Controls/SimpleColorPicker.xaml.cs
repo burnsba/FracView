@@ -25,7 +25,6 @@ namespace FracViewWpf.Controls
     {
         private bool _initDone = false;
         private bool _useInitText = true;
-        private bool _isValid = true;
 
         public static readonly DependencyProperty SelectedColorProperty =
             DependencyProperty.Register(nameof(SelectedColor), typeof(Color), typeof(SimpleColorPicker),
@@ -40,7 +39,7 @@ namespace FracViewWpf.Controls
 
         public static readonly DependencyProperty ValidationColorProperty =
             DependencyProperty.Register(nameof(ValidationColor), typeof(Color), typeof(SimpleColorPicker),
-                new PropertyMetadata(Colors.White));
+                new PropertyMetadata(Constants.Ui.ValidTextBackgroundColor));
 
         public Color ValidationColor
         {
@@ -50,7 +49,9 @@ namespace FracViewWpf.Controls
 
         public static readonly DependencyProperty SelectedColorTextProperty =
             DependencyProperty.Register(nameof(SelectedColorText), typeof(string), typeof(SimpleColorPicker),
-                new PropertyMetadata(Colors.Black.ToString().ToLower(), OnSelectedColorTextPropertyChange));
+                new PropertyMetadata(
+                    ColorConverters.WindowsMedia.ToHexSeven(Colors.Black).ToString().ToLower(),
+                    OnSelectedColorTextPropertyChange));
 
         public string SelectedColorText
         {
@@ -108,18 +109,6 @@ namespace FracViewWpf.Controls
         {
             SelectedColor = c;
             SelectedColorText = displayText;
-        }
-
-        private void SetValidation(bool isValid)
-        {
-            if (isValid)
-            {
-                ValidationColor = Constants.Ui.ValidTextBackgroundColor;
-            }
-            else
-            {
-                ValidationColor = Constants.Ui.InvalidTextBackgroundColor;
-            }
         }
 
         private void InputTextBox_TextChanged(object sender, TextChangedEventArgs e)

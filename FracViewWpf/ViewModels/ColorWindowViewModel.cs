@@ -47,6 +47,15 @@ namespace FracViewWpf.ViewModels
 
         public ICommand CancelCommand { get; set; }
 
+        public ICommand InsertBeforeCommand { get; set; }
+        public ICommand InsertAfterCommand { get; set; }
+
+        public ICommand RemoveKeyframeCommand { get; set; }
+        public ICommand RemoveAllCommand { get; set; }
+        public ICommand ResetKeyframesCommand { get; set; }
+
+        public ColorKeyframeViewModel? SelectedKeyframe { get; set; }
+
         public ColorWindowViewModel(IScene scene)
         {
             _scene = scene;
@@ -76,6 +85,16 @@ namespace FracViewWpf.ViewModels
             ApplyCloseCommand = new RelayCommand<ICloseable>(w => { AnyChanges = true; OnSceneChanged(); CloseWindow(w); });
 
             ApplyCommand = new CommandHandler(OnApplyChanges);
+
+            InsertBeforeCommand = new CommandHandler(InsertBeforeCommandHandler);
+            InsertAfterCommand = new CommandHandler(InsertAfterCommandHandler);
+            RemoveKeyframeCommand = new RelayCommand<ColorKeyframeViewModel>(RemoveKeyframeCommandHandler);
+
+            RemoveAllCommand = new CommandHandler(RemoveAllCommandHandler);
+            ResetKeyframesCommand = new CommandHandler(ResetKeyframesCommandHandler);
+
+            // If any property setters above triggered updating the AnyChanges flag, make sure it's cleared.
+            AnyChanges = false;
         }
 
         public void OnSceneChanged()
@@ -164,6 +183,128 @@ namespace FracViewWpf.ViewModels
                     }
                 }
             }
+        }
+
+        private void InsertBeforeCommandHandler()
+        {
+            var kf = new ColorKeyframeViewModel();
+
+            // default to start of list.
+            int selectedIndex = 0;
+
+            if (!object.ReferenceEquals(null, SelectedKeyframe))
+            {
+                selectedIndex = SelectedKeyframe.Index;
+                
+                // Set properties to same as selected keyframe valuestart.
+                kf.ValueStart = SelectedKeyframe.ValueStart;
+                kf.ValueEnd = SelectedKeyframe.ValueStart;
+                kf.IntervalStartText = SelectedKeyframe.IntervalStartText;
+                kf.IntervalEndText = SelectedKeyframe.IntervalStartText;
+            }
+
+            kf.Index = selectedIndex;
+            kf.PostChanged += SetAnyChanges;
+
+            for (int i = selectedIndex; i < SceneKeyframes.Count; i++)
+            {
+                SceneKeyframes[i].Index++;
+            }
+
+            SceneKeyframes.Insert(selectedIndex, kf);
+        }
+
+        private void InsertAfterCommandHandler()
+        {
+            var kf = new ColorKeyframeViewModel();
+
+            // default to end of list.
+            int selectedIndex = SceneKeyframes.Count - 1;
+
+            if (!object.ReferenceEquals(null, SelectedKeyframe))
+            {
+                selectedIndex = SelectedKeyframe.Index;
+
+                // Set properties to same as selected keyframe valueend.
+                kf.ValueStart = SelectedKeyframe.ValueEnd;
+                kf.ValueEnd = SelectedKeyframe.ValueEnd;
+                kf.IntervalStartText = SelectedKeyframe.IntervalEndText;
+                kf.IntervalEndText = SelectedKeyframe.IntervalEndText;
+            }
+
+            selectedIndex++;
+
+            kf.Index = selectedIndex;
+            kf.PostChanged += SetAnyChanges;
+
+            for (int i = selectedIndex; i < SceneKeyframes.Count; i++)
+            {
+                SceneKeyframes[i].Index++;
+            }
+
+            if (selectedIndex >= SceneKeyframes.Count)
+            {
+                SceneKeyframes.Add(kf);
+            }
+            else
+            {
+                SceneKeyframes.Insert(selectedIndex, kf);
+            }
+        }
+
+        private void RemoveAllCommandHandler()
+        {
+            while (SceneKeyframes.Count > 0)
+            {
+                var kf = SceneKeyframes.First();
+                kf.PostChanged -= SetAnyChanges;
+                SceneKeyframes.Remove(kf);
+            }
+        }
+
+        private void ResetKeyframesCommandHandler()
+        {
+            RemoveAllCommandHandler();
+
+            var scene = new Scene();
+            scene.AddDefaultSceneKeyframes();
+
+            var keyframes = scene.ColorRamp.Keyframes.Select((x, i) => new ColorKeyframeViewModel(x) { Index = i }).ToList();
+
+            foreach (var kf in keyframes)
+            {
+                kf.PostChanged += SetAnyChanges;
+                SceneKeyframes.Add(kf);
+            }
+        }
+
+        private void RemoveKeyframeCommandHandler(ColorKeyframeViewModel kf)
+        {
+            if (object.ReferenceEquals(null, kf))
+            {
+                return;
+            }
+
+            int selectedIndex = kf.Index;
+
+            if (!object.ReferenceEquals(null, SelectedKeyframe))
+            {
+                if (selectedIndex == SelectedKeyframe.Index)
+                {
+                    SelectedKeyframe = null;
+                }
+            }
+
+            for (int i = selectedIndex; i < SceneKeyframes.Count; i++)
+            {
+                if (SceneKeyframes[i].Index > 0)
+                {
+                    SceneKeyframes[i].Index--;
+                }
+            }
+
+            SceneKeyframes.Remove(kf);
+            kf.PostChanged -= SetAnyChanges;
         }
     }
 }

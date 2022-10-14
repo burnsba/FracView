@@ -50,14 +50,44 @@
                         <RowDefinition Height="*"></RowDefinition>
                     </Grid.RowDefinitions>
 
-                    <Button Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Right" Padding="6" Margin="0,0,9,0">
-                        <TextBlock>Add</TextBlock>
-                    </Button>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
+
+                        <Button VerticalAlignment="Center" HorizontalAlignment="Right"
+                                Command="{Binding Path=ResetKeyframesCommand}"
+                                Padding="6" Margin="0,0,9,0">
+                            <TextBlock>Reset to default</TextBlock>
+                        </Button>
+
+                        <Label VerticalAlignment="Center" Margin="0,0,20,0"></Label>
+
+                        <Button VerticalAlignment="Center" HorizontalAlignment="Right"
+                                Command="{Binding Path=RemoveAllCommand}"
+                                Padding="6" Margin="0,0,9,0">
+                            <TextBlock>Remove All</TextBlock>
+                        </Button>
+
+                        <Label VerticalAlignment="Center" Margin="0,0,20,0"></Label>
+                        
+                        <Button VerticalAlignment="Center" HorizontalAlignment="Right"
+                                Command="{Binding Path=InsertBeforeCommand}"
+                                Padding="6" Margin="0,0,9,0">
+                            <TextBlock>Insert Before</TextBlock>
+                        </Button>
+
+                        <Label VerticalAlignment="Center" Margin="0,0,20,0"></Label>
+
+                        <Button VerticalAlignment="Center" HorizontalAlignment="Right"
+                                Command="{Binding Path=InsertAfterCommand}"
+                                Padding="6" Margin="0,0,9,0">
+                            <TextBlock>Insert After</TextBlock>
+                        </Button>
+                    </StackPanel>
 
                     <ListBox
                         Grid.Row="1"
                         x:Name="KeyFrameList"
                         ItemsSource="{Binding Path=SceneKeyframes}"
+                        SelectedItem="{Binding Path=SelectedKeyframe}"
                         HorizontalContentAlignment="Stretch"
                         >
                         <ListBox.ItemTemplate>
@@ -93,7 +123,10 @@
 
                                     <Label Grid.Column="5"></Label>
 
-                                    <Button Grid.Column="6" VerticalAlignment="Center" HorizontalAlignment="Right" Padding="6">
+                                    <Button Grid.Column="6" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                            Command="{Binding Path=DataContext.RemoveKeyframeCommand, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}"
+                                            CommandParameter="{Binding Path=DataContext, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}"
+                                            Padding="6">
                                         <TextBlock>Remove</TextBlock>
                                     </Button>
 
