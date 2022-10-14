@@ -229,6 +229,46 @@ namespace FracViewWpf.ViewModels
             }
         }
 
+        public double GetIntervalStartValue()
+        {
+            return _intervalStart;
+        }
+
+        public double GetIntervalEndValue()
+        {
+            return _intervalEnd;
+        }
+
+        public void SetIntervalStartValue(double d)
+        {
+            if (d >= MinValidIntervalValue && d <= MaxValidIntervalValue)
+            {
+                _intervalStart = d;
+                OnPropertyChanged(nameof(IntervalStartText));
+
+                IntervalStartIsValid = true;
+            }
+            else
+            {
+                IntervalStartIsValid = false;
+            }
+        }
+
+        public void SetIntervalEndValue(double d)
+        {
+            if (d >= MinValidIntervalValue && d <= MaxValidIntervalValue)
+            {
+                _intervalEnd = d;
+                OnPropertyChanged(nameof(IntervalEndText));
+
+                IntervalEndIsValid = true;
+            }
+            else
+            {
+                IntervalEndIsValid = false;
+            }
+        }
+
         protected void OnIntervalStartChanged()
         {
             IntervalStartChanged?.Invoke(this, new EventArgs());

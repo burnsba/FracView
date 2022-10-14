@@ -407,10 +407,12 @@ namespace FracViewWpf.ViewModels
                     _algorithm.EvaluatePoints(_cancellationToken.Token);
                     _hasRunData = true;
                 })
+                .ContinueWith(err1 => Workspace.Instance.ShowTaskException(err1, "Error evaluating points"), TaskContinuationOptions.OnlyOnFaulted)
                 .ContinueWith(t1 =>
                 {
                     RenderImageSource();
                 })
+                .ContinueWith(err2 => Workspace.Instance.ShowTaskException(err2, "Error rendering image"), TaskContinuationOptions.OnlyOnFaulted)
                 .ContinueWith(t2 =>
                 {
                     _computeState = ComputeState.NotRunning;
@@ -419,7 +421,8 @@ namespace FracViewWpf.ViewModels
 
                     ComputeCommandText = GetComputeCommandText();
                     OnPropertyChanged(nameof(ComputeCommandText));
-                });
+                })
+                .ContinueWith(err3 => Workspace.Instance.ShowTaskException(err3, "Error finalizing image render"), TaskContinuationOptions.OnlyOnFaulted);
         }
 
         private void UiStatusCancelRun()
@@ -508,6 +511,7 @@ namespace FracViewWpf.ViewModels
                 {
                     RenderImageSource();
                 })
+                .ContinueWith(err1 => Workspace.Instance.ShowTaskException(err1, "Error rendering image"), TaskContinuationOptions.OnlyOnFaulted)
                 .ContinueWith(t2 =>
                 {
                     _computeState = ComputeState.NotRunning;
@@ -516,7 +520,8 @@ namespace FracViewWpf.ViewModels
 
                     ComputeCommandText = GetComputeCommandText();
                     OnPropertyChanged(nameof(ComputeCommandText));
-                });
+                })
+                .ContinueWith(err2 => Workspace.Instance.ShowTaskException(err2, "Error finalizing image render"), TaskContinuationOptions.OnlyOnFaulted);
             }
         }
 

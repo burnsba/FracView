@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Xml;
 using Microsoft.Extensions.Configuration;
+using FracViewWpf.ViewModels;
+using FracViewWpf.Windows;
+using System.Windows.Threading;
 
 namespace FracViewWpf
 {
@@ -18,11 +21,13 @@ namespace FracViewWpf
     {
         private static Workspace _instance;
         private static object _singleton = new object();
+        private Dispatcher _dispatcher;
 
         private Dictionary<string, Control> _registeredControls = new Dictionary<string, Control>();
 
         private Workspace()
         {
+            _dispatcher = Dispatcher.CurrentDispatcher;
         }
 
         /// <summary>
@@ -67,18 +72,21 @@ namespace FracViewWpf
                 throw new ArgumentException($"{typeof(T).FullName} must be System.Windows.Window");
             }
 
-            foreach (System.Windows.Window w in System.Windows.Application.Current.Windows)
+            _dispatcher.Invoke(() =>
             {
-                if (w.GetType() == typeof(T))
+                foreach (System.Windows.Window w in System.Windows.Application.Current.Windows)
                 {
-                    w.Show();
-                    w.Activate();
-                    return;
+                    if (w.GetType() == typeof(T))
+                    {
+                        w.Show();
+                        w.Activate();
+                        return;
+                    }
                 }
-            }
 
-            var window = (System.Windows.Window)Activator.CreateInstance(typeof(T), args);
-            window.Show();
+                var window = (System.Windows.Window)Activator.CreateInstance(typeof(T), args);
+                window.Show();
+            });
         }
 
         /// <summary>
@@ -95,16 +103,19 @@ namespace FracViewWpf
                 throw new ArgumentException($"{typeof(T).FullName} must be System.Windows.Window");
             }
 
-            foreach (System.Windows.Window w in System.Windows.Application.Current.Windows)
+            _dispatcher.Invoke(() =>
             {
-                if (w.GetType() == typeof(T))
+                foreach (System.Windows.Window w in System.Windows.Application.Current.Windows)
                 {
-                    w.Close();
+                    if (w.GetType() == typeof(T))
+                    {
+                        w.Close();
+                    }
                 }
-            }
 
-            var window = (System.Windows.Window)Activator.CreateInstance(typeof(T), args);
-            window.Show();
+                var window = (System.Windows.Window)Activator.CreateInstance(typeof(T), args);
+                window.Show();
+            });
         }
 
         /// <summary>
@@ -118,13 +129,16 @@ namespace FracViewWpf
                 throw new ArgumentException($"{typeof(T).FullName} must be System.Windows.Window");
             }
 
-            foreach (System.Windows.Window w in System.Windows.Application.Current.Windows)
+            _dispatcher.Invoke(() =>
             {
-                if (w.GetType() == typeof(T))
+                foreach (System.Windows.Window w in System.Windows.Application.Current.Windows)
                 {
-                    w.Close();
+                    if (w.GetType() == typeof(T))
+                    {
+                        w.Close();
+                    }
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -232,6 +246,27 @@ namespace FracViewWpf
             }
 
             return null;
+        }
+
+        public void ShowTaskException(Task task, string title)
+        {
+            if (object.ReferenceEquals(null, task))
+            {
+                return;
+            }
+
+            var exc = task.Exception;
+            if (!object.ReferenceEquals(null, exc))
+            {
+                var flattened = exc.Flatten();
+
+                var ewvm = new ErrorWindowViewModel(title, flattened)
+                {
+                    ButtonText = "Ok",
+                };
+
+                Workspace.Instance.RecreateSingletonWindow<ErrorWindow>(ewvm);
+            }
         }
     }
 }

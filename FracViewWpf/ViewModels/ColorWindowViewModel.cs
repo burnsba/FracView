@@ -99,6 +99,8 @@ namespace FracViewWpf.ViewModels
 
         public void OnSceneChanged()
         {
+            FixColorRanges();
+
             if (AnyChanges && !object.ReferenceEquals(null, _scene))
             {
                 _scene.StableColor = new SKColor(SceneStableColor.R, SceneStableColor.G, SceneStableColor.B);
@@ -144,6 +146,12 @@ namespace FracViewWpf.ViewModels
                         {
                             // Start changing values on the keyframe before the current one.
                             startIndex--;
+                            if (startIndex >= 0)
+                            {
+                                // update matching value no matter what.
+                                SceneKeyframes[startIndex].SetIntervalEndValue(newValue);
+                            }
+
                             for (int i=startIndex; i>= 0; i--)
                             {
                                 SceneKeyframes[i].QuietClampBelowMax(newValue);
@@ -167,6 +175,11 @@ namespace FracViewWpf.ViewModels
                         {
                             // Start changing values on the keyframe after the current one.
                             startIndex++;
+                            if (startIndex < SceneKeyframes.Count)
+                            {
+                                // update matching value no matter what.
+                                SceneKeyframes[startIndex].SetIntervalStartValue(newValue);
+                            }
                             for (int i = startIndex; i < SceneKeyframes.Count; i++)
                             {
                                 SceneKeyframes[i].QuietClampAboveMin(newValue);
@@ -212,6 +225,7 @@ namespace FracViewWpf.ViewModels
             }
 
             SceneKeyframes.Insert(selectedIndex, kf);
+            AnyChanges = true;
         }
 
         private void InsertAfterCommandHandler()
@@ -250,6 +264,8 @@ namespace FracViewWpf.ViewModels
             {
                 SceneKeyframes.Insert(selectedIndex, kf);
             }
+
+            AnyChanges = true;
         }
 
         private void RemoveAllCommandHandler()
@@ -259,6 +275,7 @@ namespace FracViewWpf.ViewModels
                 var kf = SceneKeyframes.First();
                 kf.PostChanged -= SetAnyChanges;
                 SceneKeyframes.Remove(kf);
+                AnyChanges = true;
             }
         }
 
@@ -276,6 +293,8 @@ namespace FracViewWpf.ViewModels
                 kf.PostChanged += SetAnyChanges;
                 SceneKeyframes.Add(kf);
             }
+
+            AnyChanges = true;
         }
 
         private void RemoveKeyframeCommandHandler(ColorKeyframeViewModel kf)
@@ -305,6 +324,53 @@ namespace FracViewWpf.ViewModels
 
             SceneKeyframes.Remove(kf);
             kf.PostChanged -= SetAnyChanges;
+            AnyChanges = true;
+        }
+
+        private void FixColorRanges()
+        {
+            if (!SceneKeyframes.Any())
+            {
+                InsertBeforeCommandHandler();
+            }
+
+            int maxIndex;
+
+            if (SceneKeyframes[0].GetIntervalStartValue() > 0)
+            {
+                SceneKeyframes[0].SetIntervalStartValue(0);
+                AnyChanges = true;
+            }
+
+            maxIndex = SceneKeyframes.Count - 1;
+
+            if (SceneKeyframes[maxIndex].GetIntervalEndValue() < 1)
+            {
+                SceneKeyframes[maxIndex].SetIntervalEndValue(1);
+                AnyChanges = true;
+            }
+
+            double prevUpper = 0;
+            for (int i=0; i< SceneKeyframes.Count; i++)
+            {
+                double lower = SceneKeyframes[i].GetIntervalStartValue();
+                double upper = SceneKeyframes[i].GetIntervalEndValue();
+
+                if (lower != prevUpper)
+                {
+                    SceneKeyframes[i].SetIntervalStartValue(prevUpper);
+                    lower = prevUpper;
+                    AnyChanges = true;
+                }
+
+                if (upper < lower)
+                {
+                    SceneKeyframes[i].SetIntervalEndValue(lower);
+                    AnyChanges = true;
+                }
+
+                prevUpper = SceneKeyframes[i].GetIntervalEndValue();
+            }
         }
     }
 }
