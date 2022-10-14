@@ -254,27 +254,27 @@ namespace FracViewWpf.ViewModels
         public MainWindowViewModel(IScene scene)
         {
             OriginX = decimal.Parse("0.29999999799999");
-            _textOriginX = OriginX.ToString();
+            TextOriginX = OriginX.ToString();
 
             OriginY = decimal.Parse("0.4491000000000016");
-            _textOriginY = OriginY.ToString();
+            TextOriginY = OriginY.ToString();
 
             FractalWidth = decimal.Parse("0.00250");
-            _textFractalWidth = FractalWidth.ToString();
+            TextFractalWidth = FractalWidth.ToString();
 
             FractalHeight = decimal.Parse("0.00250");
-            _textFractalHeight = FractalHeight.ToString();
+            TextFractalHeight = FractalHeight.ToString();
 
             StepWidth = 512;
             ImageWidth = StepWidth;
-            _textStepWidth = StepWidth.ToString();
+            TextStepWidth = StepWidth.ToString();
 
             StepHeight = 512;
             ImageHeight = StepHeight;
-            _textStepHeight = StepHeight.ToString();
+            TextStepHeight = StepHeight.ToString();
 
             MaxIterations = 1000;
-            _textMaxIterations = MaxIterations.ToString();
+            TextMaxIterations = MaxIterations.ToString();
 
             UseHistogram = true;
 

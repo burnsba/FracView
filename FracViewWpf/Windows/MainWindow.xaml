@@ -4,13 +4,20 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:FracViewWpf.Windows"
+        xmlns:converters="clr-namespace:FracViewWpf.Converters"
         mc:Ignorable="d"
         xmlns:viewmodels="clr-namespace:FracViewWpf.ViewModels"
         d:DataContext="{d:DesignInstance Type=viewmodels:MainWindowViewModel}"
         Title="MainWindow" Height="450" Width="800"
         SizeChanged="MainWindow_SizeChanged"
         >
-
+    <Window.Resources>
+        <ResourceDictionary>
+            <converters:BoolToInvertedBoolConverter x:Key="BoolToInvertedBoolConverter" />
+            <converters:BoolToValidationColorConverter x:Key="BoolToValidationColorConverter" />
+        </ResourceDictionary>
+    </Window.Resources>
+    
     <DockPanel>
 
         <Menu DockPanel.Dock="Top">
@@ -140,22 +147,50 @@
                 </Grid.ColumnDefinitions>
 
                 <Label Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">Origin.X</Label>
-                <TextBox Grid.Row="0" Grid.Column="1" x:Name="UiOriginX" VerticalAlignment="Center" Text="{Binding Path=TextOriginX}"></TextBox>
+                <TextBox Grid.Row="0" Grid.Column="1" x:Name="UiOriginX" VerticalAlignment="Center" Text="{Binding Path=TextOriginX}">
+                    <TextBox.Background>
+                        <SolidColorBrush Color="{Binding Path=OriginXIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                    </TextBox.Background>
+                </TextBox>
                 <Label Grid.Row="0" Grid.Column="2" VerticalAlignment="Center">Origin.Y</Label>
-                <TextBox Grid.Row="0" Grid.Column="3" x:Name="UiOriginY" VerticalAlignment="Center" Text="{Binding Path=TextOriginY}"></TextBox>
+                <TextBox Grid.Row="0" Grid.Column="3" x:Name="UiOriginY" VerticalAlignment="Center" Text="{Binding Path=TextOriginY}">
+                    <TextBox.Background>
+                        <SolidColorBrush Color="{Binding Path=OriginYIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                    </TextBox.Background>
+                </TextBox>
 
                 <Label Grid.Row="1" Grid.Column="0" VerticalAlignment="Center">Fractal Width</Label>
-                <TextBox Grid.Row="1" Grid.Column="1" x:Name="UiOriginFractalWidth" VerticalAlignment="Center" Text="{Binding Path=TextFractalWidth}"></TextBox>
+                <TextBox Grid.Row="1" Grid.Column="1" x:Name="UiOriginFractalWidth" VerticalAlignment="Center" Text="{Binding Path=TextFractalWidth}">
+                    <TextBox.Background>
+                        <SolidColorBrush Color="{Binding Path=FractalWidthIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                    </TextBox.Background>
+                </TextBox>
                 <Label Grid.Row="1" Grid.Column="2" VerticalAlignment="Center">Fractal Height</Label>
-                <TextBox Grid.Row="1" Grid.Column="3" x:Name="UiOriginFractalHeight" VerticalAlignment="Center" Text="{Binding Path=TextFractalHeight}"></TextBox>
+                <TextBox Grid.Row="1" Grid.Column="3" x:Name="UiOriginFractalHeight" VerticalAlignment="Center" Text="{Binding Path=TextFractalHeight}">
+                    <TextBox.Background>
+                        <SolidColorBrush Color="{Binding Path=FractalHeightIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                    </TextBox.Background>
+                </TextBox>
 
                 <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center">Pixel Width</Label>
-                <TextBox Grid.Row="2" Grid.Column="1" x:Name="UiPixelWidth" VerticalAlignment="Center" Text="{Binding Path=TextStepWidth}"></TextBox>
+                <TextBox Grid.Row="2" Grid.Column="1" x:Name="UiPixelWidth" VerticalAlignment="Center" Text="{Binding Path=TextStepWidth}">
+                    <TextBox.Background>
+                        <SolidColorBrush Color="{Binding Path=StepWidthIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                    </TextBox.Background>
+                </TextBox>
                 <Label Grid.Row="2" Grid.Column="2" VerticalAlignment="Center">Pixel Height</Label>
-                <TextBox Grid.Row="2" Grid.Column="3" x:Name="UiPixelHeight" VerticalAlignment="Center" Text="{Binding Path=TextStepHeight}"></TextBox>
+                <TextBox Grid.Row="2" Grid.Column="3" x:Name="UiPixelHeight" VerticalAlignment="Center" Text="{Binding Path=TextStepHeight}">
+                    <TextBox.Background>
+                        <SolidColorBrush Color="{Binding Path=StepHeightIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                    </TextBox.Background>
+                </TextBox>
 
                 <Label Grid.Row="3" Grid.Column="0" VerticalAlignment="Center">Max Iterations</Label>
-                <TextBox Grid.Row="3" Grid.Column="1" x:Name="UiMaxIterations" VerticalAlignment="Center" Text="{Binding Path=TextMaxIterations}"></TextBox>
+                <TextBox Grid.Row="3" Grid.Column="1" x:Name="UiMaxIterations" VerticalAlignment="Center" Text="{Binding Path=TextMaxIterations}">
+                    <TextBox.Background>
+                        <SolidColorBrush Color="{Binding Path=MaxIterationsIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                    </TextBox.Background>
+                </TextBox>
                 <Label Grid.Row="3" Grid.Column="2" VerticalAlignment="Center">Histogram</Label>
                 <CheckBox Grid.Row="3" Grid.Column="3" x:Name="UiUseHistogram" VerticalAlignment="Center" IsChecked="{Binding Path=UseHistogram}"></CheckBox>
 
