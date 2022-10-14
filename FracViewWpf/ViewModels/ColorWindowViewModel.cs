@@ -140,7 +140,7 @@ namespace FracViewWpf.ViewModels
                     // If the start value got smaller, push this down to earlier keyframes as a 
                     // new max value.
                     if (e.PropertyName == ColorKeyframeViewModel.RefIntervalStartProperty
-                        && newValue < oldValue)
+                        /*&& newValue < oldValue*/)
                     {
                         if (startIndex > -1)
                         {
@@ -169,7 +169,7 @@ namespace FracViewWpf.ViewModels
                     // Else if the end value got bigger, push this forward to later keyframes
                     // as a new min value.
                     else if (e.PropertyName == ColorKeyframeViewModel.RefIntervalEndProperty
-                        && newValue > oldValue)
+                        /*&& newValue > oldValue*/)
                     {
                         if (startIndex > -1)
                         {
