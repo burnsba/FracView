@@ -241,6 +241,17 @@ namespace FracViewWpf.ViewModels
         public double StatusBarProgressValue { get; private set; }
         public string StatusBarElapsedText { get; private set; }
 
+        public bool HasRunData
+        {
+            get => _hasRunData;
+
+            set
+            {
+                _hasRunData = value;
+                OnPropertyChanged(nameof(HasRunData));
+            }
+        }
+
         public ICommand ComputeCommand { get; set; }
 
         public ICommand ShowColorsWindowCommand { get; set; }
@@ -280,7 +291,7 @@ namespace FracViewWpf.ViewModels
 
             ComputeCommand = new CommandHandler(ComputeCommandHandler);
             ShowColorsWindowCommand = new CommandHandler(ShowColorsWindowCommandHandler);
-            RecolorCommand = new CommandHandler(RecolorCommandHandler);
+            RecolorCommand = new CommandHandler(RecolorCommandHandler, () => HasRunData);
 
             ComputeCommandText = GetComputeCommandText();
 
@@ -400,12 +411,12 @@ namespace FracViewWpf.ViewModels
             };
 
             _algorithmTimer = Stopwatch.StartNew();
-            _hasRunData = false;
+            HasRunData = false;
 
             Task.Factory.StartNew(() =>
                 {
                     _algorithm.EvaluatePoints(_cancellationToken.Token);
-                    _hasRunData = true;
+                    HasRunData = true;
                 })
                 .ContinueWith(err1 => Workspace.Instance.ShowTaskException(err1, "Error evaluating points"), TaskContinuationOptions.OnlyOnFaulted)
                 .ContinueWith(t1 =>
