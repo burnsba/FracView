@@ -96,9 +96,74 @@ namespace FracViewWpf.ViewModels
             AnyChanges = false;
         }
 
-        private void SetAnyChanges(object? sender, EventArgs e)
+        private void SetAnyChanges(object? sender, ColorKeyframeChangeEventArgs e)
         {
             AnyChanges = true;
+
+            // If the interval start/end value changed, apply this to other keyframes as a new max/min value (if needed).
+            // This assumes the value is valid.
+            if (!object.ReferenceEquals(null, e))
+            {
+                if (e.PropetyType == typeof(double))
+                {
+                    double oldValue = (double)e.OldValue;
+                    double newValue = (double)e.NewValue;
+
+                    int startIndex = -1;
+                    if (!object.ReferenceEquals(null, sender) && sender.GetType() == typeof(ColorKeyframeViewModel))
+                    {
+                        var ckvm = (ColorKeyframeViewModel)sender;
+                        startIndex = ckvm.Index;
+                    }
+
+                    // If the start value got smaller, push this down to earlier keyframes as a 
+                    // new max value.
+                    if (e.PropertyName == ColorKeyframeViewModel.RefIntervalStartProperty
+                        && newValue < oldValue)
+                    {
+                        if (startIndex > -1)
+                        {
+                            // Start changing values on the keyframe before the current one.
+                            startIndex--;
+                            for (int i=startIndex; i>= 0; i--)
+                            {
+                                SceneKeyframes[i].QuietClampBelowMax(newValue);
+                            }
+                        }
+                        else
+                        {
+                            // Can't determine index, so update everything.
+                            foreach (var kf in SceneKeyframes)
+                            {
+                                kf.QuietClampBelowMax(newValue);
+                            }
+                        }
+                    }
+                    // Else if the end value got bigger, push this forward to later keyframes
+                    // as a new min value.
+                    else if (e.PropertyName == ColorKeyframeViewModel.RefIntervalEndProperty
+                        && newValue > oldValue)
+                    {
+                        if (startIndex > -1)
+                        {
+                            // Start changing values on the keyframe after the current one.
+                            startIndex++;
+                            for (int i = startIndex; i < SceneKeyframes.Count; i++)
+                            {
+                                SceneKeyframes[i].QuietClampAboveMin(newValue);
+                            }
+                        }
+                        else
+                        {
+                            // Can't determine index, so update everything.
+                            foreach (var kf in SceneKeyframes)
+                            {
+                                kf.QuietClampAboveMin(newValue);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

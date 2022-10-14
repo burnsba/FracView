@@ -22,6 +22,11 @@ namespace FracViewWpf.ViewModels
         private bool _intervalStartIsValid = true;
         private bool _intervalEndIsValid = true;
 
+        public const string RefIntervalStartProperty = "IntervalStart";
+        public const string RefIntervalEndProperty = "IntervalEnd";
+        public const double MaxValidIntervalValue = 1.0;
+        public const double MinValidIntervalValue = 0;
+
         public int Index { get; set; }
 
         public string IntervalStartText
@@ -30,15 +35,22 @@ namespace FracViewWpf.ViewModels
 
             set
             {
+                double oldValue = _intervalStart;
                 double d;
                 if (double.TryParse(value, out d))
                 {
-                    if (d >= 0 && d <= 1)
+                    if (d >= MinValidIntervalValue && d <= MaxValidIntervalValue)
                     {
                         _intervalStart = d;
                         OnPropertyChanged(nameof(IntervalStartText));
                         OnIntervalStartChanged();
-                        OnPostChanged();
+                        OnPostChanged(new ColorKeyframeChangeEventArgs()
+                        {
+                            PropertyName = RefIntervalStartProperty,
+                            PropetyType = typeof(double),
+                            OldValue = oldValue,
+                            NewValue = d,
+                        });
 
                         IntervalStartIsValid = true;
                     }
@@ -71,15 +83,22 @@ namespace FracViewWpf.ViewModels
 
             set
             {
+                double oldValue = _intervalEnd;
                 double d;
                 if (double.TryParse(value, out d))
                 {
-                    if (d >= 0 && d <= 1)
+                    if (d >= MinValidIntervalValue && d <= MaxValidIntervalValue)
                     {
                         _intervalEnd = d;
                         OnPropertyChanged(nameof(IntervalEndText));
                         OnIntervalEndChanged();
-                        OnPostChanged();
+                        OnPostChanged(new ColorKeyframeChangeEventArgs()
+                        {
+                            PropertyName = RefIntervalEndProperty,
+                            PropetyType = typeof(double),
+                            OldValue = oldValue,
+                            NewValue = d,
+                        });
 
                         IntervalEndIsValid = true;
                     }
@@ -115,9 +134,16 @@ namespace FracViewWpf.ViewModels
 
             set
             {
+                Color oldValue = _valueStart;
                 _valueStart = value;
                 OnPropertyChanged(nameof(ValueStart));
-                OnPostChanged();
+                OnPostChanged(new ColorKeyframeChangeEventArgs()
+                {
+                    PropertyName = nameof(ValueStart),
+                    PropetyType = typeof(Color),
+                    OldValue = oldValue,
+                    NewValue = value,
+                });
             }
         }
 
@@ -130,15 +156,22 @@ namespace FracViewWpf.ViewModels
 
             set
             {
+                Color oldValue = _valueEnd;
                 _valueEnd = value;
                 OnPropertyChanged(nameof(ValueEnd));
-                OnPostChanged();
+                OnPostChanged(new ColorKeyframeChangeEventArgs()
+                {
+                    PropertyName = nameof(ValueEnd),
+                    PropetyType = typeof(Color),
+                    OldValue = oldValue,
+                    NewValue = value,
+                });
             }
         }
 
         public event EventHandler<EventArgs>? IntervalStartChanged;
         public event EventHandler<EventArgs>? IntervalEndChanged;
-        public event EventHandler<EventArgs>? PostChanged;
+        public event EventHandler<ColorKeyframeChangeEventArgs>? PostChanged;
 
         public ColorKeyframeViewModel()
         {
@@ -164,6 +197,36 @@ namespace FracViewWpf.ViewModels
             };
         }
 
+        public void QuietClampBelowMax(double d)
+        {
+            if (_intervalEnd > d && _intervalEndIsValid)
+            {
+                _intervalEnd = d;
+                OnPropertyChanged(nameof(IntervalEndText));
+            }
+
+            if (_intervalStart > d && _intervalStartIsValid)
+            {
+                _intervalStart = d;
+                OnPropertyChanged(nameof(IntervalStartText));
+            }
+        }
+
+        public void QuietClampAboveMin(double d)
+        {
+            if (_intervalEnd < d && _intervalEndIsValid)
+            {
+                _intervalEnd = d;
+                OnPropertyChanged(nameof(IntervalEndText));
+            }
+
+            if (_intervalStart < d && _intervalStartIsValid)
+            {
+                _intervalStart = d;
+                OnPropertyChanged(nameof(IntervalStartText));
+            }
+        }
+
         protected void OnIntervalStartChanged()
         {
             IntervalStartChanged?.Invoke(this, new EventArgs());
@@ -177,9 +240,9 @@ namespace FracViewWpf.ViewModels
         /// <summary>
         /// Fired when any property changes value. Fires after specific property changed events.
         /// </summary>
-        protected void OnPostChanged()
+        protected void OnPostChanged(ColorKeyframeChangeEventArgs args)
         {
-            PostChanged?.Invoke(this, new EventArgs());
+            PostChanged?.Invoke(this, args);
         }
 
         public override string ToString()
