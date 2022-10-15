@@ -70,7 +70,7 @@
         <Grid >
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"></RowDefinition>
-                <RowDefinition Height="130px" MinHeight="130px"></RowDefinition>
+                <RowDefinition Height="150px" MinHeight="150px"></RowDefinition>
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions></Grid.ColumnDefinitions>
@@ -83,35 +83,41 @@
                     <ColumnDefinition Width="*"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
 
-                <Grid
-                Grid.Column="0"
-                VerticalAlignment="Bottom"
-                >
-                    <StackPanel Orientation="Vertical">
-                        <TextBlock>Pixel Left/Top</TextBlock>
-                        <TextBox Text="{Binding Path=TextPixelLeftTop}" IsReadOnly="True"></TextBox>
-                        <TextBlock>Pixel Center</TextBlock>
-                        <TextBox Text="{Binding Path=TextPixelCenter}" IsReadOnly="True"></TextBox>
-                        <TextBlock>Pixel Width/Height</TextBlock>
-                        <TextBox Text="{Binding Path=TextPixelWidthHeight}" IsReadOnly="True"></TextBox>
+                <Border 
+                    Grid.Column="0"
+                    VerticalAlignment="Bottom"
+                    BorderBrush="Silver"
+                    BorderThickness="1"
+                    Padding="4">
+                    <Grid>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock>Pixel Left/Top</TextBlock>
+                                <TextBox Text="{Binding Path=TextPixelLeftTop}" IsReadOnly="True"></TextBox>
+                                <TextBlock>Pixel Center</TextBlock>
+                                <TextBox Text="{Binding Path=TextPixelCenter}" IsReadOnly="True"></TextBox>
+                                <TextBlock>Pixel Width/Height</TextBlock>
+                                <TextBox Text="{Binding Path=TextPixelWidthHeight}" IsReadOnly="True"></TextBox>
                         
-                        <TextBlock>Fractal Left/Top</TextBlock>
-                        <TextBox Text="{Binding Path=TextFractalLeftTop}" IsReadOnly="True"></TextBox>
-                        <TextBlock>Fractal Center</TextBlock>
-                        <TextBox Text="{Binding Path=TextFractalCenter}" IsReadOnly="True"></TextBox>
-                        <TextBlock>Fractal Width/Height</TextBlock>
-                        <TextBox Text="{Binding Path=TextFractalWidthHeight}" IsReadOnly="True"></TextBox>
+                                <TextBlock>Fractal Left/Top</TextBlock>
+                                <TextBox Text="{Binding Path=TextFractalLeftTop}" IsReadOnly="True"></TextBox>
+                                <TextBlock>Fractal Center</TextBlock>
+                                <TextBox Text="{Binding Path=TextFractalCenter}" IsReadOnly="True"></TextBox>
+                                <TextBlock>Fractal Width/Height</TextBlock>
+                                <TextBox Text="{Binding Path=TextFractalWidthHeight}" IsReadOnly="True"></TextBox>
                         
-                        <TextBlock>Mouse Pixel X/Y</TextBlock>
-                        <TextBox Text="{Binding Path=TextMousePixelXy}" IsReadOnly="True"></TextBox>
-                        <TextBlock>Mouse Fractal X/Y</TextBlock>
-                        <TextBox Text="{Binding Path=TextMouseFractalXy}" IsReadOnly="True"></TextBox>
+                                <TextBlock>Mouse Pixel X/Y</TextBlock>
+                                <TextBox Text="{Binding Path=TextMousePixelXy}" IsReadOnly="True"></TextBox>
+                                <TextBlock>Mouse Fractal X/Y</TextBlock>
+                                <TextBox Text="{Binding Path=TextMouseFractalXy}" IsReadOnly="True"></TextBox>
 
-                        <Button MinWidth="32" Command="{Binding Path=TargetFromViewCommand}">
-                            <TextBlock Padding="6,0,6,0">Target</TextBlock>
-                        </Button>
-                    </StackPanel>
-                </Grid>
+                                <Button MinWidth="32" Command="{Binding Path=TargetFromViewCommand}">
+                                    <TextBlock Padding="6,0,6,0">Target</TextBlock>
+                                </Button>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
 
                 <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"></GridSplitter>
 
@@ -154,105 +160,110 @@
                 </Border>
             </Grid>
 
-            
 
-            <Grid
+
+            <Border
                 Grid.Row="1"
-                VerticalAlignment="Bottom">
+                VerticalAlignment="Bottom"
+                BorderBrush="Silver"
+                BorderThickness="1"
+                Padding="4">
+                <Grid>
 
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="3*"></RowDefinition>
-                    <RowDefinition Height="3*"></RowDefinition>
-                    <RowDefinition Height="3*"></RowDefinition>
-                    <RowDefinition Height="3*"></RowDefinition>
-                    <RowDefinition Height="3*"></RowDefinition>
-                </Grid.RowDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="3*"></RowDefinition>
+                        <RowDefinition Height="3*"></RowDefinition>
+                        <RowDefinition Height="3*"></RowDefinition>
+                        <RowDefinition Height="3*"></RowDefinition>
+                        <RowDefinition Height="3*"></RowDefinition>
+                    </Grid.RowDefinitions>
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"></ColumnDefinition>
-                    <ColumnDefinition Width="3*"></ColumnDefinition>
-                    <ColumnDefinition Width="1*"></ColumnDefinition>
-                    <ColumnDefinition Width="3*"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"></ColumnDefinition>
+                        <ColumnDefinition Width="3*"></ColumnDefinition>
+                        <ColumnDefinition Width="1*"></ColumnDefinition>
+                        <ColumnDefinition Width="3*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
 
-                <Label Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">Origin.X</Label>
-                <TextBox Grid.Row="0" Grid.Column="1" x:Name="UiOriginX" VerticalAlignment="Center" Text="{Binding Path=TextOriginX}">
-                    <TextBox.Background>
-                        <SolidColorBrush Color="{Binding Path=OriginXIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
-                    </TextBox.Background>
-                </TextBox>
-                <Label Grid.Row="0" Grid.Column="2" VerticalAlignment="Center">Origin.Y</Label>
-                <TextBox Grid.Row="0" Grid.Column="3" x:Name="UiOriginY" VerticalAlignment="Center" Text="{Binding Path=TextOriginY}">
-                    <TextBox.Background>
-                        <SolidColorBrush Color="{Binding Path=OriginYIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
-                    </TextBox.Background>
-                </TextBox>
+                    <Label Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">Origin.X</Label>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="UiOriginX" VerticalAlignment="Center" Text="{Binding Path=TextOriginX}">
+                        <TextBox.Background>
+                            <SolidColorBrush Color="{Binding Path=OriginXIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                        </TextBox.Background>
+                    </TextBox>
+                    <Label Grid.Row="0" Grid.Column="2" VerticalAlignment="Center">Origin.Y</Label>
+                    <TextBox Grid.Row="0" Grid.Column="3" x:Name="UiOriginY" VerticalAlignment="Center" Text="{Binding Path=TextOriginY}">
+                        <TextBox.Background>
+                            <SolidColorBrush Color="{Binding Path=OriginYIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                        </TextBox.Background>
+                    </TextBox>
 
-                <Label Grid.Row="1" Grid.Column="0" VerticalAlignment="Center">Fractal Width</Label>
-                <TextBox Grid.Row="1" Grid.Column="1" x:Name="UiOriginFractalWidth" VerticalAlignment="Center" Text="{Binding Path=TextFractalWidth}">
-                    <TextBox.Background>
-                        <SolidColorBrush Color="{Binding Path=FractalWidthIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
-                    </TextBox.Background>
-                </TextBox>
-                <Label Grid.Row="1" Grid.Column="2" VerticalAlignment="Center">Fractal Height</Label>
-                <TextBox Grid.Row="1" Grid.Column="3" x:Name="UiOriginFractalHeight" VerticalAlignment="Center" Text="{Binding Path=TextFractalHeight}">
-                    <TextBox.Background>
-                        <SolidColorBrush Color="{Binding Path=FractalHeightIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
-                    </TextBox.Background>
-                </TextBox>
+                    <Label Grid.Row="1" Grid.Column="0" VerticalAlignment="Center">Fractal Width</Label>
+                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="UiOriginFractalWidth" VerticalAlignment="Center" Text="{Binding Path=TextFractalWidth}">
+                        <TextBox.Background>
+                            <SolidColorBrush Color="{Binding Path=FractalWidthIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                        </TextBox.Background>
+                    </TextBox>
+                    <Label Grid.Row="1" Grid.Column="2" VerticalAlignment="Center">Fractal Height</Label>
+                    <TextBox Grid.Row="1" Grid.Column="3" x:Name="UiOriginFractalHeight" VerticalAlignment="Center" Text="{Binding Path=TextFractalHeight}">
+                        <TextBox.Background>
+                            <SolidColorBrush Color="{Binding Path=FractalHeightIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                        </TextBox.Background>
+                    </TextBox>
 
-                <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center">Step Width</Label>
-                <TextBox Grid.Row="2" Grid.Column="1" x:Name="UiPixelWidth" VerticalAlignment="Center" Text="{Binding Path=TextStepWidth}">
-                    <TextBox.Background>
-                        <SolidColorBrush Color="{Binding Path=StepWidthIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
-                    </TextBox.Background>
-                </TextBox>
-                <Label Grid.Row="2" Grid.Column="2" VerticalAlignment="Center">Step Height</Label>
-                <TextBox Grid.Row="2" Grid.Column="3" x:Name="UiPixelHeight" VerticalAlignment="Center" Text="{Binding Path=TextStepHeight}">
-                    <TextBox.Background>
-                        <SolidColorBrush Color="{Binding Path=StepHeightIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
-                    </TextBox.Background>
-                </TextBox>
+                    <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center">Step Width</Label>
+                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="UiPixelWidth" VerticalAlignment="Center" Text="{Binding Path=TextStepWidth}">
+                        <TextBox.Background>
+                            <SolidColorBrush Color="{Binding Path=StepWidthIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                        </TextBox.Background>
+                    </TextBox>
+                    <Label Grid.Row="2" Grid.Column="2" VerticalAlignment="Center">Step Height</Label>
+                    <TextBox Grid.Row="2" Grid.Column="3" x:Name="UiPixelHeight" VerticalAlignment="Center" Text="{Binding Path=TextStepHeight}">
+                        <TextBox.Background>
+                            <SolidColorBrush Color="{Binding Path=StepHeightIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                        </TextBox.Background>
+                    </TextBox>
 
-                <Label Grid.Row="3" Grid.Column="0" VerticalAlignment="Center">Max Iterations</Label>
-                <TextBox Grid.Row="3" Grid.Column="1" x:Name="UiMaxIterations" VerticalAlignment="Center" Text="{Binding Path=TextMaxIterations}">
-                    <TextBox.Background>
-                        <SolidColorBrush Color="{Binding Path=MaxIterationsIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
-                    </TextBox.Background>
-                </TextBox>
-                <Label Grid.Row="3" Grid.Column="2" VerticalAlignment="Center">Histogram</Label>
-                <CheckBox Grid.Row="3" Grid.Column="3" x:Name="UiUseHistogram" VerticalAlignment="Center" IsChecked="{Binding Path=UseHistogram}"></CheckBox>
+                    <Label Grid.Row="3" Grid.Column="0" VerticalAlignment="Center">Max Iterations</Label>
+                    <TextBox Grid.Row="3" Grid.Column="1" x:Name="UiMaxIterations" VerticalAlignment="Center" Text="{Binding Path=TextMaxIterations}">
+                        <TextBox.Background>
+                            <SolidColorBrush Color="{Binding Path=MaxIterationsIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                        </TextBox.Background>
+                    </TextBox>
+                    <Label Grid.Row="3" Grid.Column="2" VerticalAlignment="Center">Histogram</Label>
+                    <CheckBox Grid.Row="3" Grid.Column="3" x:Name="UiUseHistogram" VerticalAlignment="Center" IsChecked="{Binding Path=UseHistogram}"></CheckBox>
 
-                <Label Grid.Row="4" Grid.Column="0" VerticalAlignment="Center">Colors</Label>
-                <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
-                    <Button MinWidth="32" Command="{Binding Path=ShowColorsWindowCommand}">
-                        <TextBlock Padding="6,0,6,0">Manage</TextBlock>
-                    </Button>
-                    <Button MinWidth="32" Command="{Binding Path=RecolorCommand}" Margin="14,0,0,0">
-                        <TextBlock Padding="6,0,6,0">Recolor</TextBlock>
-                    </Button>
-                </StackPanel>
-                <Label Grid.Row="4" Grid.Column="2" VerticalAlignment="Center"></Label>
+                    <Label Grid.Row="4" Grid.Column="0" VerticalAlignment="Center">Colors</Label>
+                    <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+                        <Button MinWidth="32" Command="{Binding Path=ShowColorsWindowCommand}">
+                            <TextBlock Padding="6,0,6,0">Manage</TextBlock>
+                        </Button>
+                        <Button MinWidth="32" Command="{Binding Path=RecolorCommand}" Margin="14,0,0,0">
+                            <TextBlock Padding="6,0,6,0">Recolor</TextBlock>
+                        </Button>
+                    </StackPanel>
+                    <Label Grid.Row="4" Grid.Column="2" VerticalAlignment="Center"></Label>
 
-                <StackPanel Grid.Row="4" Grid.Column="3" Orientation="Horizontal">
-                    <Button MinWidth="32" Command="{Binding Path=ComputeCommand}">
-                        <TextBlock Text="{Binding Path=ComputeCommandText}" Padding="6,0,6,0"></TextBlock>
-                    </Button>
+                    <StackPanel Grid.Row="4" Grid.Column="3" Orientation="Horizontal">
+                        <Button MinWidth="32" Command="{Binding Path=ComputeCommand}">
+                            <TextBlock Text="{Binding Path=ComputeCommandText}" Padding="6,0,6,0"></TextBlock>
+                        </Button>
 
-                    <Label Margin="6,0,0,0"></Label>
+                        <Label Margin="6,0,0,0"></Label>
                     
-                    <Button MinWidth="32" Command="{Binding Path=ResetToDefaultCommand}">
-                        <TextBlock Padding="6,0,6,0">Reset to default</TextBlock>
-                    </Button>
+                        <Button MinWidth="32" Command="{Binding Path=ResetToDefaultCommand}">
+                            <TextBlock Padding="6,0,6,0">Reset to default</TextBlock>
+                        </Button>
 
-                    <Label Margin="6,0,0,0"></Label>
+                        <Label Margin="6,0,0,0"></Label>
 
-                    <Button MinWidth="32" Command="{Binding Path=ResetToPreviousCommand}">
-                        <TextBlock Padding="6,0,6,0">Reset to previous</TextBlock>
-                    </Button>
-                </StackPanel>
+                        <Button MinWidth="32" Command="{Binding Path=ResetToPreviousCommand}">
+                            <TextBlock Padding="6,0,6,0">Reset to previous</TextBlock>
+                        </Button>
+                    </StackPanel>
 
-            </Grid>
+                </Grid>
+            </Border>
 
         </Grid> 
 
