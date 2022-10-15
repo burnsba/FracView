@@ -38,7 +38,10 @@ namespace FracView.Gfx
                 throw new InvalidOperationException("keyframe not found for value");
             }
 
-            int rval = (int)((double)(kf.ValueEnd.Red - kf.ValueStart.Red) * value) + kf.ValueStart.Red;
+            var range = kf.IntervalEnd - kf.IntervalStart;
+            var scaledValue = (value - kf.IntervalStart) / range;
+
+            int rval = (int)((double)(kf.ValueEnd.Red - kf.ValueStart.Red) * scaledValue) + kf.ValueStart.Red;
             if (rval < 0)
             {
                 rval = 0;
@@ -48,7 +51,7 @@ namespace FracView.Gfx
                 rval = 255;
             }
 
-            int gval = (int)((double)(kf.ValueEnd.Green - kf.ValueStart.Green) * value) + kf.ValueStart.Green;
+            int gval = (int)((double)(kf.ValueEnd.Green - kf.ValueStart.Green) * scaledValue) + kf.ValueStart.Green;
             if (gval < 0)
             {
                 gval = 0;
@@ -58,7 +61,7 @@ namespace FracView.Gfx
                 gval = 255;
             }
 
-            int bval = (int)((double)(kf.ValueEnd.Blue - kf.ValueStart.Blue) * value) + kf.ValueStart.Blue;
+            int bval = (int)((double)(kf.ValueEnd.Blue - kf.ValueStart.Blue) * scaledValue) + kf.ValueStart.Blue;
             if (bval < 0)
             {
                 bval = 0;
