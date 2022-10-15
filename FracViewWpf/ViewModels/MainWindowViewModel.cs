@@ -26,6 +26,7 @@ namespace FracViewWpf.ViewModels
         private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
         private ComputeState _computeState = ComputeState.NotRunning;
         private bool _hasRunData = false;
+        private bool _anyChangeForReset = false;
 
         private int _outputIntervalSec = 1;
 
@@ -35,6 +36,9 @@ namespace FracViewWpf.ViewModels
         private IScene _scene;
 
         private ImageSource _imageSource;
+
+        private RunSettings _previousRunData;
+        private RunSettings _uiRunData = new RunSettings();
 
         private string _textOriginX;
         private string _textOriginY;
@@ -54,10 +58,12 @@ namespace FracViewWpf.ViewModels
 
                 if (decimal.TryParse(_textOriginX, out decimal d))
                 {
-                    OriginX = d;
+                    _uiRunData.OriginX = d;
                     OriginXIsValid = true;
 
-                    OnPropertyChanged(nameof(OriginX));
+                    AnyChangeForReset = true;
+
+                    OnPropertyChanged(nameof(TextOriginX));
                 }
                 else
                 {
@@ -78,10 +84,12 @@ namespace FracViewWpf.ViewModels
 
                 if (decimal.TryParse(_textOriginY, out decimal d))
                 {
-                    OriginY = d;
+                    _uiRunData.OriginY = d;
                     OriginYIsValid = true;
-                    
-                    OnPropertyChanged(nameof(OriginY));
+
+                    AnyChangeForReset = true;
+
+                    OnPropertyChanged(nameof(TextOriginY));
                 }
                 else
                 {
@@ -102,10 +110,12 @@ namespace FracViewWpf.ViewModels
 
                 if (decimal.TryParse(_textFractalWidth, out decimal d))
                 {
-                    FractalWidth = d;
+                    _uiRunData.FractalWidth = d;
                     FractalWidthIsValid = true;
-                    
-                    OnPropertyChanged(nameof(FractalWidth));
+
+                    AnyChangeForReset = true;
+
+                    OnPropertyChanged(nameof(TextFractalWidth));
                 }
                 else
                 {
@@ -126,10 +136,12 @@ namespace FracViewWpf.ViewModels
 
                 if (decimal.TryParse(_textFractalHeight, out decimal d))
                 {
-                    FractalHeight = d;
+                    _uiRunData.FractalHeight = d;
                     FractalHeightIsValid = true;
 
-                    OnPropertyChanged(nameof(FractalHeight));
+                    AnyChangeForReset = true;
+
+                    OnPropertyChanged(nameof(TextFractalHeight));
                 }
                 else
                 {
@@ -150,12 +162,14 @@ namespace FracViewWpf.ViewModels
 
                 if (int.TryParse(_textStepWidth, out int i))
                 {
-                    StepWidth = i;
+                    _uiRunData.StepWidth = i;
                     StepWidthIsValid = true;
 
                     RecomputeImageScreenDimensions();
 
-                    OnPropertyChanged(nameof(StepWidth));
+                    AnyChangeForReset = true;
+
+                    OnPropertyChanged(nameof(TextStepWidth));
                 }
                 else
                 {
@@ -176,12 +190,14 @@ namespace FracViewWpf.ViewModels
 
                 if (int.TryParse(_textStepHeight, out int i))
                 {
-                    StepHeight = i;
+                    _uiRunData.StepHeight = i;
                     StepHeightIsValid = true;
 
                     RecomputeImageScreenDimensions();
 
-                    OnPropertyChanged(nameof(StepHeight));
+                    AnyChangeForReset = true;
+
+                    OnPropertyChanged(nameof(TextStepHeight));
                 }
                 else
                 {
@@ -202,10 +218,12 @@ namespace FracViewWpf.ViewModels
 
                 if (int.TryParse(_textMaxIterations, out int i))
                 {
-                    MaxIterations = i;
+                    _uiRunData.MaxIterations = i;
                     MaxIterationsIsValid = true;
 
-                    OnPropertyChanged(nameof(MaxIterations));
+                    AnyChangeForReset = true;
+
+                    OnPropertyChanged(nameof(TextMaxIterations));
                 }
                 else
                 {
@@ -216,14 +234,11 @@ namespace FracViewWpf.ViewModels
             }
         }
 
-        public decimal OriginX { get; private set; }
-        public decimal OriginY { get; private set; }
-        public decimal FractalWidth { get; private set; }
-        public decimal FractalHeight { get; private set; }
-        public int StepWidth { get; private set; }
-        public int StepHeight { get; private set; }
-        public int MaxIterations { get; private set; }
-        public bool UseHistogram { get; set; }
+        public bool UseHistogram
+        {
+            get => _uiRunData.UseHistogram;
+            set => _uiRunData.UseHistogram = value;
+        }
 
         public bool OriginXIsValid { get; private set; }
         public bool OriginYIsValid { get; private set; }
@@ -267,10 +282,23 @@ namespace FracViewWpf.ViewModels
             }
         }
 
+        public bool AnyChangeForReset
+        {
+            get => _anyChangeForReset;
+
+            set
+            {
+                _anyChangeForReset = value;
+                OnPropertyChanged(nameof(AnyChangeForReset));
+            }
+        }
+
         public ICommand ComputeCommand { get; set; }
 
         public ICommand ShowColorsWindowCommand { get; set; }
         public ICommand RecolorCommand { get; set; }
+        public ICommand ResetToDefaultCommand { get; set; }
+        public ICommand ResetToPreviousCommand { get; set; }
 
         public ImageSource ImageSource => _imageSource;
 
@@ -279,30 +307,15 @@ namespace FracViewWpf.ViewModels
 
         public MainWindowViewModel(IScene scene)
         {
-            OriginX = decimal.Parse("-0.5");
-            TextOriginX = OriginX.ToString();
+            ResetToDefaultCommandHandler();
 
-            OriginY = decimal.Parse("0");
-            TextOriginY = OriginY.ToString();
+            ImageWidth = _uiRunData.StepWidth;
+            ImageHeight = _uiRunData.StepHeight;
 
-            FractalWidth = decimal.Parse("4");
-            TextFractalWidth = FractalWidth.ToString();
+            _previousRunData = _uiRunData with { };
 
-            FractalHeight = decimal.Parse("4");
-            TextFractalHeight = FractalHeight.ToString();
-
-            StepWidth = 512;
-            ImageWidth = StepWidth;
-            TextStepWidth = StepWidth.ToString();
-
-            StepHeight = 512;
-            ImageHeight = StepHeight;
-            TextStepHeight = StepHeight.ToString();
-
-            MaxIterations = 100;
-            TextMaxIterations = MaxIterations.ToString();
-
-            UseHistogram = true;
+            ResetToDefaultCommand = new CommandHandler(ResetToDefaultCommandHandler);
+            ResetToPreviousCommand = new CommandHandler(ResetToPreviousCommandHandler, () => HasRunData);
 
             ComputeCommand = new CommandHandler(ComputeCommandHandler);
             ShowColorsWindowCommand = new CommandHandler(ShowColorsWindowCommandHandler);
@@ -316,6 +329,9 @@ namespace FracViewWpf.ViewModels
             {
                 _scene.AddDefaultSceneKeyframes();
             }
+
+            HasRunData = false;
+            AnyChangeForReset = false;
         }
 
         public void RecomputeImageScreenDimensions()
@@ -328,12 +344,12 @@ namespace FracViewWpf.ViewModels
             var displayGridImageHeight = GetParentDisplayGridImageHeight();
             var displayGridImageWidth = GetParentDisplayGridImageWidth();
 
-            if (StepHeight == 0 || displayGridImageHeight == 0)
+            if (_previousRunData.StepHeight == 0 || displayGridImageHeight == 0)
             {
                 return;
             }
 
-            var worldPixelRatio = (double)StepWidth / (double)StepHeight;
+            var worldPixelRatio = (double)_previousRunData.StepWidth / (double)_previousRunData.StepHeight;
             var uiPixelRatio = (double)displayGridImageWidth / (double)displayGridImageHeight;
 
             if (uiPixelRatio >= 1)
@@ -372,10 +388,10 @@ namespace FracViewWpf.ViewModels
             double scalePixelCenterX = 0;
             double scalePixelCenterY = 0;
 
-            decimal scaleFractalLeft = OriginX - (FractalWidth / 2);
-            decimal scaleFractalTop = OriginY - (FractalHeight / 2);
-            decimal scaleFractalWidth = FractalWidth;
-            decimal scaleFractalHeight = FractalHeight;
+            decimal scaleFractalLeft = _previousRunData.OriginX - (_previousRunData.FractalWidth / 2);
+            decimal scaleFractalTop = _previousRunData.OriginY - (_previousRunData.FractalHeight / 2);
+            decimal scaleFractalWidth = _previousRunData.FractalWidth;
+            decimal scaleFractalHeight = _previousRunData.FractalHeight;
 
             if (UiScale > 1)
             {
@@ -389,8 +405,8 @@ namespace FracViewWpf.ViewModels
                 scalePixelTop = scrollInfo.ContentVerticalOffset / UiScale;
             }
 
-            decimal fractalToPixelConversionX = FractalWidth / (decimal)scrollInfo.DesiredSizeX;
-            decimal fractalToPixelConversionY = FractalHeight / (decimal)scrollInfo.DesiredSizeY;
+            decimal fractalToPixelConversionX = _previousRunData.FractalWidth / (decimal)scrollInfo.DesiredSizeX;
+            decimal fractalToPixelConversionY = _previousRunData.FractalHeight / (decimal)scrollInfo.DesiredSizeY;
             decimal scaleFractalCenterX = 0;
             decimal scaleFractalCenterY = 0;
 
@@ -436,11 +452,11 @@ namespace FracViewWpf.ViewModels
             decimal fractalMouseX = 0;
             decimal fractalMouseY = 0;
 
-            decimal fractalToPixelConversionX = FractalWidth / (decimal)scrollInfo.DesiredSizeX;
-            decimal fractalToPixelConversionY = FractalHeight / (decimal)scrollInfo.DesiredSizeY;
+            decimal fractalToPixelConversionX = _previousRunData.FractalWidth / (decimal)scrollInfo.DesiredSizeX;
+            decimal fractalToPixelConversionY = _previousRunData.FractalHeight / (decimal)scrollInfo.DesiredSizeY;
 
-            decimal scaleFractalLeft = OriginX - (FractalWidth / 2);
-            decimal scaleFractalTop = OriginY - (FractalHeight / 2);
+            decimal scaleFractalLeft = _previousRunData.OriginX - (_previousRunData.FractalWidth / 2);
+            decimal scaleFractalTop = _previousRunData.OriginY - (_previousRunData.FractalHeight / 2);
 
             if (UiScale > 1)
             {
@@ -516,18 +532,12 @@ namespace FracViewWpf.ViewModels
 
         private void DoTheAlgorithm()
         {
+            _previousRunData = _uiRunData with { };
+
             _algorithm = new Mandelbrot(
+                _previousRunData,
                 _outputIntervalSec,
-                UiUpdateProgress)
-            {
-                Origin = (OriginX, OriginY),
-                FractalWidth = FractalWidth,
-                FractalHeight = FractalHeight,
-                StepWidth = StepWidth,
-                StepHeight = StepHeight,
-                MaxIterations = MaxIterations,
-                UseHistogram = UseHistogram,
-            };
+                UiUpdateProgress);
 
             _algorithmTimer = Stopwatch.StartNew();
             HasRunData = false;
@@ -574,7 +584,7 @@ namespace FracViewWpf.ViewModels
         {
             var sb = new StringBuilder();
             double donePercent = 0;
-            
+
             if (progress.TotalSteps > 0)
             {
                 donePercent = 100.0 * (double)progress.CurrentStep / (double)progress.TotalSteps;
@@ -597,7 +607,7 @@ namespace FracViewWpf.ViewModels
             sb.Append($"{elapsedSecondsD:N2} sec");
 
             StatusBarCurrentWork = progress.CurrentWorkName ?? String.Empty;
-            
+
             StatusBarProgressValue = donePercent;
             StatusBarElapsedText = sb.ToString();
 
@@ -653,6 +663,63 @@ namespace FracViewWpf.ViewModels
                 })
                 .ContinueWith(err2 => Workspace.Instance.ShowTaskException(err2, "Error finalizing image render"), TaskContinuationOptions.OnlyOnFaulted);
             }
+        }
+
+        private void ResetToDefaultCommandHandler()
+        {
+            _uiRunData.OriginX = decimal.Parse("-0.5");
+            TextOriginX = _uiRunData.OriginX.ToString();
+
+            _uiRunData.OriginY = decimal.Parse("0");
+            TextOriginY = _uiRunData.OriginY.ToString();
+
+            _uiRunData.FractalWidth = decimal.Parse("4");
+            TextFractalWidth = _uiRunData.FractalWidth.ToString();
+
+            _uiRunData.FractalHeight = decimal.Parse("4");
+            TextFractalHeight = _uiRunData.FractalHeight.ToString();
+
+            _uiRunData.StepWidth = 512;
+            TextStepWidth = _uiRunData.StepWidth.ToString();
+
+            _uiRunData.StepHeight = 512;
+            TextStepHeight = _uiRunData.StepHeight.ToString();
+
+            _uiRunData.MaxIterations = 100;
+            TextMaxIterations = _uiRunData.MaxIterations.ToString();
+
+            UseHistogram = true;
+
+            AnyChangeForReset = false;
+        }
+
+        /// <summary>
+        /// Reset position information, but leave histogram unchanged.
+        /// </summary>
+        private void ResetToPreviousCommandHandler()
+        {
+            _uiRunData.OriginX = _previousRunData.OriginX;
+            TextOriginX = _uiRunData.OriginX.ToString();
+
+            _uiRunData.OriginY = _previousRunData.OriginY;
+            TextOriginY = _uiRunData.OriginY.ToString();
+
+            _uiRunData.FractalWidth = _previousRunData.FractalWidth;
+            TextFractalWidth = _uiRunData.FractalWidth.ToString();
+
+            _uiRunData.FractalHeight = _previousRunData.FractalHeight;
+            TextFractalHeight = _uiRunData.FractalHeight.ToString();
+
+            _uiRunData.StepWidth = _previousRunData.StepWidth;
+            TextStepWidth = _uiRunData.StepWidth.ToString();
+
+            _uiRunData.StepHeight = _previousRunData.StepHeight;
+            TextStepHeight = _uiRunData.StepHeight.ToString();
+
+            _uiRunData.MaxIterations = _previousRunData.MaxIterations;
+            TextMaxIterations = _uiRunData.MaxIterations.ToString();
+
+            AnyChangeForReset = false;
         }
 
         private enum ComputeState

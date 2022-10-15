@@ -15,6 +15,12 @@ namespace FracView.Algorithms
             IterationBreak = 12;
         }
 
+        public Mandelbrot(RunSettings settings, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+            : base(settings, progressCallbackIntervalSec, progressCallback)
+        {
+            IterationBreak = 12;
+        }
+
         public override bool IsStable(EvalComplexUnit eu)
         {
             decimal pa_x = eu.WorldPos.Real;

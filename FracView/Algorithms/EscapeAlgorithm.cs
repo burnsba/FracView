@@ -68,6 +68,18 @@ namespace FracView.Algorithms
             ProgressCallbackIntervalSec = progressCallbackIntervalSec;
             ProgressCallback = progressCallback;
         }
+
+        public EscapeAlgorithm(RunSettings settings, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+            : this(progressCallbackIntervalSec, progressCallback)
+        {
+            Origin = (settings.OriginX, settings.OriginY);
+            FractalWidth = settings.FractalWidth;
+            FractalHeight = settings.FractalHeight;
+            StepWidth = settings.StepWidth;
+            StepHeight = settings.StepHeight;
+            MaxIterations = settings.MaxIterations;
+            UseHistogram = settings.UseHistogram;
+        }
        
         public abstract bool IsStable(EvalComplexUnit eu);
 
