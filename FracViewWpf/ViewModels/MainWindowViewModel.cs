@@ -39,6 +39,7 @@ namespace FracViewWpf.ViewModels
 
         private RunSettings _previousRunData;
         private RunSettings _uiRunData = new RunSettings();
+        private RunSettings _targetRunData = new RunSettings();
 
         private string _textOriginX;
         private string _textOriginY;
@@ -299,11 +300,14 @@ namespace FracViewWpf.ViewModels
         public ICommand RecolorCommand { get; set; }
         public ICommand ResetToDefaultCommand { get; set; }
         public ICommand ResetToPreviousCommand { get; set; }
+        public ICommand TargetFromViewCommand { get; set; }
 
         public ImageSource ImageSource => _imageSource;
 
         public Func<double>? GetParentDisplayGridImageWidth { get; set; } = null;
         public Func<double>? GetParentDisplayGridImageHeight { get; set; } = null;
+
+        public event EventHandler<EventArgs>? AfterRunCompleted;
 
         public MainWindowViewModel(IScene scene)
         {
@@ -313,6 +317,8 @@ namespace FracViewWpf.ViewModels
             ImageHeight = _uiRunData.StepHeight;
 
             _previousRunData = _uiRunData with { };
+
+            TargetFromViewCommand = new CommandHandler(TargetFromViewCommandHandler);
 
             ResetToDefaultCommand = new CommandHandler(ResetToDefaultCommandHandler);
             ResetToPreviousCommand = new CommandHandler(ResetToPreviousCommandHandler, () => HasRunData);
@@ -389,7 +395,7 @@ namespace FracViewWpf.ViewModels
             double scalePixelCenterY = 0;
 
             decimal scaleFractalLeft = _previousRunData.OriginX - (_previousRunData.FractalWidth / 2);
-            decimal scaleFractalTop = _previousRunData.OriginY - (_previousRunData.FractalHeight / 2);
+            decimal scaleFractalTop = _previousRunData.OriginY + (_previousRunData.FractalHeight / 2);
             decimal scaleFractalWidth = _previousRunData.FractalWidth;
             decimal scaleFractalHeight = _previousRunData.FractalHeight;
 
@@ -413,14 +419,19 @@ namespace FracViewWpf.ViewModels
             if (UiScale > 1)
             {
                 scaleFractalLeft += (decimal)scalePixelLeft * fractalToPixelConversionX;
-                scaleFractalTop += (decimal)scalePixelTop * fractalToPixelConversionY;
+                scaleFractalTop -= (decimal)scalePixelTop * fractalToPixelConversionY;
             }
 
             scalePixelCenterX = scalePixelLeft + (scalePixelWidth / 2);
             scalePixelCenterY = scalePixelTop + (scalePixelHeight / 2);
 
             scaleFractalCenterX = scaleFractalLeft + (scaleFractalWidth / 2);
-            scaleFractalCenterY = scaleFractalTop + (scaleFractalHeight / 2);
+            scaleFractalCenterY = scaleFractalTop - (scaleFractalHeight / 2);
+
+            _targetRunData.OriginX = scaleFractalCenterX;
+            _targetRunData.OriginY = scaleFractalCenterY;
+            _targetRunData.FractalWidth = scaleFractalWidth;
+            _targetRunData.FractalHeight = scaleFractalHeight;
 
             TextPixelLeftTop = $"{scalePixelLeft:N2}, {scalePixelTop:N2}";
             OnPropertyChanged(nameof(TextPixelLeftTop));
@@ -456,7 +467,7 @@ namespace FracViewWpf.ViewModels
             decimal fractalToPixelConversionY = _previousRunData.FractalHeight / (decimal)scrollInfo.DesiredSizeY;
 
             decimal scaleFractalLeft = _previousRunData.OriginX - (_previousRunData.FractalWidth / 2);
-            decimal scaleFractalTop = _previousRunData.OriginY - (_previousRunData.FractalHeight / 2);
+            decimal scaleFractalTop = _previousRunData.OriginY + (_previousRunData.FractalHeight / 2);
 
             if (UiScale > 1)
             {
@@ -467,14 +478,14 @@ namespace FracViewWpf.ViewModels
                 scaleMousePositionY /= UiScale;
 
                 scaleFractalLeft += (decimal)scalePixelLeft * fractalToPixelConversionX;
-                scaleFractalTop += (decimal)scalePixelTop * fractalToPixelConversionY;
+                scaleFractalTop -= (decimal)scalePixelTop * fractalToPixelConversionY;
             }
 
             mouseX = scalePixelLeft + scaleMousePositionX;
             mouseY = scalePixelTop + scaleMousePositionY;
 
             fractalMouseX = scaleFractalLeft + ((decimal)scaleMousePositionX * fractalToPixelConversionX);
-            fractalMouseY = scaleFractalTop + ((decimal)scaleMousePositionY * fractalToPixelConversionY);
+            fractalMouseY = scaleFractalTop - ((decimal)scaleMousePositionY * fractalToPixelConversionY);
 
             TextMousePixelXy = $"{mouseX:N2}, {mouseY:N2}";
             OnPropertyChanged(nameof(TextMousePixelXy));
@@ -562,7 +573,12 @@ namespace FracViewWpf.ViewModels
                     ComputeCommandText = GetComputeCommandText();
                     OnPropertyChanged(nameof(ComputeCommandText));
                 })
-                .ContinueWith(err3 => Workspace.Instance.ShowTaskException(err3, "Error finalizing image render"), TaskContinuationOptions.OnlyOnFaulted);
+                .ContinueWith(err3 => Workspace.Instance.ShowTaskException(err3, "Error finalizing image render"), TaskContinuationOptions.OnlyOnFaulted)
+                .ContinueWith(events =>
+                {
+                    OnAfterRunCompleted();
+                })
+                .ContinueWith(event_error => Workspace.Instance.ShowTaskException(event_error, "Error firing post events"), TaskContinuationOptions.OnlyOnFaulted);
         }
 
         private void UiStatusCancelRun()
@@ -720,6 +736,19 @@ namespace FracViewWpf.ViewModels
             TextMaxIterations = _uiRunData.MaxIterations.ToString();
 
             AnyChangeForReset = false;
+        }
+
+        private void TargetFromViewCommandHandler()
+        {
+            TextOriginX = _targetRunData.OriginX.ToString();
+            TextOriginY = _targetRunData.OriginY.ToString();
+            TextFractalWidth = _targetRunData.FractalWidth.ToString();
+            TextFractalHeight = _targetRunData.FractalHeight.ToString();
+        }
+
+        private void OnAfterRunCompleted()
+        {
+            AfterRunCompleted?.Invoke(this, new EventArgs());
         }
 
         private enum ComputeState

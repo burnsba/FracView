@@ -52,9 +52,9 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition MinWidth="100" Width="Auto" MaxWidth="200"/>
                             <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="130" />
+                            <ColumnDefinition Width="150" />
                             <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="120" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
@@ -96,7 +96,7 @@
             <Grid Grid.Row="0" Name="ImageGridContainer" MinWidth="128" MinHeight="128">
 
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="150" MaxWidth="400"></ColumnDefinition>
                     <ColumnDefinition Width="Auto"></ColumnDefinition>
                     <ColumnDefinition Width="*"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
@@ -124,6 +124,10 @@
                         <TextBox Text="{Binding Path=TextMousePixelXy}" IsReadOnly="True"></TextBox>
                         <TextBlock>Mouse Fractal X/Y</TextBlock>
                         <TextBox Text="{Binding Path=TextMouseFractalXy}" IsReadOnly="True"></TextBox>
+
+                        <Button MinWidth="32" Command="{Binding Path=TargetFromViewCommand}">
+                            <TextBlock Padding="6,0,6,0">Target</TextBlock>
+                        </Button>
                     </StackPanel>
                 </Grid>
 

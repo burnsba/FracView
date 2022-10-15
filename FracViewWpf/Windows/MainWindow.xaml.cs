@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using System.Xml.Linq;
 using FracViewWpf.Dto;
 using FracViewWpf.Mvvm;
@@ -26,6 +27,7 @@ namespace FracViewWpf.Windows
     /// </summary>
     public partial class MainWindow : Window, ICloseable
     {
+        private Dispatcher _dispatcher;
         private MainWindowViewModel _vm = null;
 
         private int _imageZoomLittleScrollIndex = 0;
@@ -37,12 +39,16 @@ namespace FracViewWpf.Windows
 
         public MainWindow(MainWindowViewModel vm)
         {
+            _dispatcher = Dispatcher.CurrentDispatcher;
+
             InitializeComponent();
 
             _vm = vm;
 
             _vm.GetParentDisplayGridImageWidth = () => this.ImageGridContainer.ActualWidth;
             _vm.GetParentDisplayGridImageHeight = () => this.ImageGridContainer.ActualHeight;
+
+            _vm.AfterRunCompleted += ClearZoom;
 
             DataContext = _vm;
         }
@@ -263,6 +269,27 @@ namespace FracViewWpf.Windows
                 );
 
             _vm.UpdateImagePositionStats(scrollInfo);
+        }
+
+        private void ClearZoom(object sender, EventArgs e)
+        {
+            _dispatcher.BeginInvoke(() =>
+            {
+                _imageZoomLittleScrollIndex = 0;
+                _imageZoomBigScrollIndex = 0;
+                MainDisplayImageScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+                MainDisplayImageScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+                _vm.UiScale = 1.0;
+
+                var transform = new ScaleTransform();
+
+                transform.ScaleX = 1.0;
+                transform.ScaleY = 1.0;
+
+                MainDisplayImage.LayoutTransform = transform;
+
+                UpdateImagePositionStats();
+            });
         }
     }
 }
