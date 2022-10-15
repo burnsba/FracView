@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -112,6 +113,27 @@ namespace FracViewWpf.Windows
 
             if (change)
             {
+                double startPixelWidth = MainDisplayImageScrollViewer.DesiredSize.Width;
+                double startPixelHeight = MainDisplayImageScrollViewer.DesiredSize.Height;
+                double startPixelTop = 0;
+                double startPixelLeft = 0;
+                double startScale = _vm.UiScale;
+                var startTransform = new ScaleTransform(startScale, startScale);
+
+                if (startScale > 1)
+                {
+                    startPixelWidth /= startScale;
+                    startPixelHeight /= startScale;
+
+                    startPixelLeft = MainDisplayImageScrollViewer.ContentHorizontalOffset / startScale;
+                    startPixelTop = MainDisplayImageScrollViewer.ContentVerticalOffset / startScale;
+                }
+
+                double startPixelCenterX = startPixelLeft + (startPixelWidth / 2);
+                double startPixelCenterY = startPixelTop + (startPixelHeight / 2);
+
+                ///////
+
                 double bigScaleFactor = 1;
                 for (int i = 0; i < _imageZoomBigScrollIndex; i++)
                 {
@@ -123,48 +145,21 @@ namespace FracViewWpf.Windows
 
                 _vm.UiScale = scalex;
 
-                var scrollStartOffsetX = MainDisplayImageScrollViewer.ContentHorizontalOffset;
-                var scrollStartOffsetY = MainDisplayImageScrollViewer.ContentVerticalOffset;
-
                 var transform = new ScaleTransform();
 
                 transform.ScaleX = scalex;
                 transform.ScaleY = scaley;
 
                 MainDisplayImage.LayoutTransform = transform;
-                /*
-                var deltaScrollX = Math.Abs(scrollStartOffsetX - scrollStartOffsetX * scalex);
-                var deltaScrollY = Math.Abs(scrollStartOffsetY - scrollStartOffsetY * scaley);
 
-                if (position.X > (MainDisplayImageScrollViewer.ActualWidth / 2))
-                {
-                    MainDisplayImageScrollViewer.ScrollToHorizontalOffset(scrollStartOffsetX + deltaScrollX);
-                }
-                else
-                {
-                    MainDisplayImageScrollViewer.ScrollToHorizontalOffset(scrollStartOffsetX - deltaScrollX);
-                }
+                // Adjust scrollview to keep maintain the point in the center.
+                // https://stackoverflow.com/a/6461667/1462295
+                var startPoint = startTransform.Transform(new Point(startPixelCenterX, startPixelCenterY));
+                var endPoint = transform.Transform(new Point(startPixelCenterX, startPixelCenterY));
+                var shift = endPoint - startPoint;
 
-                if (position.Y > (MainDisplayImageScrollViewer.ActualHeight / 2))
-                {
-                    MainDisplayImageScrollViewer.ScrollToVerticalOffset(scrollStartOffsetY + deltaScrollY);
-                }
-                else
-                {
-                    MainDisplayImageScrollViewer.ScrollToVerticalOffset(scrollStartOffsetY - deltaScrollY);
-                }
-                */
-
-                if (delta > 0)
-                {
-                    MainDisplayImageScrollViewer.ScrollToHorizontalOffset(scrollStartOffsetX * 1.1);
-                    MainDisplayImageScrollViewer.ScrollToVerticalOffset(scrollStartOffsetY * 1.1);
-                }
-                else
-                {
-                    MainDisplayImageScrollViewer.ScrollToHorizontalOffset(scrollStartOffsetX * 0.9);
-                    MainDisplayImageScrollViewer.ScrollToVerticalOffset(scrollStartOffsetY * 0.9);
-                }
+                MainDisplayImageScrollViewer.ScrollToVerticalOffset(MainDisplayImageScrollViewer.VerticalOffset + shift.Y);
+                MainDisplayImageScrollViewer.ScrollToHorizontalOffset(MainDisplayImageScrollViewer.HorizontalOffset + shift.X);
             }
 
             if (_imageZoomLittleScrollIndex == 0 && _imageZoomBigScrollIndex == 0)
