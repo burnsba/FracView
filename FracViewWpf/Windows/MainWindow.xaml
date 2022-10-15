@@ -22,28 +22,10 @@
 
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="_Open"/>
-                <MenuItem Header="_Close"/>
-                <MenuItem Header="_Save"/>
+                <MenuItem Header="_Save" Command="{Binding Path=SaveAsCommand}" CommandParameter="false"/>
+                <MenuItem Header="Save with metadata" Command="{Binding Path=SaveAsCommand}" CommandParameter="true"/>
             </MenuItem>
         </Menu>
-
-        <ToolBar DockPanel.Dock="Top">
-            <ToolBar Band="1" BandIndex="1">
-                <Button>
-                    <TextBlock>Zoom Out</TextBlock>
-                </Button>
-                <Button>
-                    <TextBlock>Reset</TextBlock>
-                </Button>
-                <Button>
-                    <TextBlock>Zoom In</TextBlock>
-                </Button>
-                <Button>
-                    <TextBlock>Recenter</TextBlock>
-                </Button>
-            </ToolBar>
-        </ToolBar>
 
         <StatusBar DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
             <StatusBar.ItemsPanel>

@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FracView.Algorithms;
 using FracView.Gfx;
+using FracViewWpf.Converters;
 using FracViewWpf.Dto;
 using FracViewWpf.Mvvm;
 using FracViewWpf.Windows;
@@ -23,10 +24,19 @@ namespace FracViewWpf.ViewModels
 {
     public class MainWindowViewModel : WindowViewModelBase
     {
+        private const string SaveAsDefaultFilename = "mandelbrot";
+        private const string SaveAsDefaultExtension = ".png";
+        private const string SaveAsFilters =
+            "PNG format|*.png" +
+            "|Jpeg format|*.jpg" +
+            "|BMP format|*.bmp" +
+            "|Gif format|*.gif";
+
         private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
         private ComputeState _computeState = ComputeState.NotRunning;
         private bool _hasRunData = false;
         private bool _anyChangeForReset = false;
+        private DateTime _runDataTime;
 
         private int _outputIntervalSec = 1;
 
@@ -35,6 +45,7 @@ namespace FracViewWpf.ViewModels
         private IEscapeAlgorithm _algorithm;
         private IScene _scene;
 
+        private SKBitmap _skbmp;
         private ImageSource _imageSource;
 
         private RunSettings _previousRunData;
@@ -301,6 +312,7 @@ namespace FracViewWpf.ViewModels
         public ICommand ResetToDefaultCommand { get; set; }
         public ICommand ResetToPreviousCommand { get; set; }
         public ICommand TargetFromViewCommand { get; set; }
+        public ICommand SaveAsCommand { get; set; }
 
         public ImageSource ImageSource => _imageSource;
 
@@ -317,6 +329,8 @@ namespace FracViewWpf.ViewModels
             ImageHeight = _uiRunData.StepHeight;
 
             _previousRunData = _uiRunData with { };
+
+            SaveAsCommand = new RelayCommand<string>(b => SaveAsCommandHandler(ToBoolConverter.ToBool(b)), () => HasRunData);
 
             TargetFromViewCommand = new CommandHandler(TargetFromViewCommandHandler);
 
@@ -556,6 +570,7 @@ namespace FracViewWpf.ViewModels
             Task.Factory.StartNew(() =>
                 {
                     _algorithm.EvaluatePoints(_cancellationToken.Token);
+                    _runDataTime = DateTime.Now;
                     HasRunData = true;
                 })
                 .ContinueWith(err1 => Workspace.Instance.ShowTaskException(err1, "Error evaluating points"), TaskContinuationOptions.OnlyOnFaulted)
@@ -635,9 +650,9 @@ namespace FracViewWpf.ViewModels
 
         private void RenderImageSource()
         {
-            var bmp = _scene.ProcessPointsToPixels(_algorithm, _outputIntervalSec, UiUpdateProgress);
+            _skbmp = _scene.ProcessPointsToPixels(_algorithm, _outputIntervalSec, UiUpdateProgress);
             // create an image WRAPPER
-            SKImage image = SKImage.FromPixels(bmp.PeekPixels());
+            SKImage image = SKImage.FromPixels(_skbmp.PeekPixels());
             // encode the image (defaults to PNG)
             SKData encoded = image.Encode();
             // get a stream over the encoded data
@@ -749,6 +764,58 @@ namespace FracViewWpf.ViewModels
         private void OnAfterRunCompleted()
         {
             AfterRunCompleted?.Invoke(this, new EventArgs());
+        }
+
+        private void SaveAsCommandHandler(bool writeMetadataFile = false)
+        {
+            if (!_hasRunData || object.ReferenceEquals(null, _skbmp))
+            {
+                return;
+            }
+
+            var dialog = new Microsoft.Win32.SaveFileDialog();
+            dialog.FileName = "mandelbrot" + _runDataTime.ToString("yyyyMMdd-HHmmss"); // Default file name
+            dialog.DefaultExt = SaveAsDefaultExtension; // Default file extension
+            dialog.Filter = SaveAsFilters; // Filter files by extension
+
+            // Show save file dialog box
+            bool? result = dialog.ShowDialog();
+
+            // Process save file dialog box results
+            if (result == true)
+            {
+                // Save document
+                string filename = dialog.FileName;
+                var extension = System.IO.Path.GetExtension(filename);
+                var format = FracView.Converters.SkiaConverters.ExtensionToFormat(extension);
+
+                using (MemoryStream memStream = new MemoryStream())
+                using (SKManagedWStream wstream = new SKManagedWStream(memStream))
+                {
+                    _skbmp.Encode(wstream, format, 100);
+                    byte[] data = memStream.ToArray();
+                    System.IO.File.WriteAllBytes(filename, data);
+                }
+
+                if (writeMetadataFile)
+                {
+                    var baseFilename = System.IO.Path.GetFileNameWithoutExtension(filename);
+                    var metadataFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(filename), baseFilename + ".txt");
+                    var sb = new StringBuilder();
+                    sb.AppendLine($"runtime: {_runDataTime.ToLongDateString()} {_runDataTime.ToLongTimeString()}");
+                    sb.AppendLine($"runtime.iso: {_runDataTime.ToString("yyyy-MM-ddTHH:mm:sszzz", System.Globalization.CultureInfo.InvariantCulture)}");
+                    sb.AppendLine($"Origin.X: {_previousRunData.OriginX}");
+                    sb.AppendLine($"Origin.Y: {_previousRunData.OriginY}");
+                    sb.AppendLine($"FractalWidth: {_previousRunData.FractalWidth}");
+                    sb.AppendLine($"FractalHeight: {_previousRunData.FractalHeight}");
+                    sb.AppendLine($"StepWidth: {_previousRunData.StepWidth}");
+                    sb.AppendLine($"StepHeight: {_previousRunData.StepHeight}");
+                    sb.AppendLine($"MaxIterations: {_previousRunData.MaxIterations}");
+                    sb.AppendLine($"UseHistogram: {_previousRunData.UseHistogram}");
+
+                    System.IO.File.WriteAllText(metadataFilename, sb.ToString());
+                }
+            }
         }
 
         private enum ComputeState
