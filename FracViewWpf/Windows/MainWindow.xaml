@@ -94,42 +94,81 @@
             <Grid.ColumnDefinitions></Grid.ColumnDefinitions>
 
             <Grid Grid.Row="0" Name="ImageGridContainer" MinWidth="128" MinHeight="128">
-                    <Border VerticalAlignment="Top"
-                            BorderThickness="2"
-                            BorderBrush="#FFBDBDBD"
-                            Width="{Binding Path=ImageWidth}"
-                            Height="{Binding Path=ImageHeight}"
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+
+                <Grid
+                Grid.Column="0"
+                VerticalAlignment="Bottom"
+                >
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock>Pixel Left/Top</TextBlock>
+                        <TextBox Text="{Binding Path=TextPixelLeftTop}" IsReadOnly="True"></TextBox>
+                        <TextBlock>Pixel Center</TextBlock>
+                        <TextBox Text="{Binding Path=TextPixelCenter}" IsReadOnly="True"></TextBox>
+                        <TextBlock>Pixel Width/Height</TextBlock>
+                        <TextBox Text="{Binding Path=TextPixelWidthHeight}" IsReadOnly="True"></TextBox>
+                        
+                        <TextBlock>Fractal Left/Top</TextBlock>
+                        <TextBox Text="{Binding Path=TextFractalLeftTop}" IsReadOnly="True"></TextBox>
+                        <TextBlock>Fractal Center</TextBlock>
+                        <TextBox Text="{Binding Path=TextFractalCenter}" IsReadOnly="True"></TextBox>
+                        <TextBlock>Fractal Width/Height</TextBlock>
+                        <TextBox Text="{Binding Path=TextFractalWidthHeight}" IsReadOnly="True"></TextBox>
+                        
+                        <TextBlock>Mouse Pixel X/Y</TextBlock>
+                        <TextBox Text="{Binding Path=TextMousePixelXy}" IsReadOnly="True"></TextBox>
+                        <TextBlock>Mouse Fractal X/Y</TextBlock>
+                        <TextBox Text="{Binding Path=TextMouseFractalXy}" IsReadOnly="True"></TextBox>
+                    </StackPanel>
+                </Grid>
+
+                <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"></GridSplitter>
+
+                <Border Grid.Column="2"
+                    VerticalAlignment="Top"
+                        BorderThickness="2"
+                        BorderBrush="#FFBDBDBD"
+                        Width="{Binding Path=ImageWidth}"
+                        Height="{Binding Path=ImageHeight}"
+                        MinWidth="128"
+                        MinHeight="128"
+                        >
+                    <ScrollViewer
+                        Name="MainDisplayImageScrollViewer"
+                        HorizontalScrollBarVisibility="Hidden"
+                        VerticalScrollBarVisibility="Hidden"
+                        MouseWheel="MainDisplayImageScrollViewer_MouseWheel"
+                        ScrollChanged="MainDisplayImageScrollViewer_ScrollChanged"
+                        >
+                        <Image
+                            Name="MainDisplayImage"
+                            RenderOptions.BitmapScalingMode="HighQuality"
                             MinWidth="128"
                             MinHeight="128"
-                            >
-                        <ScrollViewer
-                            Name="MainDisplayImageScrollViewer"
-                            HorizontalScrollBarVisibility="Hidden"
-                            VerticalScrollBarVisibility="Hidden"
-                            MouseWheel="MainDisplayImageScrollViewer_MouseWheel"
-                            >
-                            <Image
-                                Name="MainDisplayImage"
-                                RenderOptions.BitmapScalingMode="HighQuality"
-                                MinWidth="128"
-                                MinHeight="128"
-                                Source="{Binding Path=ImageSource}"
-                                Width="{Binding Path=ImageWidth}"
-                                Height="{Binding Path=ImageHeight}"
-                                RenderTransformOrigin="0.5,0.5"
-                                MouseWheel="Image_MouseWheel"
+                            Source="{Binding Path=ImageSource}"
+                            Width="{Binding Path=ImageWidth}"
+                            Height="{Binding Path=ImageHeight}"
+                            RenderTransformOrigin="0.5,0.5"
+                            MouseWheel="Image_MouseWheel"
                                 
-                                MouseLeftButtonDown="MainDisplayImageScrollViewer_MouseLeftButtonDown"
-                                PreviewMouseMove="MainDisplayImageScrollViewer_PreviewMouseMove"
-                                PreviewMouseLeftButtonUp="MainDisplayImageScrollViewer_PreviewMouseLeftButtonUp"
-                                >
-                                <Image.RenderTransform>
-                                    <ScaleTransform/>
-                                </Image.RenderTransform>
-                            </Image>
-                        </ScrollViewer>
-                    </Border>
+                            MouseLeftButtonDown="MainDisplayImageScrollViewer_MouseLeftButtonDown"
+                            PreviewMouseMove="MainDisplayImageScrollViewer_PreviewMouseMove"
+                            PreviewMouseLeftButtonUp="MainDisplayImageScrollViewer_PreviewMouseLeftButtonUp"
+                            >
+                            <Image.RenderTransform>
+                                <ScaleTransform/>
+                            </Image.RenderTransform>
+                        </Image>
+                    </ScrollViewer>
+                </Border>
             </Grid>
+
+            
 
             <Grid
                 Grid.Row="1"
@@ -176,13 +215,13 @@
                     </TextBox.Background>
                 </TextBox>
 
-                <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center">Pixel Width</Label>
+                <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center">Step Width</Label>
                 <TextBox Grid.Row="2" Grid.Column="1" x:Name="UiPixelWidth" VerticalAlignment="Center" Text="{Binding Path=TextStepWidth}">
                     <TextBox.Background>
                         <SolidColorBrush Color="{Binding Path=StepWidthIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
                     </TextBox.Background>
                 </TextBox>
-                <Label Grid.Row="2" Grid.Column="2" VerticalAlignment="Center">Pixel Height</Label>
+                <Label Grid.Row="2" Grid.Column="2" VerticalAlignment="Center">Step Height</Label>
                 <TextBox Grid.Row="2" Grid.Column="3" x:Name="UiPixelHeight" VerticalAlignment="Center" Text="{Binding Path=TextStepHeight}">
                     <TextBox.Background>
                         <SolidColorBrush Color="{Binding Path=StepHeightIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>

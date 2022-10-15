@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml.Linq;
+using FracViewWpf.Dto;
 using FracViewWpf.Mvvm;
 using FracViewWpf.ViewModels;
 
@@ -48,6 +49,8 @@ namespace FracViewWpf.Windows
         private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             _vm.RecomputeImageScreenDimensions();
+
+            UpdateImagePositionStats();
         }
 
         private void Image_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -56,6 +59,8 @@ namespace FracViewWpf.Windows
             var mousePosition = e.GetPosition(MainDisplayImage);
 
             AdjustImagePixelZoom(e.Delta, mousePosition);
+
+            UpdateImagePositionStats();
         }
 
         private void AdjustImagePixelZoom(double delta, Point position)
@@ -115,6 +120,8 @@ namespace FracViewWpf.Windows
 
                 var scalex = bigScaleFactor * Views.Constants.ScrollValues[_imageZoomLittleScrollIndex];
                 var scaley = bigScaleFactor * Views.Constants.ScrollValues[_imageZoomLittleScrollIndex];
+
+                _vm.UiScale = scalex;
 
                 var scrollStartOffsetX = MainDisplayImageScrollViewer.ContentHorizontalOffset;
                 var scrollStartOffsetY = MainDisplayImageScrollViewer.ContentVerticalOffset;
@@ -178,6 +185,14 @@ namespace FracViewWpf.Windows
             return;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// https://stackoverflow.com/a/42288914/1462295
+        /// </remarks>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MainDisplayImageScrollViewer_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             MainDisplayImage.CaptureMouse();
@@ -188,6 +203,12 @@ namespace FracViewWpf.Windows
 
         private void MainDisplayImageScrollViewer_PreviewMouseMove(object sender, MouseEventArgs e)
         {
+            Point scrollerMousePosition = new Point(
+                e.GetPosition(MainDisplayImageScrollViewer).X,
+                e.GetPosition(MainDisplayImageScrollViewer).Y);
+
+            UpdateMousePositionStats(scrollerMousePosition);
+
             if (MainDisplayImage.IsMouseCaptured)
             {
                 double newOffset;
@@ -197,12 +218,56 @@ namespace FracViewWpf.Windows
 
                 newOffset = _horizontalPanOffset + (_panMousePoint.X - e.GetPosition(MainDisplayImageScrollViewer).X);
                 MainDisplayImageScrollViewer.ScrollToHorizontalOffset(newOffset);
+
+                UpdateImagePositionStats();
             }
         }
 
         private void MainDisplayImageScrollViewer_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             MainDisplayImage.ReleaseMouseCapture();
+        }
+
+        private void UpdateImagePositionStats()
+        {
+            ScrollScaleInfo scrollInfo = new ScrollScaleInfo(
+                MainDisplayImageScrollViewer.ContentHorizontalOffset,
+                MainDisplayImageScrollViewer.ExtentWidth,
+                MainDisplayImageScrollViewer.ContentVerticalOffset,
+                MainDisplayImageScrollViewer.ExtentHeight,
+                MainDisplayImageScrollViewer.DesiredSize.Width,
+                MainDisplayImageScrollViewer.DesiredSize.Height
+                );
+
+            _vm.UpdateImagePositionStats(scrollInfo);
+        }
+
+        private void UpdateMousePositionStats(Point position)
+        {
+            ScrollScaleInfo scrollInfo = new ScrollScaleInfo(
+                MainDisplayImageScrollViewer.ContentHorizontalOffset,
+                MainDisplayImageScrollViewer.ExtentWidth,
+                MainDisplayImageScrollViewer.ContentVerticalOffset,
+                MainDisplayImageScrollViewer.ExtentHeight,
+                MainDisplayImageScrollViewer.DesiredSize.Width,
+                MainDisplayImageScrollViewer.DesiredSize.Height
+                );
+
+            _vm.UpdateMousePositionStats(position, scrollInfo);
+        }
+
+        private void MainDisplayImageScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            ScrollScaleInfo scrollInfo = new ScrollScaleInfo(
+                MainDisplayImageScrollViewer.ContentHorizontalOffset,
+                MainDisplayImageScrollViewer.ExtentWidth,
+                MainDisplayImageScrollViewer.ContentVerticalOffset,
+                MainDisplayImageScrollViewer.ExtentHeight,
+                MainDisplayImageScrollViewer.DesiredSize.Width,
+                MainDisplayImageScrollViewer.DesiredSize.Height
+                );
+
+            _vm.UpdateImagePositionStats(scrollInfo);
         }
     }
 }
