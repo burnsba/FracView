@@ -29,6 +29,10 @@ namespace FracViewWpf.Windows
         private int _imageZoomLittleScrollIndex = 0;
         private int _imageZoomBigScrollIndex = 0;
 
+        private Point _panMousePoint;
+        private double _verticalPanOffset = 1;
+        private double _horizontalPanOffset = 1;
+
         public MainWindow(MainWindowViewModel vm)
         {
             InitializeComponent();
@@ -172,6 +176,33 @@ namespace FracViewWpf.Windows
         {
             e.Handled = true;
             return;
+        }
+
+        private void MainDisplayImageScrollViewer_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            MainDisplayImage.CaptureMouse();
+            _panMousePoint = e.GetPosition(MainDisplayImageScrollViewer);
+            _verticalPanOffset = MainDisplayImageScrollViewer.VerticalOffset;
+            _horizontalPanOffset = MainDisplayImageScrollViewer.HorizontalOffset;
+        }
+
+        private void MainDisplayImageScrollViewer_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (MainDisplayImage.IsMouseCaptured)
+            {
+                double newOffset;
+
+                newOffset = _verticalPanOffset + (_panMousePoint.Y - e.GetPosition(MainDisplayImageScrollViewer).Y);
+                MainDisplayImageScrollViewer.ScrollToVerticalOffset(newOffset);
+
+                newOffset = _horizontalPanOffset + (_panMousePoint.X - e.GetPosition(MainDisplayImageScrollViewer).X);
+                MainDisplayImageScrollViewer.ScrollToHorizontalOffset(newOffset);
+            }
+        }
+
+        private void MainDisplayImageScrollViewer_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            MainDisplayImage.ReleaseMouseCapture();
         }
     }
 }

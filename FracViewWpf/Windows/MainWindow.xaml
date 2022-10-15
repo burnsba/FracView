@@ -118,6 +118,10 @@
                                 Height="{Binding Path=ImageHeight}"
                                 RenderTransformOrigin="0.5,0.5"
                                 MouseWheel="Image_MouseWheel"
+                                
+                                MouseLeftButtonDown="MainDisplayImageScrollViewer_MouseLeftButtonDown"
+                                PreviewMouseMove="MainDisplayImageScrollViewer_PreviewMouseMove"
+                                PreviewMouseLeftButtonUp="MainDisplayImageScrollViewer_PreviewMouseLeftButtonUp"
                                 >
                                 <Image.RenderTransform>
                                     <ScaleTransform/>
