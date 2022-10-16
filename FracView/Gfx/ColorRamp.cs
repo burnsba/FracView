@@ -38,7 +38,12 @@ namespace FracView.Gfx
                 throw new InvalidOperationException("keyframe not found for value");
             }
 
-            var range = kf.IntervalEnd - kf.IntervalStart;
+            if (kf.IntervalEnd == kf.IntervalStart)
+            {
+                throw new DivideByZeroException("keyframe range is zero (start and end are same)");
+            }
+
+            var range = Math.Abs(kf.IntervalEnd - kf.IntervalStart);
             var scaledValue = (value - kf.IntervalStart) / range;
 
             int rval = (int)((double)(kf.ValueEnd.Red - kf.ValueStart.Red) * scaledValue) + kf.ValueStart.Red;

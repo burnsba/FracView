@@ -17,13 +17,14 @@ using FracViewWpf.Dto;
 using FracViewWpf.Mvvm;
 using FracViewWpf.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using SkiaSharp;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace FracViewWpf.ViewModels
 {
     public class MainWindowViewModel : WindowViewModelBase
     {
+        private const string SessionJsonFilename = "session.json";
         private const string SaveAsDefaultFilename = "mandelbrot";
         private const string SaveAsDefaultExtension = ".png";
         private const string SaveAsFilters =
@@ -508,6 +509,72 @@ namespace FracViewWpf.ViewModels
             OnPropertyChanged(nameof(TextMouseFractalXy));
         }
 
+        public void LoadSessionJson()
+        {
+            if (!System.IO.File.Exists(SessionJsonFilename))
+            {
+                return;
+            }
+
+            var fileContent = System.IO.File.ReadAllText(SessionJsonFilename);
+            SessionSettings? settings = null;
+
+            try
+            {
+                settings = JsonConvert.DeserializeObject<SessionSettings>(fileContent);
+            }
+            catch (Exception ex)
+            {
+                var ewvm = new ErrorWindowViewModel($"Error loading saved session information", ex)
+                {
+                    ButtonText = "Ok",
+                };
+
+                Workspace.Instance.RecreateSingletonWindow<ErrorWindow>(ewvm);
+
+                return;
+            }
+
+            if (object.ReferenceEquals(null, settings))
+            {
+                var ewvm = new ErrorWindowViewModel()
+                {
+                    HeaderMessage = "Error loading saved session information",
+                    ButtonText = "Ok",
+                };
+
+                Workspace.Instance.RecreateSingletonWindow<ErrorWindow>(ewvm);
+
+                return;
+            }
+
+            _previousRunData = settings.RunSettings with { };
+            ResetToPreviousCommandHandler();
+
+            if (!object.ReferenceEquals(null, _scene))
+            {
+                _scene.StableColor = settings.GetStableColor();
+                _scene.ColorRamp.Keyframes = settings.GetColorRampKeyframes();
+            }
+        }
+
+        private void SaveSessionJson()
+        {
+            var settings = new SessionSettings()
+            {
+                RunSettings = _previousRunData with { },
+            };
+
+            if (!object.ReferenceEquals(null, _scene))
+            {
+                settings.SetStableColor(_scene.StableColor);
+                settings.SetColorRampKeyframes(_scene.ColorRamp.Keyframes);
+            }
+
+            var json = JsonConvert.SerializeObject(settings, Formatting.Indented);
+            System.IO.File.WriteAllText(SessionJsonFilename, json);
+        }
+
         private void ComputeCommandHandler()
         {
             if (_computeState == ComputeState.Running)
@@ -543,7 +610,21 @@ namespace FracViewWpf.ViewModels
         {
             var svm = ActivatorUtilities.CreateInstance<ColorWindowViewModel>(Workspace.Instance.ServiceProvider, this._scene);
 
+            svm.SceneChanged += Svm_SceneChanged;
+
             Workspace.Instance.RecreateSingletonWindow<ColorWindow>(svm);
+        }
+
+        private void Svm_SceneChanged(object? sender, SceneEventArgs e)
+        {
+            if (object.ReferenceEquals(null, e) || object.ReferenceEquals(null, e.Scene))
+            {
+                return;
+            }
+
+            // the scene in the argument property should be a reference to the same scene
+            // in this viewmodel.
+            SaveSessionJson();
         }
 
         private string GetComputeCommandText()
@@ -558,6 +639,9 @@ namespace FracViewWpf.ViewModels
         private void DoTheAlgorithm()
         {
             _previousRunData = _uiRunData with { };
+
+            // Save current settings, after setting _previousRunData
+            SaveSessionJson();
 
             _algorithm = new MandelbrotDouble(
                 _previousRunData,
@@ -774,7 +858,7 @@ namespace FracViewWpf.ViewModels
             }
 
             var dialog = new Microsoft.Win32.SaveFileDialog();
-            dialog.FileName = "mandelbrot" + _runDataTime.ToString("yyyyMMdd-HHmmss"); // Default file name
+            dialog.FileName = SaveAsDefaultFilename + _runDataTime.ToString("yyyyMMdd-HHmmss"); // Default file name
             dialog.DefaultExt = SaveAsDefaultExtension; // Default file extension
             dialog.Filter = SaveAsFilters; // Filter files by extension
 

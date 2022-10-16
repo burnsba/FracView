@@ -60,6 +60,9 @@ namespace FracViewWpf
             };
 
             MainWindowViewModel vm = (MainWindowViewModel)Workspace.Instance.ServiceProvider.GetService(typeof(MainWindowViewModel));
+
+            vm.LoadSessionJson();
+
             MainWindow mainWindow = (MainWindow)Workspace.Instance.ServiceProvider.GetService(typeof(MainWindow));
 
             mainWindow.Show();
