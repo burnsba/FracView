@@ -559,7 +559,7 @@ namespace FracViewWpf.ViewModels
         {
             _previousRunData = _uiRunData with { };
 
-            _algorithm = new Mandelbrot(
+            _algorithm = new MandelbrotDouble(
                 _previousRunData,
                 _outputIntervalSec,
                 UiUpdateProgress);

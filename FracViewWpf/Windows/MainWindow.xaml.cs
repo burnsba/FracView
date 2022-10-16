@@ -291,5 +291,11 @@ namespace FracViewWpf.Windows
                 UpdateImagePositionStats();
             });
         }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Workspace.Instance.CloseWindows<ErrorWindow>();
+            Workspace.Instance.CloseWindows<ColorWindow>();
+        }
     }
 }

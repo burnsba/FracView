@@ -9,7 +9,7 @@
         xmlns:viewmodels="clr-namespace:FracViewWpf.ViewModels"
         d:DataContext="{d:DesignInstance Type=viewmodels:MainWindowViewModel}"
         Title="MainWindow" Height="450" Width="800"
-        SizeChanged="MainWindow_SizeChanged"
+        SizeChanged="MainWindow_SizeChanged" Closing="Window_Closing"
         >
     <Window.Resources>
         <ResourceDictionary>
