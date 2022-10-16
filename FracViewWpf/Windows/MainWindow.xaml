@@ -75,7 +75,7 @@
 
             <Grid.ColumnDefinitions></Grid.ColumnDefinitions>
 
-            <Grid Grid.Row="0" Name="ImageGridContainer" MinWidth="128" MinHeight="128">
+            <Grid Grid.Row="0" MinWidth="128" MinHeight="128" Name="ImageGridContainer">
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="150" MaxWidth="400"></ColumnDefinition>
@@ -121,7 +121,9 @@
 
                 <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"></GridSplitter>
 
-                <Border Grid.Column="2"
+                <Border
+                    Name="ImageBorderContainer"
+                    Grid.Column="2"
                     VerticalAlignment="Top"
                         BorderThickness="2"
                         BorderBrush="#FFBDBDBD"

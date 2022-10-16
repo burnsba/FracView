@@ -370,21 +370,8 @@ namespace FracViewWpf.ViewModels
                 return;
             }
 
-            var worldPixelRatio = (double)_previousRunData.StepWidth / (double)_previousRunData.StepHeight;
-            var uiPixelRatio = (double)displayGridImageWidth / (double)displayGridImageHeight;
-
-            if (uiPixelRatio >= 1)
-            {
-                // ui display width is larger, height needs to shrink to accomodate
-                ImageHeight = (int)(displayGridImageHeight) - 1;
-                ImageWidth = (int)((double)ImageHeight * worldPixelRatio) - 1;
-            }
-            else
-            {
-                // ui display height is larger, width needs to shrink to accomodate
-                ImageWidth = (int)(displayGridImageWidth) - 1;
-                ImageHeight = (int)((double)ImageWidth * worldPixelRatio) - 1;
-            }
+            ImageHeight = (int)displayGridImageHeight;
+            ImageWidth = (int)displayGridImageWidth;
 
             if (ImageWidth < 0)
             {

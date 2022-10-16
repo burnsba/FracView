@@ -45,7 +45,7 @@ namespace FracViewWpf.Windows
 
             _vm = vm;
 
-            _vm.GetParentDisplayGridImageWidth = () => this.ImageGridContainer.ActualWidth;
+            _vm.GetParentDisplayGridImageWidth = () => this.ImageGridContainer.ColumnDefinitions[2].ActualWidth;
             _vm.GetParentDisplayGridImageHeight = () => this.ImageGridContainer.ActualHeight;
 
             _vm.AfterRunCompleted += ClearZoom;
@@ -288,6 +288,7 @@ namespace FracViewWpf.Windows
 
                 MainDisplayImage.LayoutTransform = transform;
 
+                _vm.RecomputeImageScreenDimensions();
                 UpdateImagePositionStats();
             });
         }
