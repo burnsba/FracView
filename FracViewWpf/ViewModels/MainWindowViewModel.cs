@@ -73,12 +73,17 @@ namespace FracViewWpf.ViewModels
             {
                 _textOriginX = value;
 
-                if (decimal.TryParse(_textOriginX, out decimal d))
+                if (MathString.DecimalTryParseMathString(_textOriginX, out decimal d, out bool hasMath))
                 {
                     _uiRunData.OriginX = d;
                     OriginXIsValid = true;
 
                     AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textOriginX = _uiRunData.OriginX.ToString();
+                    }
 
                     OnPropertyChanged(nameof(TextOriginX));
                 }
@@ -99,12 +104,17 @@ namespace FracViewWpf.ViewModels
             {
                 _textOriginY = value;
 
-                if (decimal.TryParse(_textOriginY, out decimal d))
+                if (MathString.DecimalTryParseMathString(_textOriginY, out decimal d, out bool hasMath))
                 {
                     _uiRunData.OriginY = d;
                     OriginYIsValid = true;
 
                     AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textOriginY = _uiRunData.OriginY.ToString();
+                    }
 
                     OnPropertyChanged(nameof(TextOriginY));
                 }
@@ -125,12 +135,17 @@ namespace FracViewWpf.ViewModels
             {
                 _textFractalWidth = value;
 
-                if (decimal.TryParse(_textFractalWidth, out decimal d))
+                if (MathString.DecimalTryParseMathString(_textFractalWidth, out decimal d, out bool hasMath))
                 {
                     _uiRunData.FractalWidth = d;
                     FractalWidthIsValid = true;
 
                     AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textFractalWidth = _uiRunData.FractalWidth.ToString();
+                    }
 
                     OnPropertyChanged(nameof(TextFractalWidth));
                 }
@@ -151,12 +166,17 @@ namespace FracViewWpf.ViewModels
             {
                 _textFractalHeight = value;
 
-                if (decimal.TryParse(_textFractalHeight, out decimal d))
+                if (MathString.DecimalTryParseMathString(_textFractalHeight, out decimal d, out bool hasMath))
                 {
                     _uiRunData.FractalHeight = d;
                     FractalHeightIsValid = true;
 
                     AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textFractalHeight = _uiRunData.FractalHeight.ToString();
+                    }
 
                     OnPropertyChanged(nameof(TextFractalHeight));
                 }
@@ -177,7 +197,7 @@ namespace FracViewWpf.ViewModels
             {
                 _textStepWidth = value;
 
-                if (int.TryParse(_textStepWidth, out int i))
+                if (MathString.IntTryParseMathString(_textStepWidth, out int i, out bool hasMath))
                 {
                     _uiRunData.StepWidth = i;
                     StepWidthIsValid = true;
@@ -185,6 +205,11 @@ namespace FracViewWpf.ViewModels
                     RecomputeImageScreenDimensions();
 
                     AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textStepWidth = _uiRunData.StepWidth.ToString();
+                    }
 
                     OnPropertyChanged(nameof(TextStepWidth));
                 }
@@ -205,7 +230,7 @@ namespace FracViewWpf.ViewModels
             {
                 _textStepHeight = value;
 
-                if (int.TryParse(_textStepHeight, out int i))
+                if (MathString.IntTryParseMathString(_textStepHeight, out int i, out bool hasMath))
                 {
                     _uiRunData.StepHeight = i;
                     StepHeightIsValid = true;
@@ -213,6 +238,11 @@ namespace FracViewWpf.ViewModels
                     RecomputeImageScreenDimensions();
 
                     AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textStepHeight = _uiRunData.StepHeight.ToString();
+                    }
 
                     OnPropertyChanged(nameof(TextStepHeight));
                 }
@@ -233,12 +263,17 @@ namespace FracViewWpf.ViewModels
             {
                 _textMaxIterations = value;
 
-                if (int.TryParse(_textMaxIterations, out int i))
+                if (MathString.IntTryParseMathString(_textMaxIterations, out int i, out bool hasMath))
                 {
                     _uiRunData.MaxIterations = i;
                     MaxIterationsIsValid = true;
 
                     AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textMaxIterations = _uiRunData.MaxIterations.ToString();
+                    }
 
                     OnPropertyChanged(nameof(TextMaxIterations));
                 }
