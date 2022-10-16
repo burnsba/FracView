@@ -33,7 +33,11 @@ namespace FracViewWpf.ViewModels
             "|BMP format|*.bmp" +
             "|Gif format|*.gif";
 
-        private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
+        //private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
+        
+        private CancellationTokenSource _cancellationTokenCompute = new CancellationTokenSource();
+        private CancellationTokenSource _cancellationTokenColor = new CancellationTokenSource();
+        
         private ComputeState _computeState = ComputeState.NotRunning;
         private bool _hasRunData = false;
         private bool _anyChangeForReset = false;
@@ -564,32 +568,24 @@ namespace FracViewWpf.ViewModels
 
         private void ComputeCommandHandler()
         {
-            if (_computeState == ComputeState.Running)
+            if (_computeState == ComputeState.RunningCompute)
             {
-                _computeState = ComputeState.NotRunning;
-                _cancellationToken.Cancel();
-
-                if (!object.ReferenceEquals(null, _algorithmTimer))
+                _cancellationTokenCompute.Cancel();
+            }
+            else if (_computeState == ComputeState.RunningColor)
+            {
+                _cancellationTokenColor.Cancel();
+            }
+            else if(_computeState == ComputeState.NotRunning)
+            {
+                if (object.ReferenceEquals(null, _algorithmTimer))
                 {
-                    _algorithmTimer.Stop();
+                    _algorithmTimer = Stopwatch.StartNew();
                 }
 
-                ComputeCommandText = GetComputeCommandText();
-                OnPropertyChanged(nameof(ComputeCommandText));
-
-                UiStatusCancelRun();
-            }
-            else
-            {
-                _computeState = ComputeState.Running;
-                _cancellationToken.TryReset();
+                UiStatusStartRun();
 
                 DoTheAlgorithm();
-
-                ComputeCommandText = GetComputeCommandText();
-                OnPropertyChanged(nameof(ComputeCommandText));
-
-                UiStatusStartRun();
             }
         }
 
@@ -618,7 +614,8 @@ namespace FracViewWpf.ViewModels
         {
             return _computeState switch
             {
-                ComputeState.Running => "Cancel",
+                ComputeState.RunningCompute => "Cancel",
+                ComputeState.RunningColor => "Cancel",
                 _ => "Go",
             };
         }
@@ -635,36 +632,64 @@ namespace FracViewWpf.ViewModels
                 _outputIntervalSec,
                 UiUpdateProgress);
 
-            _algorithmTimer = Stopwatch.StartNew();
-            HasRunData = false;
-
             Task.Factory.StartNew(() =>
+            {
+                _cancellationTokenCompute = new CancellationTokenSource();
+                _algorithmTimer = Stopwatch.StartNew();
+                HasRunData = false;
+
+                _computeState = ComputeState.RunningCompute;
+                ComputeCommandText = GetComputeCommandText();
+                OnPropertyChanged(nameof(ComputeCommandText));
+
+                _algorithm.EvaluatePoints(_cancellationTokenCompute.Token);
+                _runDataTime = DateTime.Now;
+
+                if (_cancellationTokenCompute.IsCancellationRequested)
                 {
-                    _algorithm.EvaluatePoints(_cancellationToken.Token);
-                    _runDataTime = DateTime.Now;
-                    HasRunData = true;
-                })
-                .ContinueWith(err1 => Workspace.Instance.ShowTaskException(err1, "Error evaluating points"), TaskContinuationOptions.OnlyOnFaulted)
-                .ContinueWith(t1 =>
-                {
-                    RenderImageSource();
-                })
-                .ContinueWith(err2 => Workspace.Instance.ShowTaskException(err2, "Error rendering image"), TaskContinuationOptions.OnlyOnFaulted)
-                .ContinueWith(t2 =>
-                {
+                    _hasRunData = false;
                     _computeState = ComputeState.NotRunning;
                     _algorithmTimer.Stop();
-                    UiStatusFinishRunSuccess();
 
                     ComputeCommandText = GetComputeCommandText();
                     OnPropertyChanged(nameof(ComputeCommandText));
-                })
-                .ContinueWith(err3 => Workspace.Instance.ShowTaskException(err3, "Error finalizing image render"), TaskContinuationOptions.OnlyOnFaulted)
-                .ContinueWith(events =>
+                    UiStatusCancelRun();
+
+                    return;
+                }
+
+                HasRunData = true;
+
+                _computeState = ComputeState.NotRunning;
+                _algorithmTimer.Stop();
+
+                RecolorAction();
+
+                if (_cancellationTokenColor.IsCancellationRequested)
                 {
-                    OnAfterRunCompleted();
-                })
-                .ContinueWith(event_error => Workspace.Instance.ShowTaskException(event_error, "Error firing post events"), TaskContinuationOptions.OnlyOnFaulted);
+                    UiStatusCancelRun();
+                }
+                else
+                {
+                    UiStatusFinishRunSuccess();
+                }
+
+                ComputeCommandText = GetComputeCommandText();
+                OnPropertyChanged(nameof(ComputeCommandText));
+
+                OnAfterRunCompleted();
+            })
+            .ContinueWith(event_error => {
+
+                _hasRunData = false;
+                _computeState = ComputeState.NotRunning;
+                _algorithmTimer.Stop();
+                UiStatusCancelRun();
+                ComputeCommandText = GetComputeCommandText();
+                OnPropertyChanged(nameof(ComputeCommandText));
+
+                Workspace.Instance.ShowTaskException(event_error, "Computation error");
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         private void UiStatusCancelRun()
@@ -719,9 +744,17 @@ namespace FracViewWpf.ViewModels
             OnPropertyChanged(nameof(StatusBarElapsedText));
         }
 
-        private void RenderImageSource()
+        private void RenderImageSource(CancellationToken token)
         {
-            _skbmp = _scene.ProcessPointsToPixels(_algorithm, _outputIntervalSec, UiUpdateProgress);
+            var bmp = _scene.ProcessPointsToPixels(_algorithm, token, _outputIntervalSec, UiUpdateProgress);
+
+            if (object.ReferenceEquals(null, bmp) || token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            _skbmp = bmp;
+
             // create an image WRAPPER
             SKImage image = SKImage.FromPixels(_skbmp.PeekPixels());
             // encode the image (defaults to PNG)
@@ -747,23 +780,43 @@ namespace FracViewWpf.ViewModels
         {
             if (_computeState == ComputeState.NotRunning && _hasRunData)
             {
-                _algorithmTimer = Stopwatch.StartNew();
-
                 Task.Factory.StartNew(() =>
                 {
-                    RenderImageSource();
+                    RecolorAction();
                 })
-                .ContinueWith(err1 => Workspace.Instance.ShowTaskException(err1, "Error rendering image"), TaskContinuationOptions.OnlyOnFaulted)
-                .ContinueWith(t2 =>
+                .ContinueWith(err1 =>
                 {
                     _computeState = ComputeState.NotRunning;
                     _algorithmTimer.Stop();
-                    UiStatusFinishRunSuccess();
-
+                    UiStatusCancelRun();
                     ComputeCommandText = GetComputeCommandText();
                     OnPropertyChanged(nameof(ComputeCommandText));
-                })
-                .ContinueWith(err2 => Workspace.Instance.ShowTaskException(err2, "Error finalizing image render"), TaskContinuationOptions.OnlyOnFaulted);
+
+                    Workspace.Instance.ShowTaskException(err1, "Error rendering image");
+                }, TaskContinuationOptions.OnlyOnFaulted);
+            }
+            else if (_computeState == ComputeState.RunningColor && _hasRunData)
+            {
+                _cancellationTokenColor.Cancel();
+            }
+        }
+
+        private void RecolorAction()
+        {
+            _cancellationTokenColor = new CancellationTokenSource();
+            _algorithmTimer = Stopwatch.StartNew();
+            _computeState = ComputeState.RunningColor;
+            _algorithm.UseHistogram = _uiRunData.UseHistogram;
+            RenderImageSource(_cancellationTokenColor.Token);
+            _computeState = ComputeState.NotRunning;
+            _algorithmTimer.Stop();
+            if (_cancellationTokenColor.IsCancellationRequested)
+            {
+                UiStatusCancelRun();
+            }
+            else
+            {
+                UiStatusFinishRunSuccess();
             }
         }
 
@@ -892,7 +945,8 @@ namespace FracViewWpf.ViewModels
         private enum ComputeState
         {
             NotRunning,
-            Running,
+            RunningCompute,
+            RunningColor,
             Cancelling,
         }
     }

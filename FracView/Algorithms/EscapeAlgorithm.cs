@@ -15,6 +15,7 @@ namespace FracView.Algorithms
         private decimal _iterationBreakSquare = 0;
         private bool _isInit = false;
         private bool _pointsEvaluated = false;
+        private bool _histogramIsEvaluated = false;
         private object _lockObject = new object();
         private List<EvalComplexUnit>? _consideredPoints = null;
 
@@ -52,6 +53,7 @@ namespace FracView.Algorithms
         public decimal IterationBreakSquare => _iterationBreakSquare;
 
         public bool UseHistogram { get; set; }
+        public bool HistogramIsEvaluated => _histogramIsEvaluated;
 
         public List<EvalComplexUnit> ConsideredPoints
         {
@@ -97,7 +99,12 @@ namespace FracView.Algorithms
 
         public bool EvaluatePoints(CancellationToken token)
         {
-            Init();
+            Init(token);
+
+            if (token.IsCancellationRequested)
+            {
+                return false;
+            }
 
             bool interrupted = false;
             var reportTimer = Stopwatch.StartNew();
@@ -144,6 +151,11 @@ namespace FracView.Algorithms
                 }
             });
 
+            if (token.IsCancellationRequested)
+            {
+                return false;
+            }
+
             _pointsEvaluated = true;
 
             if (UseHistogram)
@@ -154,7 +166,7 @@ namespace FracView.Algorithms
             return !interrupted;
         }
 
-        private void Init()
+        private void Init(CancellationToken token)
         {
             if (_isInit)
             {
@@ -211,6 +223,13 @@ namespace FracView.Algorithms
 
                     for (int i = 0; i < StepWidth; i++)
                     {
+                        if (token.IsCancellationRequested)
+                        {
+                            _consideredPoints = new List<EvalComplexUnit>(TotalSteps);
+                            _isInit = false;
+                            return;
+                        }
+
                         var eu = new EvalComplexUnit((i, j), (x, y));
 
                         _consideredPoints.Add(eu);
@@ -248,8 +267,7 @@ namespace FracView.Algorithms
             _isInit = true;
         }
 
-
-        private void ComputeHistogram(CancellationToken token)
+        public void ComputeHistogram(CancellationToken token)
         {
             if (!_isInit)
             {
@@ -283,21 +301,38 @@ namespace FracView.Algorithms
                 throw new InvalidOperationException($"There are more iterations to evaluate than space in {nameof(NumIterationsPerPixel)}.");
             }
 
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
             int iterationCount = 0;
             long iterationsTotal = 0;
 
             var reportTimer = Stopwatch.StartNew();
             var totalTimer = Stopwatch.StartNew();
 
-            ProgressCallback(new ProgressReport(
-                0,
-                0,
-                _consideredPoints.Count,
-                $"{nameof(EscapeAlgorithm)}.{nameof(ComputeHistogram)}, loop=1)"
-                ));
+            _histogramIsEvaluated = false;
 
-            _consideredPoints.ForEach(x =>
+            if (!object.ReferenceEquals(null, ProgressCallback))
             {
+                ProgressCallback(new ProgressReport(
+                    0,
+                    0,
+                    /* set not null from _isInit */
+                    _consideredPoints!.Count,
+                    $"{nameof(EscapeAlgorithm)}.{nameof(ComputeHistogram)}, loop=1)"
+                    ));
+            }
+
+            /* set not null from _isInit */
+            _consideredPoints!.ForEach(x =>
+            {
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 NumIterationsPerPixel[x.IterationCount]++;
 
                 // not parallel, no need to lock.
@@ -324,8 +359,13 @@ namespace FracView.Algorithms
             iterationCount = 0;
             reportTimer.Restart();
 
-            Parallel.ForEach(_consideredPoints, x =>
+            Parallel.ForEach(_consideredPoints, (x, loopState) =>
             {
+                if (token.IsCancellationRequested)
+                {
+                    loopState.Break();
+                }
+
                 for (int i = 0; i < x.IterationCount; i++)
                 {
                     x.HistogramValue += (double)NumIterationsPerPixel[i] / (double)iterationsTotal;
@@ -348,6 +388,14 @@ namespace FracView.Algorithms
                     iterationCount++;
                 }
             });
+
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            // Else, wasn't cancelled, so points have been evaluated.
+            _histogramIsEvaluated = true;
         }
     }
 }

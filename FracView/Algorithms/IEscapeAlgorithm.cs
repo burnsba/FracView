@@ -9,10 +9,12 @@ namespace FracView.Algorithms
 {
     public interface IEscapeAlgorithm : IAlgorithm
     {
-        bool UseHistogram { get; }
+        bool UseHistogram { get; set; }
+        bool HistogramIsEvaluated { get; }
 
         int MaxIterations { get; }
 
         bool EvaluatePoints(CancellationToken token);
+        void ComputeHistogram(CancellationToken token);
     }
 }

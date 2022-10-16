@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FracView.Algorithms;
+using Microsoft.VisualBasic.FileIO;
 using SkiaSharp;
 using static System.Formats.Asn1.AsnWriter;
 
@@ -41,7 +42,7 @@ namespace FracView.Gfx
             return bmp;
         }
 
-        public SKBitmap ProcessPointsToPixels(IEscapeAlgorithm algorithm, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+        public SKBitmap ProcessPointsToPixels(IEscapeAlgorithm algorithm, CancellationToken token, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
         {
             if (!ColorRamp.Keyframes.Any())
             {
@@ -65,8 +66,23 @@ namespace FracView.Gfx
                 iterationCount = 0;
                 reportTimer.Restart();
 
-                Parallel.ForEach(points, x =>
+                if (!algorithm.HistogramIsEvaluated)
                 {
+                    algorithm.ComputeHistogram(token);
+
+                    if (token.IsCancellationRequested)
+                    {
+                        return null;
+                    }
+                }
+
+                Parallel.ForEach(points, (x, loopState) =>
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        loopState.Break();
+                    }
+
                     SKColor pixelColor = ColorRef.White;
 
                     if (x.IsStable == true)
@@ -114,8 +130,13 @@ namespace FracView.Gfx
 
                 //var writeTime = Stopwatch.StartNew();
 
-                Parallel.ForEach(points, x =>
+                Parallel.ForEach(points, (x, loopState) =>
                 {
+                    if (token.IsCancellationRequested)
+                    {
+                        loopState.Break();
+                    }
+
                     SKColor pixelColor = ColorRef.White;
 
                     if (x.IsStable == true)
@@ -169,6 +190,11 @@ namespace FracView.Gfx
                 });
 
                 //Console.WriteLine($"write image: {writeTime.Elapsed.TotalSeconds:N2} sec");
+            }
+
+            if (token.IsCancellationRequested)
+            {
+                return null;
             }
 
             return bmp;
