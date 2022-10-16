@@ -25,30 +25,42 @@ namespace FracView.Algorithms
         {
             decimal pa_x = eu.WorldPos.Real;
             decimal pa_y = eu.WorldPos.Imag;
-            decimal pb_x = 0;
-            decimal pb_y = 0;
-            decimal break_value;
-
-            decimal iterationBreakSquare = 0;
-
-            if (IterationBreak != null)
-            {
-                iterationBreakSquare = IterationBreak.Value * IterationBreak.Value;
-            }
 
             for (eu.IterationCount = 1; eu.IterationCount < MaxIterations; eu.IterationCount++)
             {
-                //convert to native types for performance.Avoids runtime overhead of creating so many records.
+                //convert to native types for performance. Avoids runtime overhead of creating so many records.
 
-                pb_x = pa_x * pa_x - pa_y * pa_y;
-                pb_y = pa_x * pa_y + pa_y * pa_x;
+                /*
+                
+                // naive implementation.
+
+                decimal pb_x = pa_x * pa_x - pa_y * pa_y;
+                decimal pb_y = pa_x * pa_y + pa_y * pa_x;
 
                 pa_x = pb_x + eu.WorldPos.Real;
                 pa_y = pb_y + eu.WorldPos.Imag;
 
-                break_value = (pa_x * pa_x) + (pa_y * pa_y);
+                decimal break_value = (pa_x * pa_x) + (pa_y * pa_y);
 
-                if ((IterationBreak != null && (break_value >= iterationBreakSquare)) || break_value <= 0)
+                if (break_value >= IterationBreakSquare || break_value <= 0)
+                {
+                    eu.LastPos = (pa_x, pa_y);
+
+                    return false;
+                }*/
+
+                // optimized to reduce multiplications.
+
+                decimal xsquare = pa_x * pa_x;
+                decimal ysquare = pa_y * pa_y;
+                decimal xy = pa_x * pa_y;
+
+                pa_x = xsquare - ysquare + eu.WorldPos.Real;
+                pa_y = xy + xy + eu.WorldPos.Imag;
+
+                xsquare += ysquare;
+
+                if (xsquare >= IterationBreakSquare || xsquare == 0)
                 {
                     eu.LastPos = (pa_x, pa_y);
 

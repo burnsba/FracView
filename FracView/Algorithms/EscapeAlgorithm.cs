@@ -11,6 +11,8 @@ namespace FracView.Algorithms
 {
     public abstract class EscapeAlgorithm : IEscapeAlgorithm
     {
+        private decimal _iterationBreak = 0;
+        private decimal _iterationBreakSquare = 0;
         private bool _isInit = false;
         private bool _pointsEvaluated = false;
         private object _lockObject = new object();
@@ -37,7 +39,17 @@ namespace FracView.Algorithms
 
         public int MaxIterations { get; set; }
 
-        public decimal? IterationBreak { get; set; } = null;
+        public decimal IterationBreak
+        {
+            get => _iterationBreak;
+            set
+            {
+                _iterationBreak = value;
+                _iterationBreakSquare = value * value;
+            }
+        }
+
+        public decimal IterationBreakSquare => _iterationBreakSquare;
 
         public bool UseHistogram { get; set; }
 
