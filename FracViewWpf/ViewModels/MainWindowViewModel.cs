@@ -33,8 +33,6 @@ namespace FracViewWpf.ViewModels
             "|BMP format|*.bmp" +
             "|Gif format|*.gif";
 
-        //private CancellationTokenSource _cancellationToken = new CancellationTokenSource();
-        
         private CancellationTokenSource _cancellationTokenCompute = new CancellationTokenSource();
         private CancellationTokenSource _cancellationTokenColor = new CancellationTokenSource();
         
@@ -202,8 +200,6 @@ namespace FracViewWpf.ViewModels
                     _uiRunData.StepWidth = i;
                     StepWidthIsValid = true;
 
-                    //RecomputeImageScreenDimensions();
-
                     AnyChangeForReset = true;
 
                     if (hasMath)
@@ -304,9 +300,6 @@ namespace FracViewWpf.ViewModels
         public bool StepHeightIsValid { get; private set; }
         public bool MaxIterationsIsValid { get; private set; }
 
-        //public int ImageWidth { get; private set; }
-        //public int ImageHeight { get; private set; }
-
         public string ComputeCommandText { get; private set; }
 
         public string StatusBarCurrentWork { get; private set; }
@@ -361,17 +354,11 @@ namespace FracViewWpf.ViewModels
 
         public ImageSource ImageSource => _imageSource;
 
-        //public Func<double>? GetParentDisplayGridImageWidth { get; set; } = null;
-        //public Func<double>? GetParentDisplayGridImageHeight { get; set; } = null;
-
         public event EventHandler<EventArgs>? AfterRunCompleted;
 
         public MainWindowViewModel(IScene scene)
         {
             ResetToDefaultCommandHandler();
-
-            //ImageWidth = _uiRunData.StepWidth;
-            //ImageHeight = _uiRunData.StepHeight;
 
             _previousRunData = _uiRunData with { };
 
@@ -399,116 +386,8 @@ namespace FracViewWpf.ViewModels
             AnyChangeForReset = false;
         }
 
-        /*
-        public void RecomputeImageScreenDimensions()
-        {
-            if (GetParentDisplayGridImageWidth == null || GetParentDisplayGridImageHeight == null)
-            {
-                return;
-            }
-
-            var displayGridImageHeight = GetParentDisplayGridImageHeight();
-            var displayGridImageWidth = GetParentDisplayGridImageWidth();
-
-            if (_previousRunData.StepHeight == 0 || displayGridImageHeight == 0)
-            {
-                return;
-            }
-
-            ImageHeight = (int)displayGridImageHeight;
-            ImageWidth = (int)displayGridImageWidth;
-
-            if (ImageWidth < 0)
-            {
-                ImageWidth = 0;
-            }
-
-            if (ImageHeight < 0)
-            {
-                ImageHeight = 0;
-            }
-
-            OnPropertyChanged(nameof(ImageHeight));
-            OnPropertyChanged(nameof(ImageWidth));
-        }
-        */
-
         public void UpdateImagePositionStats(ScrollScaleInfo scrollInfo)
         {
-            //double scalePixelWidth = ImageWidth;
-            //double scalePixelHeight = ImageHeight;
-            /*
-            double scalePixelTop = 0;
-            double scalePixelLeft = 0;
-            double scalePixelCenterX = 0;
-            double scalePixelCenterY = 0;
-
-            decimal scaleFractalLeft = _previousRunData.OriginX - (_previousRunData.FractalWidth / 2);
-            decimal scaleFractalTop = _previousRunData.OriginY + (_previousRunData.FractalHeight / 2);
-            decimal scaleFractalWidth = _previousRunData.FractalWidth;
-            decimal scaleFractalHeight = _previousRunData.FractalHeight;
-
-            if (UiScale > 1)
-            {
-                scalePixelWidth /= UiScale;
-                scalePixelHeight /= UiScale;
-
-                scaleFractalWidth /= (decimal)UiScale;
-                scaleFractalHeight /= (decimal)UiScale;
-
-                scalePixelLeft = scrollInfo.ContentHorizontalOffset / UiScale;
-                scalePixelTop = scrollInfo.ContentVerticalOffset / UiScale;
-            }
-
-            if (scrollInfo.DesiredSizeX == 0 || scrollInfo.DesiredSizeY == 0)
-            {
-                return;
-            }
-
-            decimal fractalToPixelConversionX = _previousRunData.FractalWidth / (decimal)scrollInfo.DesiredSizeX;
-            decimal fractalToPixelConversionY = _previousRunData.FractalHeight / (decimal)scrollInfo.DesiredSizeY;
-            decimal scaleFractalCenterX = 0;
-            decimal scaleFractalCenterY = 0;
-
-            if (UiScale > 1)
-            {
-                scaleFractalLeft += (decimal)scalePixelLeft * fractalToPixelConversionX;
-                scaleFractalTop -= (decimal)scalePixelTop * fractalToPixelConversionY;
-            }
-
-            scalePixelCenterX = scalePixelLeft + (scalePixelWidth / 2);
-            scalePixelCenterY = scalePixelTop + (scalePixelHeight / 2);
-
-            scaleFractalCenterX = scaleFractalLeft + (scaleFractalWidth / 2);
-            scaleFractalCenterY = scaleFractalTop - (scaleFractalHeight / 2);
-
-            _targetRunData.OriginX = scaleFractalCenterX;
-            _targetRunData.OriginY = scaleFractalCenterY;
-            _targetRunData.FractalWidth = scaleFractalWidth;
-            _targetRunData.FractalHeight = scaleFractalHeight;
-
-            TextPixelLeftTop = $"{scalePixelLeft:N2}, {scalePixelTop:N2}";
-            OnPropertyChanged(nameof(TextPixelLeftTop));
-
-            TextPixelCenter = $"{scalePixelCenterX:N2}, {scalePixelCenterY:N2}";
-            OnPropertyChanged(nameof(TextPixelCenter));
-
-            TextPixelWidthHeight = $"{scalePixelWidth:N2}, {scalePixelHeight:N2}";
-            OnPropertyChanged(nameof(TextPixelWidthHeight));
-
-            TextFractalLeftTop = $"{scaleFractalLeft}, {scaleFractalTop}";
-            OnPropertyChanged(nameof(TextFractalLeftTop));
-
-            TextFractalCenter = $"{scaleFractalCenterX}, {scaleFractalCenterY}";
-            OnPropertyChanged(nameof(TextFractalCenter));
-
-            TextFractalWidthHeight = $"{scaleFractalWidth}, {scaleFractalHeight}";
-            OnPropertyChanged(nameof(TextFractalWidthHeight));
-            */
-
-            // (scrollInfo.DesiredSizeX - System.Windows.SystemParameters.VerticalScrollBarWidth - 5)
-            // (scrollInfo.DesiredSizeY - System.Windows.SystemParameters.HorizontalScrollBarHeight - 5)
-
             if (scrollInfo.ExtentWidth == 0 || scrollInfo.ExtentHeight == 0)
             {
                 return;

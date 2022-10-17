@@ -28,7 +28,7 @@ namespace FracViewWpf.Windows
     public partial class MainWindow : Window, ICloseable
     {
         private Dispatcher _dispatcher;
-        private MainWindowViewModel _vm = null;
+        private MainWindowViewModel _vm;
 
         private int _imageZoomLittleScrollIndex = 0;
         private int _imageZoomBigScrollIndex = 0;
@@ -45,9 +45,6 @@ namespace FracViewWpf.Windows
 
             _vm = vm;
 
-            //_vm.GetParentDisplayGridImageWidth = () => this.ImageGridContainer.ColumnDefinitions[2].ActualWidth;
-            //_vm.GetParentDisplayGridImageHeight = () => this.ImageGridContainer.ActualHeight;
-
             _vm.AfterRunCompleted += ClearZoom;
 
             DataContext = _vm;
@@ -55,62 +52,12 @@ namespace FracViewWpf.Windows
 
         private void AdjustImageSize()
         {
-            var imageTotalPixelHeight = _vm.StepHeight;// * _vm.UiScale;
-            var imageTotalPixelWidth = _vm.StepWidth;// * _vm.UiScale;
-            double ratio = (double)_vm.StepWidth / (double)_vm.StepHeight;
-
-            //if (ratio > 1)
-            //{
-            //    if (imageTotalPixelHeight > MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight)
-            //    {
-            //        MainDisplayImage.Height = MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight;
-            //        MainDisplayImage.Width = MainDisplayImage.Height * ratio;
-            //    }
-            //    else if (imageTotalPixelWidth > MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth)
-            //    {
-            //        MainDisplayImage.Width = MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth;
-            //        MainDisplayImage.Height = MainDisplayImage.Width / ratio;
-            //    }
-            //}
-            //else if (ratio < 1)
-            //{
-            //    if (imageTotalPixelWidth > MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth)
-            //    {
-            //        MainDisplayImage.Width = MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth;
-            //        MainDisplayImage.Height = MainDisplayImage.Width / ratio;
-            //    }
-            //    else if (imageTotalPixelHeight > MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight)
-            //    {
-            //        MainDisplayImage.Height = MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight;
-            //        MainDisplayImage.Width = MainDisplayImage.Height * ratio;
-            //    }
-            //}
-
-            //if (imageTotalPixelHeight > MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight)
-            //{
-            //    MainDisplayImage.Height = MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight;
-            //}
-            //else
-            //{
-                MainDisplayImage.Height = imageTotalPixelHeight;
-            //}
-
-
-
-            //if (imageTotalPixelWidth > MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth)
-            //{
-            //    MainDisplayImage.Width = MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth;
-            //}
-            //else
-            //{
-                MainDisplayImage.Width = imageTotalPixelWidth;
-            //}
+            MainDisplayImage.Height = (double)_vm.StepHeight;
+            MainDisplayImage.Width = (double)_vm.StepWidth;
         }
 
         private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            //_vm.RecomputeImageScreenDimensions();
-
             AdjustImageSize();
 
             UpdateImagePositionStats();
@@ -221,14 +168,6 @@ namespace FracViewWpf.Windows
                 var startPoint = startTransform.Transform(new Point(startPixelCenterX, startPixelCenterY));
                 var endPoint = transform.Transform(new Point(startPixelCenterX, startPixelCenterY));
 
-                //if (startScale <= 1)
-                //{
-                //    startPoint.X += System.Windows.SystemParameters.VerticalScrollBarWidth / 2;
-                //    //startPoint.Y -= System.Windows.SystemParameters.HorizontalScrollBarHeight;
-                //}
-
-                //startPoint.X -= System.Windows.SystemParameters.VerticalScrollBarWidth / 2;
-
                 if (startScale == 1 && scalex == 1.1)
                 {
                     endPoint.X -= 12.2;
@@ -243,17 +182,6 @@ namespace FracViewWpf.Windows
                 MainDisplayImageScrollViewer.ScrollToVerticalOffset(MainDisplayImageScrollViewer.VerticalOffset + shift.Y);
                 MainDisplayImageScrollViewer.ScrollToHorizontalOffset(MainDisplayImageScrollViewer.HorizontalOffset + shift.X);
             }
-
-            //if (_imageZoomLittleScrollIndex == 0 && _imageZoomBigScrollIndex == 0)
-            //{
-            //    MainDisplayImageScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
-            //    MainDisplayImageScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-            //}
-            //else
-            //{
-            //    MainDisplayImageScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
-            //    MainDisplayImageScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
-            //}
         }
 
         private void MainDisplayImageScrollViewer_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -352,14 +280,12 @@ namespace FracViewWpf.Windows
             _vm.UpdateImagePositionStats(scrollInfo);
         }
 
-        private void ClearZoom(object sender, EventArgs e)
+        private void ClearZoom(object? sender, EventArgs e)
         {
             _dispatcher.BeginInvoke(() =>
             {
                 _imageZoomLittleScrollIndex = 0;
                 _imageZoomBigScrollIndex = 0;
-                //MainDisplayImageScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
-                //MainDisplayImageScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
                 _vm.UiScale = 1.0;
 
                 var transform = new ScaleTransform();
@@ -369,7 +295,6 @@ namespace FracViewWpf.Windows
 
                 MainDisplayImage.LayoutTransform = transform;
 
-                //_vm.RecomputeImageScreenDimensions();
                 AdjustImageSize();
                 UpdateImagePositionStats();
             });
