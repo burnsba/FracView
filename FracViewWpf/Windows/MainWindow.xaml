@@ -86,14 +86,18 @@
 
                 <Border 
                     Grid.Column="0"
-                    VerticalAlignment="Bottom"
                     BorderBrush="Silver"
                     BorderThickness="1"
-                    Padding="4">
-                    <Grid>
+                    Padding="4"
+                    >
+                    <Grid
+                        VerticalAlignment="Bottom"
+                        >
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel Orientation="Vertical">
-                                <Button HorizontalAlignment="left" VerticalAlignment="Center" Padding="6" Margin="6 6 0 0"
+                            
+                            <StackPanel Orientation="Vertical" Margin="6 0 6 0">
+                                
+                                <Button HorizontalAlignment="left" VerticalAlignment="Center" Padding="6" 
                                         Command="{Binding Path=ToggleCrosshairCommand}">
                                     <TextBlock Text="{Binding Path=ShowCrosshairCommandText}"></TextBlock>
                                 </Button>
@@ -108,20 +112,28 @@
                                 <TextBox Text="{Binding Path=TextPixelWidthHeight}" IsReadOnly="True"></TextBox>
                                 <TextBlock>View Width/Height</TextBlock>
                                 <TextBox Text="{Binding Path=TextViewWidthHeight}" IsReadOnly="True"></TextBox>
-                        
+
+                                <Label></Label>
+                                
                                 <TextBlock>Fractal Left/Top</TextBlock>
                                 <TextBox Text="{Binding Path=TextFractalLeftTop}" IsReadOnly="True"></TextBox>
                                 <TextBlock>Fractal Center</TextBlock>
                                 <TextBox Text="{Binding Path=TextFractalCenter}" IsReadOnly="True"></TextBox>
                                 <TextBlock>Fractal Width/Height</TextBlock>
                                 <TextBox Text="{Binding Path=TextFractalWidthHeight}" IsReadOnly="True"></TextBox>
-                        
+
+                                <Label></Label>
+                                
                                 <TextBlock>Mouse Pixel X/Y</TextBlock>
                                 <TextBox Text="{Binding Path=TextMousePixelXy}" IsReadOnly="True"></TextBox>
                                 <TextBlock>Mouse Fractal X/Y</TextBlock>
                                 <TextBox Text="{Binding Path=TextMouseFractalXy}" IsReadOnly="True"></TextBox>
 
-                                <Button MinWidth="32" Command="{Binding Path=TargetFromViewCommand}">
+                                <Label></Label>
+                                
+                                <Button MinWidth="32" 
+                                        HorizontalAlignment="left" VerticalAlignment="Center" Padding="6" 
+                                        Command="{Binding Path=TargetFromViewCommand}">
                                     <TextBlock Padding="6,0,6,0">Target</TextBlock>
                                 </Button>
                             </StackPanel>
