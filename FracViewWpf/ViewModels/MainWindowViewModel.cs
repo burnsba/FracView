@@ -202,7 +202,7 @@ namespace FracViewWpf.ViewModels
                     _uiRunData.StepWidth = i;
                     StepWidthIsValid = true;
 
-                    RecomputeImageScreenDimensions();
+                    //RecomputeImageScreenDimensions();
 
                     AnyChangeForReset = true;
 
@@ -222,6 +222,8 @@ namespace FracViewWpf.ViewModels
             }
         }
 
+        public int StepWidth => _previousRunData.StepWidth;
+
         public string TextStepHeight
         {
             get => _textStepHeight;
@@ -235,7 +237,7 @@ namespace FracViewWpf.ViewModels
                     _uiRunData.StepHeight = i;
                     StepHeightIsValid = true;
 
-                    RecomputeImageScreenDimensions();
+                    //RecomputeImageScreenDimensions();
 
                     AnyChangeForReset = true;
 
@@ -254,6 +256,8 @@ namespace FracViewWpf.ViewModels
                 OnPropertyChanged(nameof(StepHeightIsValid));
             }
         }
+
+        public int StepHeight => _previousRunData.StepHeight;
 
         public string TextMaxIterations
         {
@@ -300,8 +304,8 @@ namespace FracViewWpf.ViewModels
         public bool StepHeightIsValid { get; private set; }
         public bool MaxIterationsIsValid { get; private set; }
 
-        public int ImageWidth { get; private set; }
-        public int ImageHeight { get; private set; }
+        //public int ImageWidth { get; private set; }
+        //public int ImageHeight { get; private set; }
 
         public string ComputeCommandText { get; private set; }
 
@@ -313,6 +317,7 @@ namespace FracViewWpf.ViewModels
         public string TextPixelLeftTop { get; set; }
         public string TextPixelCenter { get; set; }
         public string TextPixelWidthHeight { get; set; }
+        public string TextViewWidthHeight { get; set; }
 
         public string TextFractalLeftTop { get; set; }
         public string TextFractalCenter { get; set; }
@@ -356,8 +361,8 @@ namespace FracViewWpf.ViewModels
 
         public ImageSource ImageSource => _imageSource;
 
-        public Func<double>? GetParentDisplayGridImageWidth { get; set; } = null;
-        public Func<double>? GetParentDisplayGridImageHeight { get; set; } = null;
+        //public Func<double>? GetParentDisplayGridImageWidth { get; set; } = null;
+        //public Func<double>? GetParentDisplayGridImageHeight { get; set; } = null;
 
         public event EventHandler<EventArgs>? AfterRunCompleted;
 
@@ -365,8 +370,8 @@ namespace FracViewWpf.ViewModels
         {
             ResetToDefaultCommandHandler();
 
-            ImageWidth = _uiRunData.StepWidth;
-            ImageHeight = _uiRunData.StepHeight;
+            //ImageWidth = _uiRunData.StepWidth;
+            //ImageHeight = _uiRunData.StepHeight;
 
             _previousRunData = _uiRunData with { };
 
@@ -394,6 +399,7 @@ namespace FracViewWpf.ViewModels
             AnyChangeForReset = false;
         }
 
+        /*
         public void RecomputeImageScreenDimensions()
         {
             if (GetParentDisplayGridImageWidth == null || GetParentDisplayGridImageHeight == null)
@@ -425,11 +431,13 @@ namespace FracViewWpf.ViewModels
             OnPropertyChanged(nameof(ImageHeight));
             OnPropertyChanged(nameof(ImageWidth));
         }
+        */
 
         public void UpdateImagePositionStats(ScrollScaleInfo scrollInfo)
         {
-            double scalePixelWidth = ImageWidth;
-            double scalePixelHeight = ImageHeight;
+            //double scalePixelWidth = ImageWidth;
+            //double scalePixelHeight = ImageHeight;
+            /*
             double scalePixelTop = 0;
             double scalePixelLeft = 0;
             double scalePixelCenterX = 0;
@@ -450,6 +458,11 @@ namespace FracViewWpf.ViewModels
 
                 scalePixelLeft = scrollInfo.ContentHorizontalOffset / UiScale;
                 scalePixelTop = scrollInfo.ContentVerticalOffset / UiScale;
+            }
+
+            if (scrollInfo.DesiredSizeX == 0 || scrollInfo.DesiredSizeY == 0)
+            {
+                return;
             }
 
             decimal fractalToPixelConversionX = _previousRunData.FractalWidth / (decimal)scrollInfo.DesiredSizeX;
@@ -491,44 +504,99 @@ namespace FracViewWpf.ViewModels
 
             TextFractalWidthHeight = $"{scaleFractalWidth}, {scaleFractalHeight}";
             OnPropertyChanged(nameof(TextFractalWidthHeight));
+            */
+
+            // (scrollInfo.DesiredSizeX - System.Windows.SystemParameters.VerticalScrollBarWidth - 5)
+            // (scrollInfo.DesiredSizeY - System.Windows.SystemParameters.HorizontalScrollBarHeight - 5)
+
+            if (scrollInfo.ExtentWidth == 0 || scrollInfo.ExtentHeight == 0)
+            {
+                return;
+            }
+
+            if (_previousRunData.StepWidth == 0 || _previousRunData.StepHeight == 0)
+            {
+                return;
+            }
+
+            double scalePixelLeft = _previousRunData.StepWidth
+                * scrollInfo.ContentHorizontalOffset
+                / scrollInfo.ExtentWidth;
+
+            double scalePixelTop = _previousRunData.StepHeight
+                * scrollInfo.ContentVerticalOffset
+                / scrollInfo.ExtentHeight;
+
+            double pixelScaleRatioX = (scrollInfo.DesiredSizeX - System.Windows.SystemParameters.VerticalScrollBarWidth) / scrollInfo.ExtentWidth;
+            double pixelScaleRatioY = (scrollInfo.DesiredSizeY - System.Windows.SystemParameters.HorizontalScrollBarHeight) / scrollInfo.ExtentHeight;
+
+            double scalePixelWidth = (double)_previousRunData.StepWidth;
+            double scalePixelHeight = (double)_previousRunData.StepHeight;
+
+            double scaleViewWidth = pixelScaleRatioX * scalePixelWidth;
+            double scaleViewHeight = pixelScaleRatioY * scalePixelHeight;
+
+            double scalePixelCenterX = scalePixelLeft + (scaleViewWidth / 2);
+            double scalePixelCenterY = scalePixelTop + (scaleViewHeight / 2);
+
+            //
+
+            decimal fractalToPixelConversionX = _previousRunData.FractalWidth / (decimal)(scrollInfo.DesiredSizeX - System.Windows.SystemParameters.VerticalScrollBarWidth);
+            decimal fractalToPixelConversionY = _previousRunData.FractalHeight / (decimal)(scrollInfo.DesiredSizeY - System.Windows.SystemParameters.HorizontalScrollBarHeight);
+
+            decimal scaleFractalLeft = _previousRunData.OriginX - (_previousRunData.FractalWidth / 2)
+                + ((decimal)scalePixelLeft / _previousRunData.StepWidth) * _previousRunData.FractalWidth;
+
+            decimal scaleFractalTop = _previousRunData.OriginY + (_previousRunData.FractalHeight / 2)
+                - ((decimal)scalePixelTop / _previousRunData.StepHeight) * _previousRunData.FractalHeight;
+
+            decimal scaleFractalWidth = _previousRunData.FractalWidth / (decimal)UiScale;
+            decimal scaleFractalHeight = _previousRunData.FractalHeight / (decimal)UiScale;
+
+            decimal scaleFractalCenterX = scaleFractalLeft + (_previousRunData.FractalWidth * (decimal)pixelScaleRatioX / 2);
+            decimal scaleFractalCenterY = scaleFractalTop - (_previousRunData.FractalHeight * (decimal)pixelScaleRatioY / 2);
+
+            _targetRunData.OriginX = scaleFractalCenterX;
+            _targetRunData.OriginY = scaleFractalCenterY;
+            _targetRunData.FractalWidth = scaleFractalWidth;
+            _targetRunData.FractalHeight = scaleFractalHeight;
+
+            TextPixelLeftTop = $"{scalePixelLeft:N2}, {scalePixelTop:N2}";
+            OnPropertyChanged(nameof(TextPixelLeftTop));
+
+            TextPixelCenter = $"{scalePixelCenterX:N2}, {scalePixelCenterY:N2}";
+            OnPropertyChanged(nameof(TextPixelCenter));
+
+            TextPixelWidthHeight = $"{scalePixelWidth:N2}, {scalePixelHeight:N2}";
+            OnPropertyChanged(nameof(TextPixelWidthHeight));
+
+            TextViewWidthHeight = $"{scaleViewWidth:N2}, {scaleViewHeight:N2}";
+            OnPropertyChanged(nameof(TextViewWidthHeight));
+
+            TextFractalLeftTop = $"{scaleFractalLeft}, {scaleFractalTop}";
+            OnPropertyChanged(nameof(TextFractalLeftTop));
+
+            TextFractalCenter = $"{scaleFractalCenterX}, {scaleFractalCenterY}";
+            OnPropertyChanged(nameof(TextFractalCenter));
+
+            TextFractalWidthHeight = $"{scaleFractalWidth}, {scaleFractalHeight}";
+            OnPropertyChanged(nameof(TextFractalWidthHeight));
         }
 
         public void UpdateMousePositionStats(Point position, ScrollScaleInfo scrollInfo)
         {
-            double scalePixelTop = 0;
-            double scalePixelLeft = 0;
-            double mouseX = 0;
-            double mouseY = 0;
-            double scaleMousePositionX = position.X;
-            double scaleMousePositionY = position.Y;
             decimal fractalMouseX = 0;
             decimal fractalMouseY = 0;
 
-            decimal fractalToPixelConversionX = _previousRunData.FractalWidth / (decimal)scrollInfo.DesiredSizeX;
-            decimal fractalToPixelConversionY = _previousRunData.FractalHeight / (decimal)scrollInfo.DesiredSizeY;
+            fractalMouseX = _previousRunData.OriginX
+                - (_previousRunData.FractalWidth / 2)
+                + (_previousRunData.FractalWidth * (decimal)position.X / (decimal)_previousRunData.StepWidth);
 
-            decimal scaleFractalLeft = _previousRunData.OriginX - (_previousRunData.FractalWidth / 2);
-            decimal scaleFractalTop = _previousRunData.OriginY + (_previousRunData.FractalHeight / 2);
+            fractalMouseY = _previousRunData.OriginY
+                - (_previousRunData.FractalHeight / 2)
+                + (_previousRunData.FractalHeight * (decimal)position.Y / (decimal)_previousRunData.StepHeight);
 
-            if (UiScale > 1)
-            {
-                scalePixelLeft = scrollInfo.ContentHorizontalOffset / UiScale;
-                scalePixelTop = scrollInfo.ContentVerticalOffset / UiScale;
-
-                scaleMousePositionX /= UiScale;
-                scaleMousePositionY /= UiScale;
-
-                scaleFractalLeft += (decimal)scalePixelLeft * fractalToPixelConversionX;
-                scaleFractalTop -= (decimal)scalePixelTop * fractalToPixelConversionY;
-            }
-
-            mouseX = scalePixelLeft + scaleMousePositionX;
-            mouseY = scalePixelTop + scaleMousePositionY;
-
-            fractalMouseX = scaleFractalLeft + ((decimal)scaleMousePositionX * fractalToPixelConversionX);
-            fractalMouseY = scaleFractalTop - ((decimal)scaleMousePositionY * fractalToPixelConversionY);
-
-            TextMousePixelXy = $"{mouseX:N2}, {mouseY:N2}";
+            TextMousePixelXy = $"{position.X:N2}, {position.Y:N2}";
             OnPropertyChanged(nameof(TextMousePixelXy));
 
             TextMouseFractalXy = $"{fractalMouseX}, {fractalMouseY}";

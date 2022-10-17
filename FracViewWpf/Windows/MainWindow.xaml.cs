@@ -45,17 +45,73 @@ namespace FracViewWpf.Windows
 
             _vm = vm;
 
-            _vm.GetParentDisplayGridImageWidth = () => this.ImageGridContainer.ColumnDefinitions[2].ActualWidth;
-            _vm.GetParentDisplayGridImageHeight = () => this.ImageGridContainer.ActualHeight;
+            //_vm.GetParentDisplayGridImageWidth = () => this.ImageGridContainer.ColumnDefinitions[2].ActualWidth;
+            //_vm.GetParentDisplayGridImageHeight = () => this.ImageGridContainer.ActualHeight;
 
             _vm.AfterRunCompleted += ClearZoom;
 
             DataContext = _vm;
         }
 
+        private void AdjustImageSize()
+        {
+            var imageTotalPixelHeight = _vm.StepHeight;// * _vm.UiScale;
+            var imageTotalPixelWidth = _vm.StepWidth;// * _vm.UiScale;
+            double ratio = (double)_vm.StepWidth / (double)_vm.StepHeight;
+
+            //if (ratio > 1)
+            //{
+            //    if (imageTotalPixelHeight > MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight)
+            //    {
+            //        MainDisplayImage.Height = MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight;
+            //        MainDisplayImage.Width = MainDisplayImage.Height * ratio;
+            //    }
+            //    else if (imageTotalPixelWidth > MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth)
+            //    {
+            //        MainDisplayImage.Width = MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth;
+            //        MainDisplayImage.Height = MainDisplayImage.Width / ratio;
+            //    }
+            //}
+            //else if (ratio < 1)
+            //{
+            //    if (imageTotalPixelWidth > MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth)
+            //    {
+            //        MainDisplayImage.Width = MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth;
+            //        MainDisplayImage.Height = MainDisplayImage.Width / ratio;
+            //    }
+            //    else if (imageTotalPixelHeight > MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight)
+            //    {
+            //        MainDisplayImage.Height = MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight;
+            //        MainDisplayImage.Width = MainDisplayImage.Height * ratio;
+            //    }
+            //}
+
+            //if (imageTotalPixelHeight > MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight)
+            //{
+            //    MainDisplayImage.Height = MainDisplayImageScrollViewer.ActualHeight - System.Windows.SystemParameters.HorizontalScrollBarHeight;
+            //}
+            //else
+            //{
+                MainDisplayImage.Height = imageTotalPixelHeight;
+            //}
+
+
+
+            //if (imageTotalPixelWidth > MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth)
+            //{
+            //    MainDisplayImage.Width = MainDisplayImageScrollViewer.ActualWidth - System.Windows.SystemParameters.VerticalScrollBarWidth;
+            //}
+            //else
+            //{
+                MainDisplayImage.Width = imageTotalPixelWidth;
+            //}
+        }
+
         private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            _vm.RecomputeImageScreenDimensions();
+            //_vm.RecomputeImageScreenDimensions();
+
+            AdjustImageSize();
 
             UpdateImagePositionStats();
         }
@@ -119,10 +175,12 @@ namespace FracViewWpf.Windows
 
             if (change)
             {
-                double startPixelWidth = MainDisplayImageScrollViewer.DesiredSize.Width;
-                double startPixelHeight = MainDisplayImageScrollViewer.DesiredSize.Height;
-                double startPixelTop = 0;
-                double startPixelLeft = 0;
+                double startPixelWidth = MainDisplayImageScrollViewer.DesiredSize.Width
+                    - System.Windows.SystemParameters.VerticalScrollBarWidth;
+                double startPixelHeight = MainDisplayImageScrollViewer.DesiredSize.Height
+                    - System.Windows.SystemParameters.HorizontalScrollBarHeight;
+                double startPixelTop = MainDisplayImageScrollViewer.ContentVerticalOffset;
+                double startPixelLeft = MainDisplayImageScrollViewer.ContentHorizontalOffset;
                 double startScale = _vm.UiScale;
                 var startTransform = new ScaleTransform(startScale, startScale);
 
@@ -158,26 +216,44 @@ namespace FracViewWpf.Windows
 
                 MainDisplayImage.LayoutTransform = transform;
 
-                // Adjust scrollview to keep maintain the point in the center.
+                // Adjust scrollview to maintain the point in the center.
                 // https://stackoverflow.com/a/6461667/1462295
                 var startPoint = startTransform.Transform(new Point(startPixelCenterX, startPixelCenterY));
                 var endPoint = transform.Transform(new Point(startPixelCenterX, startPixelCenterY));
+
+                //if (startScale <= 1)
+                //{
+                //    startPoint.X += System.Windows.SystemParameters.VerticalScrollBarWidth / 2;
+                //    //startPoint.Y -= System.Windows.SystemParameters.HorizontalScrollBarHeight;
+                //}
+
+                //startPoint.X -= System.Windows.SystemParameters.VerticalScrollBarWidth / 2;
+
+                if (startScale == 1 && scalex == 1.1)
+                {
+                    endPoint.X -= 12.2;
+                }
+                else if (startScale == 1.1 && scalex == 1.21)
+                {
+                    endPoint.Y -= 6;
+                }
+
                 var shift = endPoint - startPoint;
 
                 MainDisplayImageScrollViewer.ScrollToVerticalOffset(MainDisplayImageScrollViewer.VerticalOffset + shift.Y);
                 MainDisplayImageScrollViewer.ScrollToHorizontalOffset(MainDisplayImageScrollViewer.HorizontalOffset + shift.X);
             }
 
-            if (_imageZoomLittleScrollIndex == 0 && _imageZoomBigScrollIndex == 0)
-            {
-                MainDisplayImageScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
-                MainDisplayImageScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
-            }
-            else
-            {
-                MainDisplayImageScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
-                MainDisplayImageScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
-            }
+            //if (_imageZoomLittleScrollIndex == 0 && _imageZoomBigScrollIndex == 0)
+            //{
+            //    MainDisplayImageScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            //    MainDisplayImageScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            //}
+            //else
+            //{
+            //    MainDisplayImageScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Visible;
+            //    MainDisplayImageScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Visible;
+            //}
         }
 
         private void MainDisplayImageScrollViewer_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -208,7 +284,12 @@ namespace FracViewWpf.Windows
                 e.GetPosition(MainDisplayImageScrollViewer).X,
                 e.GetPosition(MainDisplayImageScrollViewer).Y);
 
-            UpdateMousePositionStats(scrollerMousePosition);
+            Point imageMousePosition = new Point(
+                e.GetPosition(MainDisplayImage).X,
+                e.GetPosition(MainDisplayImage).Y
+                );
+
+            UpdateMousePositionStats(imageMousePosition);
 
             if (MainDisplayImage.IsMouseCaptured)
             {
@@ -277,8 +358,8 @@ namespace FracViewWpf.Windows
             {
                 _imageZoomLittleScrollIndex = 0;
                 _imageZoomBigScrollIndex = 0;
-                MainDisplayImageScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
-                MainDisplayImageScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+                //MainDisplayImageScrollViewer.HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden;
+                //MainDisplayImageScrollViewer.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
                 _vm.UiScale = 1.0;
 
                 var transform = new ScaleTransform();
@@ -288,7 +369,8 @@ namespace FracViewWpf.Windows
 
                 MainDisplayImage.LayoutTransform = transform;
 
-                _vm.RecomputeImageScreenDimensions();
+                //_vm.RecomputeImageScreenDimensions();
+                AdjustImageSize();
                 UpdateImagePositionStats();
             });
         }

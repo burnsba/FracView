@@ -98,6 +98,8 @@
                                 <TextBox Text="{Binding Path=TextPixelCenter}" IsReadOnly="True"></TextBox>
                                 <TextBlock>Pixel Width/Height</TextBlock>
                                 <TextBox Text="{Binding Path=TextPixelWidthHeight}" IsReadOnly="True"></TextBox>
+                                <TextBlock>View Width/Height</TextBlock>
+                                <TextBox Text="{Binding Path=TextViewWidthHeight}" IsReadOnly="True"></TextBox>
                         
                                 <TextBlock>Fractal Left/Top</TextBlock>
                                 <TextBox Text="{Binding Path=TextFractalLeftTop}" IsReadOnly="True"></TextBox>
@@ -122,37 +124,44 @@
                 <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"></GridSplitter>
 
                 <Border
-                    Name="ImageBorderContainer"
                     Grid.Column="2"
-                    VerticalAlignment="Top"
-                        BorderThickness="2"
-                        BorderBrush="#FFBDBDBD"
-                        Width="{Binding Path=ImageWidth}"
-                        Height="{Binding Path=ImageHeight}"
-                        MinWidth="128"
-                        MinHeight="128"
-                        >
+                    Name="ImageBorderContainer"
+                    VerticalAlignment="Stretch"
+                    HorizontalAlignment="Stretch"
+                    BorderThickness="2"
+                    BorderBrush="#FFBDBDBD"
+                    MinWidth="128"
+                    MinHeight="128"
+                    Margin="0"
+                    Padding="0"
+                    >
                     <ScrollViewer
                         Name="MainDisplayImageScrollViewer"
-                        HorizontalScrollBarVisibility="Hidden"
-                        VerticalScrollBarVisibility="Hidden"
+                        HorizontalScrollBarVisibility="Visible"
+                        VerticalScrollBarVisibility="Visible"
                         MouseWheel="MainDisplayImageScrollViewer_MouseWheel"
                         ScrollChanged="MainDisplayImageScrollViewer_ScrollChanged"
+                        VerticalAlignment="Stretch"
+                        HorizontalAlignment="Stretch"
+                        Margin="0"
+                        Padding="0"
                         >
                         <Image
+                            
                             Name="MainDisplayImage"
                             RenderOptions.BitmapScalingMode="HighQuality"
                             MinWidth="128"
                             MinHeight="128"
                             Source="{Binding Path=ImageSource}"
-                            Width="{Binding Path=ImageWidth}"
-                            Height="{Binding Path=ImageHeight}"
+                            
                             RenderTransformOrigin="0.5,0.5"
                             MouseWheel="Image_MouseWheel"
-                                
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
                             MouseLeftButtonDown="MainDisplayImageScrollViewer_MouseLeftButtonDown"
                             PreviewMouseMove="MainDisplayImageScrollViewer_PreviewMouseMove"
                             PreviewMouseLeftButtonUp="MainDisplayImageScrollViewer_PreviewMouseLeftButtonUp"
+                            Margin="0"
                             >
                             <Image.RenderTransform>
                                 <ScaleTransform/>
@@ -160,6 +169,20 @@
                         </Image>
                     </ScrollViewer>
                 </Border>
+                <Border Grid.Column="2"
+                        BorderThickness="1"
+                        BorderBrush="Red"
+                        Width="1"
+                        HorizontalAlignment="Center"
+                        Margin="-17 0 0 0"
+                        Height="2000"
+                        ></Border>
+                <Border Grid.Column="2"
+                        BorderThickness="1"
+                        BorderBrush="Red"
+                        Margin="0 -17 0 0"
+                        Height="1"
+                        ></Border>
             </Grid>
 
 
