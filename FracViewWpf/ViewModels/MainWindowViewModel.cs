@@ -343,6 +343,9 @@ namespace FracViewWpf.ViewModels
             }
         }
 
+        public bool ShowCrosshair { get; set; }
+        public string ShowCrosshairCommandText { get; set; }
+
         public ICommand ComputeCommand { get; set; }
 
         public ICommand ShowColorsWindowCommand { get; set; }
@@ -351,6 +354,7 @@ namespace FracViewWpf.ViewModels
         public ICommand ResetToPreviousCommand { get; set; }
         public ICommand TargetFromViewCommand { get; set; }
         public ICommand SaveAsCommand { get; set; }
+        public ICommand ToggleCrosshairCommand { get; set; }
 
         public ImageSource ImageSource => _imageSource;
 
@@ -365,6 +369,7 @@ namespace FracViewWpf.ViewModels
             SaveAsCommand = new RelayCommand<string>(b => SaveAsCommandHandler(ToBoolConverter.ToBool(b)), () => HasRunData);
 
             TargetFromViewCommand = new CommandHandler(TargetFromViewCommandHandler);
+            ToggleCrosshairCommand = new CommandHandler(ToggleCrosshairCommandHandler);
 
             ResetToDefaultCommand = new CommandHandler(ResetToDefaultCommandHandler);
             ResetToPreviousCommand = new CommandHandler(ResetToPreviousCommandHandler, () => HasRunData);
@@ -374,6 +379,10 @@ namespace FracViewWpf.ViewModels
             RecolorCommand = new CommandHandler(RecolorCommandHandler, () => HasRunData);
 
             ComputeCommandText = GetComputeCommandText();
+
+            // set crosshair state to shown, then trigger command to hide, so all relevant state is updated.
+            ShowCrosshair = true;
+            ToggleCrosshairCommandHandler();
 
             _scene = scene;
 
@@ -922,6 +931,23 @@ namespace FracViewWpf.ViewModels
                     System.IO.File.WriteAllText(metadataFilename, sb.ToString());
                 }
             }
+        }
+
+        private void ToggleCrosshairCommandHandler()
+        {
+            if (ShowCrosshair)
+            {
+                ShowCrosshair = false;
+                ShowCrosshairCommandText = "Show Crosshair";
+            }
+            else
+            {
+                ShowCrosshair = true;
+                ShowCrosshairCommandText = "Hide Crosshair";
+            }
+
+            OnPropertyChanged(nameof(ShowCrosshair));
+            OnPropertyChanged(nameof(ShowCrosshairCommandText));
         }
 
         private enum ComputeState
