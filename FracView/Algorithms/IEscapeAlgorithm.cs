@@ -7,14 +7,14 @@ using FracView.World;
 
 namespace FracView.Algorithms
 {
+    /// <summary>
+    /// Interface to describe an escape algorithm.
+    /// </summary>
     public interface IEscapeAlgorithm : IAlgorithm
     {
-        bool UseHistogram { get; set; }
-        bool HistogramIsEvaluated { get; }
-
+        /// <summary>
+        /// Gets the max number of iterations to evaluate a point.
+        /// </summary>
         int MaxIterations { get; }
-
-        bool EvaluatePoints(CancellationToken token);
-        void ComputeHistogram(CancellationToken token);
     }
 }

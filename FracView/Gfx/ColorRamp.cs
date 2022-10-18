@@ -7,10 +7,20 @@ using SkiaSharp;
 
 namespace FracView.Gfx
 {
+    /// <summary>
+    /// Describes range of colors along an interval, with keyframes.
+    /// </summary>
     public class ColorRamp
     {
+        /// <summary>
+        /// Gets or sets the keyframes in the color ramp.
+        /// </summary>
         public List<Keyframe<SKColor, double>> Keyframes { get; set; } = new List<Keyframe<SKColor, double>>();
 
+        /// <summary>
+        /// Creates a copy of the color ramp.
+        /// </summary>
+        /// <returns>Copy.</returns>
         public ColorRamp Clone()
         {
             var keyframeClone = Keyframes.Select(KeyFrameClone).ToList();
@@ -21,6 +31,15 @@ namespace FracView.Gfx
             };
         }
 
+        /// <summary>
+        /// Applies linear interpolation in RGB color space to determine the color of a value,
+        /// as resolved by the keyframe values.
+        /// </summary>
+        /// <param name="value">Value to resolve. Must be within the range of <see cref="Keyframe{TKey, TInterval}.IntervalStart"/>
+        /// and <see cref="Keyframe{TKey, TInterval}.IntervalEnd"/> of at least one keyframe.</param>
+        /// <returns>Color from value.</returns>
+        /// <exception cref="InvalidOperationException">When there is no keyframe to map value to.</exception>
+        /// <exception cref="DivideByZeroException">When the interval range is zero.</exception>
         public SKColor InterpolateFromKeyframes(double value)
         {
             if (value < 0)

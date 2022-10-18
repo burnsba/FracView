@@ -6,19 +6,37 @@ using System.Threading.Tasks;
 
 namespace FracView.World
 {
+    /// <summary>
+    /// Simple 2d int pair.
+    /// </summary>
     public record Point2DInt
     {
         private static Point2DInt _zero = new Point2DInt(0, 0);
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Point2DInt"/> class.
+        /// </summary>
+        /// <param name="x">First value.</param>
+        /// <param name="y">Second value.</param>
         public Point2DInt(int x, int y)
         {
             X = x;
             Y = y;
         }
 
+        /// <summary>
+        /// Gets the first value.
+        /// </summary>
         public int X { get; }
+
+        /// <summary>
+        /// Gets the second value.
+        /// </summary>
         public int Y { get; }
 
+        /// <summary>
+        /// Returns (0,0).
+        /// </summary>
         public static Point2DInt Zero => _zero;
 
         public static implicit operator Point2DInt(ValueTuple<int, int> d)

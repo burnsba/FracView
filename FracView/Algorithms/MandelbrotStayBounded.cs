@@ -7,6 +7,10 @@ using FracView.World;
 
 namespace FracView.Algorithms
 {
+    /// <summary>
+    /// Modification of Mandelbrot algorithm. If real or imaginary parts exceed a positive threshold they are
+    /// subtracted back down to a lower value. Negative values are unaffected.
+    /// </summary>
     public class MandelbrotStayBounded : EscapeAlgorithm
     {
         private double _iterationBreakSquareBounded;

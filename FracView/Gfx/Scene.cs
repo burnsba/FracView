@@ -11,18 +11,35 @@ using static System.Formats.Asn1.AsnWriter;
 
 namespace FracView.Gfx
 {
+    /// <summary>
+    /// Container for rendering final result of computed area.
+    /// </summary>
     public class Scene : IScene
     {
         private object _lockObject = new object();
 
+        /// <summary>
+        /// Gets or sets the color used for bounded/unset pixels.
+        /// </summary>
         public SKColor StableColor { get; set; } = ColorRef.Black;
 
+        /// <summary>
+        /// Gets or sets the color ramp used to map values to colors.
+        /// </summary>
         public ColorRamp ColorRamp { get; set; } = new ColorRamp();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Scene"/> class.
+        /// </summary>
         public Scene()
         {
         }
 
+        /// <summary>
+        /// Allocates memory to be used by graphic result container.
+        /// </summary>
+        /// <param name="algorithm">Algorithm; only uses pixel dimensions.</param>
+        /// <returns>Allocated image container.</returns>
         private SKBitmap AllocateBitmap(IEscapeAlgorithm algorithm)
         {
             SKBitmap bmp;
@@ -42,6 +59,18 @@ namespace FracView.Gfx
             return bmp;
         }
 
+        /// <summary>
+        /// Takes the computed results from <see cref="IEscapeAlgorithm.ConsideredPoints"/> and maps world points to pixels with color values.
+        /// If the histogram data needs to be computed or recomputed, that will happen automatically here.
+        /// </summary>
+        /// <param name="algorithm">Algorithm with associated points.</param>
+        /// <param name="token">Cancellation token.</param>
+        /// <param name="progressCallbackIntervalSec">Interval in seconds that progress should be reported.</param>
+        /// <param name="progressCallback">Reporting callback method.</param>
+        /// <returns>Image with pixels set.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if algorithm has not computed points yet, or colorramp has not been set in this instance.
+        /// </exception>
         public SKBitmap ProcessPointsToPixels(IEscapeAlgorithm algorithm, CancellationToken token, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
         {
             if (!ColorRamp.Keyframes.Any())
@@ -200,6 +229,11 @@ namespace FracView.Gfx
             return bmp;
         }
 
+        /// <summary>
+        /// Converts histogram percent value to color value.
+        /// </summary>
+        /// <param name="percent">Value between zero and one.</param>
+        /// <returns>Color according to colorramp.</returns>
         public SKColor ResolveColorByPercent(double percent)
         {
             if (percent < 0)
@@ -214,6 +248,12 @@ namespace FracView.Gfx
             return ColorRamp.InterpolateFromKeyframes(percent);
         }
 
+        /// <summary>
+        /// Converts iteration percent to color value.
+        /// </summary>
+        /// <param name="iterationCount">Iteration count of point.</param>
+        /// <param name="maxIterations">Max iterations defined by algorithm.</param>
+        /// <returns>Color according to colorramp.</returns>
         public SKColor ResolveColorByIterations(int iterationCount, int maxIterations)
         {
             double percent;
@@ -232,6 +272,9 @@ namespace FracView.Gfx
             return ColorRamp.InterpolateFromKeyframes(percent);
         }
 
+        /// <summary>
+        /// Adds the default keyframes to <see cref="ColorRamp.Keyframes"/>.
+        /// </summary>
         public void AddDefaultSceneKeyframes()
         {
             ColorRamp.Keyframes.Add(new Keyframe<SKColor, double>()

@@ -7,6 +7,9 @@ using FracView.World;
 
 namespace FracView.Algorithms
 {
+    /// <summary>
+    /// Modification of Mandelbrot algorithm in computation of Z^2, to use cos.
+    /// </summary>
     public class MandelbrotCos : EscapeAlgorithm
     {
         private double _iterationBreakSquareLog;

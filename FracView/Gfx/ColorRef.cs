@@ -7,6 +7,9 @@ using SkiaSharp;
 
 namespace FracView.Gfx
 {
+    /// <summary>
+    /// Contains static reference colors used in the application.
+    /// </summary>
     public class ColorRef
     {
         private static SKColor _black = new SKColor(0, 0, 0);

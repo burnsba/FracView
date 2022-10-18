@@ -19,27 +19,65 @@ namespace FracView.Algorithms
         private object _lockObject = new object();
         private List<EvalComplexUnit>? _consideredPoints = null;
 
-        public (decimal, decimal) Origin { get; set; }
-
+        /// <inheritdoc />
         public decimal FractalWidth { get; set; }
+
+        /// <inheritdoc />
         public decimal FractalHeight { get; set; }
 
-        /// <summary>
-        /// Number of steps to divide world range into, used as number of pixels.
-        /// </summary>
+        /// <inheritdoc />
         public int StepWidth { get; set; }
 
-        /// <summary>
-        /// Number of steps to divide world range into, used as number of pixels.
-        /// </summary>
+        /// <inheritdoc />
         public int StepHeight { get; set; }
 
-        protected int TotalSteps => StepWidth * StepHeight;
-
-        protected int[]? NumIterationsPerPixel = null;
-
+        /// <inheritdoc />
         public int MaxIterations { get; set; }
 
+        /// <inheritdoc />
+        public bool UseHistogram { get; set; }
+
+        /// <inheritdoc />
+        public bool HistogramIsEvaluated => _histogramIsEvaluated;
+
+        /// <inheritdoc />
+        public int ProgressCallbackIntervalSec { get; set; }
+
+        /// <inheritdoc />
+        public Action<ProgressReport>? ProgressCallback { get; set; }
+
+        /// <summary>
+        /// Gets or sets world origin point.
+        /// </summary>
+        public (decimal, decimal) Origin { get; set; }
+
+        /// <summary>
+        /// Gets or sets the points computed by the algorithm.
+        /// <see cref="EvaluatePoints"/> must have been called at least once.
+        /// </summary>
+        public List<EvalComplexUnit> ConsideredPoints
+        {
+            get
+            {
+                if (!_pointsEvaluated)
+                {
+                    throw new InvalidOperationException($"Call {nameof(EvaluatePoints)} first");
+                }
+
+                return _consideredPoints!;
+
+            }
+
+            private set
+            {
+                _consideredPoints = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the value used by the escape algorithm to determine
+        /// that a point has escaped.
+        /// </summary>
         public decimal IterationBreak
         {
             get => _iterationBreak;
@@ -50,39 +88,40 @@ namespace FracView.Algorithms
             }
         }
 
+        /// <summary>
+        /// Gets the square of the <see cref="IterationBreak"/> value.
+        /// </summary>
         public decimal IterationBreakSquare => _iterationBreakSquare;
 
-        public bool UseHistogram { get; set; }
-        public bool HistogramIsEvaluated => _histogramIsEvaluated;
+        /// <summary>
+        /// Gets the total number of steps as <see cref="StepWidth"/> times <see cref="StepHeight"/>.
+        /// </summary>
+        protected int TotalSteps => StepWidth * StepHeight;
 
-        public List<EvalComplexUnit> ConsideredPoints
-        {
-            get
-            {
-                if (!_pointsEvaluated)
-                {
-                    throw new InvalidOperationException($"Call {nameof(EvaluatePoints)} first");
-                }
+        /// <summary>
+        /// Container for computing histogram data.
+        /// </summary>
+        protected int[]? NumIterationsPerPixel = null;
 
-                return _consideredPoints;
-
-            }
-
-            private set
-            {
-                _consideredPoints = value;
-            }
-        }
-
-        public int ProgressCallbackIntervalSec { get; set; }
-        public Action<ProgressReport>? ProgressCallback { get; set; }
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EscapeAlgorithm"/> class.
+        /// </summary>
+        /// <param name="progressCallbackIntervalSec">Interval in seconds that progress should be reported.</param>
+        /// <param name="progressCallback">Reporting callback method.</param>
+        /// <returns>Image with pixels set.</returns>
         public EscapeAlgorithm(int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
         {
             ProgressCallbackIntervalSec = progressCallbackIntervalSec;
             ProgressCallback = progressCallback;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EscapeAlgorithm"/> class.
+        /// </summary>
+        /// <param name="settings">Settings used by algorithm.</param>
+        /// <param name="progressCallbackIntervalSec">Interval in seconds that progress should be reported.</param>
+        /// <param name="progressCallback">Reporting callback method.</param>
+        /// <returns>Image with pixels set.</returns>
         public EscapeAlgorithm(RunSettings settings, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
             : this(progressCallbackIntervalSec, progressCallback)
         {
@@ -95,8 +134,18 @@ namespace FracView.Algorithms
             UseHistogram = settings.UseHistogram;
         }
        
+        /// <summary>
+        /// Method to determine whether a point is stable or not.
+        /// </summary>
+        /// <param name="eu">Point to consider.</param>
+        /// <returns>True if point remains bounded for evaluation, false otherwise.</returns>
         public abstract bool IsStable(EvalComplexUnit eu);
 
+        /// <summary>
+        /// Evaluates all points defined within the world range.
+        /// </summary>
+        /// <param name="token">Cancellation token.</param>
+        /// <returns>True if computation finished successfully, false otherwise.</returns>
         public bool EvaluatePoints(CancellationToken token)
         {
             Init(token);
@@ -166,107 +215,12 @@ namespace FracView.Algorithms
             return !interrupted;
         }
 
-        private void Init(CancellationToken token)
-        {
-            if (_isInit)
-            {
-                return;
-            }
-
-            if (FractalWidth <= 0)
-            {
-                throw new ArgumentException($"{nameof(FractalWidth)} must be positive");
-            }
-
-            if (FractalHeight <= 0)
-            {
-                throw new ArgumentException($"{nameof(FractalHeight)} must be positive");
-            }
-
-            if (StepWidth <= 0)
-            {
-                throw new ArgumentException($"{nameof(StepWidth)} must be positive");
-            }
-
-            if (StepHeight <= 0)
-            {
-                throw new ArgumentException($"{nameof(StepHeight)} must be positive");
-            }
-
-            if (MaxIterations <= 0)
-            {
-                throw new ArgumentException($"{nameof(MaxIterations)} must be positive");
-            }
-
-            var reportTimer = Stopwatch.StartNew();
-            var totalTimer = Stopwatch.StartNew();
-
-            try
-            {
-                _consideredPoints = new List<EvalComplexUnit>(TotalSteps);
-
-                decimal startX = Origin.Item1 - (FractalWidth / 2);
-                decimal stepX = FractalWidth / StepWidth;
-                decimal x;
-
-                decimal startY = Origin.Item2 - (FractalHeight / 2);
-                decimal stepY = FractalHeight / StepHeight;
-                decimal y;
-
-                y = startY;
-                x = startX;
-                int currentStepCount = 0;
-
-                for (int j = 0; j < StepHeight; j++)
-                {
-                    x = startX;
-
-                    for (int i = 0; i < StepWidth; i++)
-                    {
-                        if (token.IsCancellationRequested)
-                        {
-                            _consideredPoints = new List<EvalComplexUnit>(TotalSteps);
-                            _isInit = false;
-                            return;
-                        }
-
-                        var eu = new EvalComplexUnit((i, j), (x, y));
-
-                        _consideredPoints.Add(eu);
-
-                        lock (_lockObject)
-                        {
-                            if (ProgressCallback != null && ProgressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > ProgressCallbackIntervalSec)
-                            {
-                                ProgressCallback(new ProgressReport(
-                                    totalTimer.Elapsed.TotalSeconds,
-                                    currentStepCount,
-                                    TotalSteps,
-                                    $"{nameof(EscapeAlgorithm)}.{nameof(Init)}"
-                                    ));
-
-                                reportTimer.Restart();
-                            }
-                        }
-
-                        x += stepX;
-                        currentStepCount++;
-                    }
-
-                    y += stepY;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Unable to allocate evaluation grid for processing.");
-                Console.WriteLine(ex.Message);
-
-                throw;
-            }
-
-            _isInit = true;
-        }
-
+        /// <summary>
+        /// Computes the histogram for all evaluated points.
+        /// </summary>
+        /// <param name="token">Cancellation token.</param>
+        /// <exception cref="InvalidOperationException">If init has not been called yet, if maxiterations is not set, or there isn't space in NumIterationsPerPixel.</exception>
+        /// <exception cref="NullReferenceException">NumIterationsPerPixel is null.</exception>
         public void ComputeHistogram(CancellationToken token)
         {
             if (!_isInit)
@@ -396,6 +350,114 @@ namespace FracView.Algorithms
 
             // Else, wasn't cancelled, so points have been evaluated.
             _histogramIsEvaluated = true;
+        }
+
+        /// <summary>
+        /// Allocates memory for <see cref="_consideredPoints"/>.
+        /// Initializes each point-pixel pair that will be evaluated and adds to <see cref="_consideredPoints"/>.
+        /// This method can only be called once.
+        /// </summary>
+        /// <param name="token">Cancellation token.</param>
+        /// <exception cref="ArgumentException">If initial run settings are invalid.</exception>
+        private void Init(CancellationToken token)
+        {
+            if (_isInit)
+            {
+                return;
+            }
+
+            if (FractalWidth <= 0)
+            {
+                throw new ArgumentException($"{nameof(FractalWidth)} must be positive");
+            }
+
+            if (FractalHeight <= 0)
+            {
+                throw new ArgumentException($"{nameof(FractalHeight)} must be positive");
+            }
+
+            if (StepWidth <= 0)
+            {
+                throw new ArgumentException($"{nameof(StepWidth)} must be positive");
+            }
+
+            if (StepHeight <= 0)
+            {
+                throw new ArgumentException($"{nameof(StepHeight)} must be positive");
+            }
+
+            if (MaxIterations <= 0)
+            {
+                throw new ArgumentException($"{nameof(MaxIterations)} must be positive");
+            }
+
+            var reportTimer = Stopwatch.StartNew();
+            var totalTimer = Stopwatch.StartNew();
+
+            try
+            {
+                _consideredPoints = new List<EvalComplexUnit>(TotalSteps);
+
+                decimal startX = Origin.Item1 - (FractalWidth / 2);
+                decimal stepX = FractalWidth / StepWidth;
+                decimal x;
+
+                decimal startY = Origin.Item2 - (FractalHeight / 2);
+                decimal stepY = FractalHeight / StepHeight;
+                decimal y;
+
+                y = startY;
+                x = startX;
+                int currentStepCount = 0;
+
+                for (int j = 0; j < StepHeight; j++)
+                {
+                    x = startX;
+
+                    for (int i = 0; i < StepWidth; i++)
+                    {
+                        if (token.IsCancellationRequested)
+                        {
+                            _consideredPoints = new List<EvalComplexUnit>(TotalSteps);
+                            _isInit = false;
+                            return;
+                        }
+
+                        var eu = new EvalComplexUnit((i, j), (x, y));
+
+                        _consideredPoints.Add(eu);
+
+                        lock (_lockObject)
+                        {
+                            if (ProgressCallback != null && ProgressCallbackIntervalSec > 0 && reportTimer.Elapsed.TotalSeconds > ProgressCallbackIntervalSec)
+                            {
+                                ProgressCallback(new ProgressReport(
+                                    totalTimer.Elapsed.TotalSeconds,
+                                    currentStepCount,
+                                    TotalSteps,
+                                    $"{nameof(EscapeAlgorithm)}.{nameof(Init)}"
+                                    ));
+
+                                reportTimer.Restart();
+                            }
+                        }
+
+                        x += stepX;
+                        currentStepCount++;
+                    }
+
+                    y += stepY;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unable to allocate evaluation grid for processing.");
+                Console.WriteLine(ex.Message);
+
+                throw;
+            }
+
+            _isInit = true;
         }
     }
 }

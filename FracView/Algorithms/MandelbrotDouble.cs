@@ -7,6 +7,9 @@ using FracView.World;
 
 namespace FracView.Algorithms
 {
+    /// <summary>
+    /// Fast implementation of Mandelbrot algorithm, using <see cref="double"/>.
+    /// </summary>
     public class MandelbrotDouble : EscapeAlgorithm
     {
         private double _iterationBreakDouble;

@@ -1,15 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using SkiaSharp;
-using FracView.Algorithms;
-using FracView.Gfx;
-using FracView;
+This library deals with fractals.
 
-namespace FracViewCmd
-{
+World parameters are given to define the scope of the area to plot. This defines the origin, width and height. Scene parameters are given to define the render resolution, and color ramps for rendering results. Each computed pixel result is stored in a `EvalComplexUnit`.
+
+SkiaSharp is used to convert image data to various formats.
+
+------
+
+This library currently only supports the Mandelbrot algorithm.
+
+There are implementations using decimal (more precise), double (faster), and some modifications to the original Mandelbrot algorithm. No arbitrary precision library was found to be sufficiently fast for rendering results.
+
+----
+
+## Use
+
+Declare an instance of the `Mandelbrot` class and set the runtime settings. Declare a `Scene` and set colorramp values. Call `algorithm.EvaluatePoints`, then `scene.ProcessPointsToPixels`.
+
     internal class Program
     {
         private static int _outputIntervalSec = 2;
@@ -57,4 +63,5 @@ namespace FracViewCmd
             Console.WriteLine();
         }
     }
-}
+    
+.

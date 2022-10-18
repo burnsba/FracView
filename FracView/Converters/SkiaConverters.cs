@@ -9,6 +9,12 @@ namespace FracView.Converters
 {
     public static class SkiaConverters
     {
+        /// <summary>
+        /// Converts file extension (with period) to associated image format.
+        /// </summary>
+        /// <param name="extension">File extension.</param>
+        /// <returns>Image format.</returns>
+        /// <exception cref="NotSupportedException">If the file extension could not be resolved.</exception>
         public static SKEncodedImageFormat ExtensionToFormat(string extension)
         {
             return (extension?.ToLower()?.Trim()) switch

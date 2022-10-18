@@ -7,24 +7,42 @@ using System.Threading.Tasks;
 namespace FracView.World
 {
     /// <summary>
-    /// Single grid square to evaluate point at.
+    /// Contains evaluation results for a single pixel of data.
     /// </summary>
     public record EvalComplexUnit
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EvalComplexUnit"/> class.
+        /// </summary>
         public EvalComplexUnit()
         { }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EvalComplexUnit"/> class.
+        /// </summary>
+        /// <param name="index">Pixel grid location.</param>
         public EvalComplexUnit(Point2DInt index)
         {
             Index = index;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EvalComplexUnit"/> class.
+        /// </summary>
+        /// <param name="index">Pixel grid location.</param>
+        /// <param name="ComplexPoint">World location.</param>
         public EvalComplexUnit(Point2DInt index, ComplexPoint worldPos)
         {
             Index = index;
             WorldPos = worldPos;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EvalComplexUnit"/> class.
+        /// </summary>
+        /// <param name="rowx">Pixel grid x.</param>
+        /// <param name="coly">Pixel grid y.</param>
+        /// <param name="ComplexPoint">World location.</param>
         public EvalComplexUnit(int rowx, int coly, ComplexPoint worldPos)
         {
             Index = (rowx, coly);
@@ -56,6 +74,9 @@ namespace FracView.World
         /// </summary>
         public ComplexPoint LastPos { get; set; } = ComplexPoint.Zero;
 
+        /// <summary>
+        /// If a histogram is computed for the entire scene, this will store the result for this pixel.
+        /// </summary>
         public double HistogramValue { get; set; } = 0;
     }
 }

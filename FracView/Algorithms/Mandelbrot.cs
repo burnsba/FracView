@@ -7,6 +7,9 @@ using FracView.World;
 
 namespace FracView.Algorithms
 {
+    /// <summary>
+    /// Precision implementation of Mandelbrot algorithm, using <see cref="decimal"/>.
+    /// </summary>
     public class Mandelbrot : EscapeAlgorithm
     {
         public Mandelbrot(int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
