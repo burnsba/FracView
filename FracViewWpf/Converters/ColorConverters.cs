@@ -10,60 +10,124 @@ using SWM = System.Windows.Media;
 
 namespace FracViewWpf.Converters
 {
+    /// <summary>
+    /// Converts text to one of the standard color classes.
+    /// </summary>
     public static class ColorConverters
     {
         private static Regex _sixDigits = new Regex("^[0-9a-fA-F]{6}$");
 
+        /// <summary>
+        /// Conversion methods for <see cref="System.Drawing.Color"/>.
+        /// </summary>
         public static class Drawing
         {
+            /// <summary>
+            /// Converts a HTML hex color string to standard color object.
+            /// Optional "#" at string start.
+            /// Either a 3 digit or 6 digit value is required.
+            /// </summary>
+            /// <param name="value">HTML hex color.</param>
+            /// <returns>Parsed color.</returns>
             public static SD.Color FromHtmlHex(string value)
             {
                 var rgb = Common.FromHtmlHex(value);
                 return SD.Color.FromArgb(rgb.Item1, rgb.Item2, rgb.Item3);
             }
 
+            /// <summary>
+            /// Attempts to parse a color described by a CSS style to a standard color object.
+            /// This will first attempt to parse as a color with a leading "#".
+            /// If that fails, will check if this is a "rgb(0,0,0)" formatted string.
+            /// If that fails, will attempt to lookup the value according to standard
+            /// color definition names ("black", etc).
+            /// </summary>
+            /// <param name="value">CSS style color value.</param>
+            /// <returns>Parsed color.</returns>
             public static SD.Color FromCss(string value)
             {
                 var rgb = Common.FromCss(value);
                 return SD.Color.FromArgb(rgb.Item1, rgb.Item2, rgb.Item3);
             }
 
+            /// <summary>
+            /// Convert color to six digit hex string.
+            /// </summary>
+            /// <param name="c">Color.</param>
+            /// <returns>Hex string.</returns>
             public static string ToHexSix(SD.Color c)
             {
                 return $"{c.R:x2}{c.G:x2}{c.B:x2}";
             }
 
+            /// <summary>
+            /// Convert color to six digit hex string with additional leading "#" character.
+            /// </summary>
+            /// <param name="c">Color.</param>
+            /// <returns>Hex string.</returns>
             public static string ToHexSeven(SD.Color c)
             {
                 return $"#{c.R:x2}{c.G:x2}{c.B:x2}";
             }
         }
 
+        /// <summary>
+        /// Conversion methods for <see cref="System.Windows.Media.Color"/>.
+        /// </summary>
         public static class WindowsMedia
         {
+            /// <summary>
+            /// Converts a HTML hex color string to standard color object.
+            /// Optional "#" at string start.
+            /// Either a 3 digit or 6 digit value is required.
+            /// </summary>
+            /// <param name="value">HTML hex color.</param>
+            /// <returns>Parsed color.</returns>
             public static SWM.Color FromHtmlHex(string value)
             {
                 var rgb = Common.FromHtmlHex(value);
                 return SWM.Color.FromArgb(255, rgb.Item1, rgb.Item2, rgb.Item3);
             }
 
+            /// <summary>
+            /// Attempts to parse a color described by a CSS style to a standard color object.
+            /// This will first attempt to parse as a color with a leading "#".
+            /// If that fails, will check if this is a "rgb(0,0,0)" formatted string.
+            /// If that fails, will attempt to lookup the value according to standard
+            /// color definition names ("black", etc).
+            /// </summary>
+            /// <param name="value">CSS style color value.</param>
+            /// <returns>Parsed color.</returns>
             public static SWM.Color FromCss(string value)
             {
                 var rgb = Common.FromCss(value);
                 return SWM.Color.FromArgb(255, rgb.Item1, rgb.Item2, rgb.Item3);
             }
 
+            /// <summary>
+            /// Convert color to six digit hex string.
+            /// </summary>
+            /// <param name="c">Color.</param>
+            /// <returns>Hex string.</returns>
             public static string ToHexSix(SWM.Color c)
             {
                 return $"{c.R:x2}{c.G:x2}{c.B:x2}";
             }
 
+            /// <summary>
+            /// Convert color to six digit hex string with additional leading "#" character.
+            /// </summary>
+            /// <param name="c">Color.</param>
+            /// <returns>Hex string.</returns>
             public static string ToHexSeven(SWM.Color c)
             {
                 return $"#{c.R:x2}{c.G:x2}{c.B:x2}";
             }
         }
 
+        /// <summary>
+        /// Common conversion methods. A container tuple of three bytes is used to curry RGB color info.
+        /// </summary>
         private static class Common
         {
             /// <summary>

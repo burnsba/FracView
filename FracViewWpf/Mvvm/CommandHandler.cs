@@ -12,12 +12,12 @@ namespace FracViewWpf.Mvvm
     /// </summary>
     public class CommandHandler : ICommand
     {
-        private Action<object> _actionWithArgs;
-        private Action _actionEmpty;
+        private Action<object?>? _actionWithArgs;
+        private Action? _actionEmpty;
         private bool _actionHasArgs = false;
 
-        private Func<object, bool> _canExecuteWithArgs;
-        private Func<bool> _canExecuteEmpty;
+        private Func<object?, bool>? _canExecuteWithArgs;
+        private Func<bool>? _canExecuteEmpty;
         private bool _executeHasArgs = false;
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace FracViewWpf.Mvvm
         /// Initializes a new instance of the <see cref="CommandHandler"/> class.
         /// </summary>
         /// <param name="action">Action to perform when the command is executed.</param>
-        public CommandHandler(Action<object> action)
+        public CommandHandler(Action<object?> action)
         {
             _actionWithArgs = action;
             _canExecuteEmpty = () => true;
@@ -65,7 +65,7 @@ namespace FracViewWpf.Mvvm
         /// </summary>
         /// <param name="action">Action to perform when the command is executed.</param>
         /// <param name="canExecute">Function to determine if command can be executed.</param>
-        public CommandHandler(Action action, Func<object, bool> canExecute)
+        public CommandHandler(Action action, Func<object?, bool> canExecute)
         {
             _actionEmpty = action;
             _canExecuteWithArgs = canExecute;
@@ -79,7 +79,7 @@ namespace FracViewWpf.Mvvm
         /// </summary>
         /// <param name="action">Action to perform when the command is executed.</param>
         /// <param name="canExecute">Function to determine if command can be executed.</param>
-        public CommandHandler(Action<object> action, Func<bool> canExecute)
+        public CommandHandler(Action<object?> action, Func<bool> canExecute)
         {
             _actionWithArgs = action;
             _canExecuteEmpty = canExecute;
@@ -93,7 +93,7 @@ namespace FracViewWpf.Mvvm
         /// </summary>
         /// <param name="action">Action to perform when the command is executed.</param>
         /// <param name="canExecute">Function to determine if command can be executed.</param>
-        public CommandHandler(Action<object> action, Func<object, bool> canExecute)
+        public CommandHandler(Action<object?> action, Func<object?, bool> canExecute)
         {
             _actionWithArgs = action;
             _canExecuteWithArgs = canExecute;
@@ -105,7 +105,7 @@ namespace FracViewWpf.Mvvm
         /// <summary>
         /// Event handler.
         /// </summary>
-        public event EventHandler CanExecuteChanged
+        public event EventHandler? CanExecuteChanged
         {
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
@@ -116,28 +116,28 @@ namespace FracViewWpf.Mvvm
         /// </summary>
         /// <param name="parameter">Optional CanExecute function parameter.</param>
         /// <returns>Whether command can be performed.</returns>
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object? parameter)
         {
             if (_executeHasArgs)
             {
-                return _canExecuteWithArgs(parameter);
+                return _canExecuteWithArgs!(parameter);
             }
 
-            return _canExecuteEmpty();
+            return _canExecuteEmpty!();
         }
 
         /// <summary>
         /// Executes the command.
         /// </summary>
         /// <param name="parameter">Optional action parameter.</param>
-        public void Execute(object parameter)
+        public void Execute(object? parameter)
         {
             if (_actionHasArgs)
             {
-                _actionWithArgs(parameter);
+                _actionWithArgs!(parameter);
             }
 
-            _actionEmpty();
+            _actionEmpty!();
         }
     }
 }

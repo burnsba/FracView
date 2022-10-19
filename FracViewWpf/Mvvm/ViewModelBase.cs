@@ -16,7 +16,7 @@ namespace FracViewWpf.Mvvm
         /// <summary>
         /// Property changed event.
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
         /// Property changed notifier.

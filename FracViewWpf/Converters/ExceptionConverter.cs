@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 namespace FracViewWpf.Converters
 {
     /// <summary>
-    /// Converts exception.
+    /// Exception conversion methods.
     /// </summary>
     public static class ExceptionConverter
     {
         /// <summary>
-        /// Converts exception to string in the usual format.
+        /// Extracts information from exception to print as text.
         /// </summary>
         /// <param name="ex">Exception to convert.</param>
         /// <returns>Contents of exception and all inner exceptions.</returns>

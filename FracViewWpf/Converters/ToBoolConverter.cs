@@ -6,8 +6,21 @@ using System.Threading.Tasks;
 
 namespace FracViewWpf.Converters
 {
+    /// <summary>
+    /// Helper class to try to make things truthy.
+    /// </summary>
     public static class ToBoolConverter
     {
+        /// <summary>
+        /// Tries to enterpret value as bool.
+        /// Text is trimmed and converted to lowercase for comparison.
+        /// </summary>
+        /// <param name="s">String to parse.</param>
+        /// <returns>
+        /// False, if string is null or empty.
+        /// True if text is exactly "true", "1", or "t".
+        /// False otherwise.
+        /// </returns>
         public static bool ToBool(string s)
         {
             if (string.IsNullOrEmpty(s))

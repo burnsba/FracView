@@ -16,6 +16,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Xml.Linq;
+using FracViewWpf.Constants;
 using FracViewWpf.Dto;
 using FracViewWpf.Mvvm;
 using FracViewWpf.ViewModels;
@@ -81,7 +82,7 @@ namespace FracViewWpf.Windows
             if (delta > 0)
             {
                 _imageZoomLittleScrollIndex++;
-                if (_imageZoomLittleScrollIndex >= Views.Constants.ScrollValues.Count)
+                if (_imageZoomLittleScrollIndex >= Views.ScrollValues.Count)
                 {
                     _imageZoomLittleScrollIndex = 0;
                     _imageZoomBigScrollIndex++;
@@ -95,7 +96,7 @@ namespace FracViewWpf.Windows
                 _imageZoomLittleScrollIndex--;
                 if (_imageZoomLittleScrollIndex < 0)
                 {
-                    _imageZoomLittleScrollIndex = Views.Constants.ScrollValues.Count - 1;
+                    _imageZoomLittleScrollIndex = Views.ScrollValues.Count - 1;
 
                     _imageZoomBigScrollIndex--;
                     if (_imageZoomBigScrollIndex < 0)
@@ -151,8 +152,8 @@ namespace FracViewWpf.Windows
                     bigScaleFactor *= 10.0;
                 }
 
-                var scalex = bigScaleFactor * Views.Constants.ScrollValues[_imageZoomLittleScrollIndex];
-                var scaley = bigScaleFactor * Views.Constants.ScrollValues[_imageZoomLittleScrollIndex];
+                var scalex = bigScaleFactor * Views.ScrollValues[_imageZoomLittleScrollIndex];
+                var scaley = bigScaleFactor * Views.ScrollValues[_imageZoomLittleScrollIndex];
 
                 _vm.UiScale = scalex;
 

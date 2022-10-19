@@ -4,10 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FracViewWpf.Views
+namespace FracViewWpf.Constants
 {
-    public static class Constants
+    public static class Views
     {
+        /// <summary>
+        /// Gets the allowed list of "zoom" factors.
+        /// </summary>
         public static IReadOnlyList<double> ScrollValues = new List<double>()
         {
             1.0,

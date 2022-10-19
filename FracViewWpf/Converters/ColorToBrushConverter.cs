@@ -9,6 +9,9 @@ using System.Windows.Media;
 
 namespace FracViewWpf.Converters
 {
+    /// <summary>
+    /// Helper method to shortcut color into brush.
+    /// </summary>
     [ValueConversion(typeof(Color), typeof(SolidColorBrush))]
     public class ColorToBrushConverter : IValueConverter
     {

@@ -19,10 +19,18 @@ using FracViewWpf.Converters;
 namespace FracViewWpf.Controls
 {
     /// <summary>
-    /// Interaction logic for SimpleColorPicker.xaml
+    /// Very basic color picker control.
+    /// The current color is shown above.
+    /// A single textbox allows entry for the color.
+    /// The <see cref="ColorConverters.WindowsMedia.FromCss"/> method is used to parse text.
+    /// If the text can not be parsed, the control will set <see cref="IsValid"/>to false.
+    /// Picking a color using the mouse is not supported.
     /// </summary>
     public partial class SimpleColorPicker : UserControl
     {
+        /* The following two fields are used to initialize the text and color
+         * during/after constructor.
+         */
         private bool _initDone = false;
         private bool _useInitText = true;
 
@@ -30,10 +38,12 @@ namespace FracViewWpf.Controls
             DependencyProperty.Register(nameof(SelectedColor), typeof(Color), typeof(SimpleColorPicker),
                 new PropertyMetadata(Colors.Black, OnSelectedColorPropertyChange));
 
+        /// <summary>
+        /// Gets or sets the currently selected color.
+        /// </summary>
         public Color SelectedColor
         {
             get => (Color)GetValue(SelectedColorProperty);
-
             set => SetValue(SelectedColorProperty, value);
         }
 
@@ -41,6 +51,9 @@ namespace FracViewWpf.Controls
             DependencyProperty.Register(nameof(ValidationColor), typeof(Color), typeof(SimpleColorPicker),
                 new PropertyMetadata(Constants.Ui.ValidTextBackgroundColor));
 
+        /// <summary>
+        /// Gets or sets the color used when the textbox contains a valid color.
+        /// </summary>
         public Color ValidationColor
         {
             get => (Color)GetValue(ValidationColorProperty);
@@ -53,6 +66,9 @@ namespace FracViewWpf.Controls
                     ColorConverters.WindowsMedia.ToHexSeven(Colors.Black).ToString().ToLower(),
                     OnSelectedColorTextPropertyChange));
 
+        /// <summary>
+        /// Gets or sets the text bound to the currently selected color.
+        /// </summary>
         public string SelectedColorText
         {
             get => (string)GetValue(SelectedColorTextProperty);
@@ -63,6 +79,9 @@ namespace FracViewWpf.Controls
             DependencyProperty.Register(nameof(IsValid), typeof(bool), typeof(SimpleColorPicker),
                 new PropertyMetadata(true, OnIsValidPropertyChange));
 
+        /// <summary>
+        /// Gets or sets a value indicating if the current text parses into a color.
+        /// </summary>
         public bool IsValid
         {
             get => (bool)GetValue(IsValidProperty);
@@ -97,12 +116,10 @@ namespace FracViewWpf.Controls
 
         private static void OnSelectedColorTextPropertyChange(DependencyObject d, DependencyPropertyChangedEventArgs args)
         {
-
         }
 
         private static void OnIsValidPropertyChange(DependencyObject d, DependencyPropertyChangedEventArgs args)
         {
-
         }
 
         private void UpdateValue(Color c, string displayText)

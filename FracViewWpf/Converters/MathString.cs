@@ -6,15 +6,20 @@ using System.Threading.Tasks;
 
 namespace FracViewWpf.Converters
 {
+    /// <summary>
+    /// Static methods to evaluate a string as a math expression and return the result.
+    /// </summary>
     public static class MathString
     {
         /// <summary>
+        /// Attempts to parse string as text containing decimal values and math operators.
         /// Very loose support for math operations.
         /// Operator precedence is not gauranteed.
         /// </summary>
-        /// <param name="s"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
+        /// <param name="s">String to parse.</param>
+        /// <param name="result">Resulting value.</param>
+        /// <param name="hasMath">Whether any math operators were encountered or not.</param>
+        /// <returns>True if the string was successfully parsed, false otherwise.</returns>
         public static bool DecimalTryParseMathString(string s, out decimal result, out bool hasMath)
         {
             List<decimal> aggregate = new List<decimal>();
@@ -143,12 +148,14 @@ namespace FracViewWpf.Converters
         }
 
         /// <summary>
+        /// Attempts to parse string as text containing int values and math operators.
         /// Very loose support for math operations.
         /// Operator precedence is not gauranteed.
         /// </summary>
-        /// <param name="s"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
+        /// <param name="s">String to parse.</param>
+        /// <param name="result">Resulting value.</param>
+        /// <param name="hasMath">Whether any math operators were encountered or not.</param>
+        /// <returns>True if the string was successfully parsed, false otherwise.</returns>
         public static bool IntTryParseMathString(string s, out int result, out bool hasMath)
         {
             List<int> aggregate = new List<int>();

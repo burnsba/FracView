@@ -9,6 +9,9 @@ using System.Windows.Media;
 
 namespace FracViewWpf.Converters
 {
+    /// <summary>
+    /// Used to convert a "IsValid" property into a background color.
+    /// </summary>
     [ValueConversion(typeof(bool), typeof(Color))]
     public class BoolToValidationColorConverter : IValueConverter
     {
