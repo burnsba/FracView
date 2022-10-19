@@ -101,6 +101,13 @@
                                         Command="{Binding Path=ToggleCrosshairCommand}">
                                     <TextBlock Text="{Binding Path=ShowCrosshairCommandText}"></TextBlock>
                                 </Button>
+                                
+                                <Label></Label>
+                                
+                                <Button HorizontalAlignment="left" VerticalAlignment="Center" Padding="6" 
+                                        Command="{Binding Path=ResetZoomCommand}">
+                                    <TextBlock>Reset zoom</TextBlock>
+                                </Button>
 
                                 <Label></Label>
                                 

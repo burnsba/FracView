@@ -46,6 +46,8 @@ namespace FracViewWpf.Windows
 
             _vm = vm;
 
+            _vm.NotifyUiResetZoomRequest += ClearZoom;
+
             // After algorithm is full computed, reset the ui zoom.
             _vm.AfterRunCompleted += ClearZoom;
 
@@ -113,27 +115,37 @@ namespace FracViewWpf.Windows
             // scroll down
             else if (delta < 0)
             {
-                // Can only zoom out if not already at max zoom.
+                //// Can only zoom out if not already at max zoom.
+                //_imageZoomLittleScrollIndex--;
+                //if (_imageZoomLittleScrollIndex < 0)
+                //{
+                //    _imageZoomLittleScrollIndex = Views.ScrollValues.Count - 1;
+
+                //    _imageZoomBigScrollIndex--;
+                //    if (_imageZoomBigScrollIndex < 0)
+                //    {
+                //        _imageZoomLittleScrollIndex = 0;
+                //        _imageZoomBigScrollIndex = 0;
+                //    }
+                //    else
+                //    {
+                //        change = true;
+                //    }
+                //}
+                //else
+                //{
+                //    change = true;
+                //}
+
                 _imageZoomLittleScrollIndex--;
                 if (_imageZoomLittleScrollIndex < 0)
                 {
                     _imageZoomLittleScrollIndex = Views.ScrollValues.Count - 1;
-
                     _imageZoomBigScrollIndex--;
-                    if (_imageZoomBigScrollIndex < 0)
-                    {
-                        _imageZoomLittleScrollIndex = 0;
-                        _imageZoomBigScrollIndex = 0;
-                    }
-                    else
-                    {
-                        change = true;
-                    }
                 }
-                else
-                {
-                    change = true;
-                }
+
+                // You can always zoom in farther
+                change = true;
             }
             // Reset zoom event.
             else if (delta == 0 || double.IsNaN(delta))
@@ -183,13 +195,29 @@ namespace FracViewWpf.Windows
 
                 // Calculate new zoom amount.
                 double bigScaleFactor = 1;
-                for (int i = 0; i < _imageZoomBigScrollIndex; i++)
-                {
-                    bigScaleFactor *= 10.0;
-                }
+                double scalex;
+                double scaley;
 
-                var scalex = bigScaleFactor * Views.ScrollValues[_imageZoomLittleScrollIndex];
-                var scaley = bigScaleFactor * Views.ScrollValues[_imageZoomLittleScrollIndex];
+                if (_imageZoomBigScrollIndex >= 0)
+                {
+                    for (int i = 0; i < _imageZoomBigScrollIndex; i++)
+                    {
+                        bigScaleFactor *= 10.0;
+                    }
+
+                    scalex = bigScaleFactor * Views.ScrollValues[_imageZoomLittleScrollIndex];
+                    scaley = bigScaleFactor * Views.ScrollValues[_imageZoomLittleScrollIndex];
+                }
+                else
+                {
+                    for (int i = _imageZoomBigScrollIndex; i < 0; i++)
+                    {
+                        bigScaleFactor /= 10.0;
+                    }
+
+                    scalex = bigScaleFactor * Views.ScrollValues[_imageZoomLittleScrollIndex];
+                    scaley = bigScaleFactor * Views.ScrollValues[_imageZoomLittleScrollIndex];
+                }
 
                 // Save new zoom into view model.
                 _vm.UiScale = scalex;

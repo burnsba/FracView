@@ -109,6 +109,7 @@ namespace FracViewWpf.ViewModels
             ComputeCommand = new CommandHandler(ComputeCommandHandler);
             ShowColorsWindowCommand = new CommandHandler(ShowColorsWindowCommandHandler);
             RecolorCommand = new CommandHandler(RecolorCommandHandler, () => HasRunData);
+            ResetZoomCommand = new CommandHandler(ResetZoomCommandHandler);
 
             ComputeCommandText = GetComputeCommandText();
 
@@ -132,6 +133,11 @@ namespace FracViewWpf.ViewModels
         /// Hooked by main window to reset UI scale.
         /// </summary>
         public event EventHandler<EventArgs>? AfterRunCompleted;
+
+        /// <summary>
+        /// Event to request user interface to reset zoom settings.
+        /// </summary>
+        public event EventHandler<EventArgs>? NotifyUiResetZoomRequest;
 
         /// <summary>
         /// Gets or sets the text field for world origin x.
@@ -580,9 +586,14 @@ namespace FracViewWpf.ViewModels
         public ICommand SaveAsCommand { get; set; }
 
         /// <summary>
-        /// Gets or sets the commandto show or hide the crosshair.
+        /// Gets or sets the command to show or hide the crosshair.
         /// </summary>
         public ICommand ToggleCrosshairCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the command to reset the zoom.
+        /// </summary>
+        public ICommand ResetZoomCommand { get; set; }
 
         /// <summary>
         /// Gets or sets the image containing the rendered results.
@@ -1251,6 +1262,14 @@ namespace FracViewWpf.ViewModels
 
             OnPropertyChanged(nameof(ShowCrosshair));
             OnPropertyChanged(nameof(ShowCrosshairCommandText));
+        }
+        
+        /// <summary>
+        /// Command handler to reset zoom to default settings.
+        /// </summary>
+        private void ResetZoomCommandHandler()
+        {
+            NotifyUiResetZoomRequest?.Invoke(this, new EventArgs());
         }
 
         private enum ComputeState
