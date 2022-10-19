@@ -19,15 +19,19 @@ namespace FracViewWpf
     /// </summary>
     public class Workspace
     {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         private static Workspace _instance;
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+
         private static object _singleton = new object();
         private Dispatcher _dispatcher;
 
         private Dictionary<string, Control> _registeredControls = new Dictionary<string, Control>();
 
-        private Workspace()
+        private Workspace(IServiceProvider serviceProvider)
         {
             _dispatcher = Dispatcher.CurrentDispatcher;
+            ServiceProvider = serviceProvider;
         }
 
         /// <summary>
@@ -51,9 +55,7 @@ namespace FracViewWpf
             {
                 if (object.ReferenceEquals(null, _instance))
                 {
-                    _instance = new Workspace();
-
-                    _instance.ServiceProvider = serviceProvider;
+                    _instance = new Workspace(serviceProvider);
                 }
             }
         }
@@ -84,7 +86,15 @@ namespace FracViewWpf
                     }
                 }
 
-                var window = (System.Windows.Window)Activator.CreateInstance(typeof(T), args);
+                var obj = Activator.CreateInstance(typeof(T), args);
+
+                if (object.ReferenceEquals(null, obj))
+                {
+                    throw new NullReferenceException(nameof(obj));
+                }
+
+                var window = (System.Windows.Window)obj;
+
                 window.Show();
             });
         }
@@ -113,7 +123,15 @@ namespace FracViewWpf
                     }
                 }
 
-                var window = (System.Windows.Window)Activator.CreateInstance(typeof(T), args);
+                var obj = Activator.CreateInstance(typeof(T), args);
+
+                if (object.ReferenceEquals(null, obj))
+                {
+                    throw new NullReferenceException(nameof(obj));
+                }
+
+                var window = (System.Windows.Window)obj;
+
                 window.Show();
             });
         }
@@ -238,7 +256,7 @@ namespace FracViewWpf
         /// </summary>
         /// <param name="name">Name of item.</param>
         /// <returns>Control or null.</returns>
-        public Control GetControlSafe(string name)
+        public Control? GetControlSafe(string name)
         {
             if (_registeredControls.ContainsKey(name))
             {

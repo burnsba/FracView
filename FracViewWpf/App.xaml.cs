@@ -22,9 +22,9 @@ namespace FracViewWpf
     {
         private void App_Startup(object sender, StartupEventArgs e)
         {
-            ServiceCollection serviceCollection = null;
+            ServiceCollection serviceCollection;
             IConfiguration configuration;
-            ServiceProvider serviceProvider = null;
+            ServiceProvider serviceProvider;
 
             try
             {
@@ -59,11 +59,11 @@ namespace FracViewWpf
                 ShowUnhandledException(e.Exception, "TaskScheduler.UnobservedTaskException");
             };
 
-            MainWindowViewModel vm = (MainWindowViewModel)Workspace.Instance.ServiceProvider.GetService(typeof(MainWindowViewModel));
+            MainWindowViewModel vm = (MainWindowViewModel)Workspace.Instance.ServiceProvider.GetService(typeof(MainWindowViewModel))!;
 
             vm.LoadSessionJson();
 
-            MainWindow mainWindow = (MainWindow)Workspace.Instance.ServiceProvider.GetService(typeof(MainWindow));
+            MainWindow mainWindow = (MainWindow)Workspace.Instance.ServiceProvider.GetService(typeof(MainWindow))!;
 
             mainWindow.Show();
         }

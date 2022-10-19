@@ -21,7 +21,7 @@ namespace FracViewWpf.Windows
     /// </summary>
     public partial class ErrorWindow : Window, ICloseable
     {
-        private ErrorWindowViewModel _vm = null;
+        private readonly ErrorWindowViewModel _vm;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ErrorWindow"/> class.

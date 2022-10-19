@@ -22,6 +22,7 @@ namespace FracViewWpf.ViewModels
         {
             CloseCommand = new RelayCommand<ICloseable>(CloseWindow);
 
+            TextContent = String.Empty;
             WindowTitle = "Error";
             ButtonText = "Ok";
         }

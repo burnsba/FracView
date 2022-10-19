@@ -21,7 +21,7 @@ namespace FracViewWpf.Windows
     /// </summary>
     public partial class ColorWindow : Window, ICloseable
     {
-        private ColorWindowViewModel _vm = null;
+        private readonly ColorWindowViewModel _vm;
 
         public ColorWindow(ColorWindowViewModel vm)
         {

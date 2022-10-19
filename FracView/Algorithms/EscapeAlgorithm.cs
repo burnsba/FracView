@@ -11,12 +11,12 @@ namespace FracView.Algorithms
 {
     public abstract class EscapeAlgorithm : IEscapeAlgorithm
     {
+        private readonly object _lockObject = new();
         private decimal _iterationBreak = 0;
         private decimal _iterationBreakSquare = 0;
         private bool _isInit = false;
         private bool _pointsEvaluated = false;
         private bool _histogramIsEvaluated = false;
-        private object _lockObject = new object();
         private List<EvalComplexUnit>? _consideredPoints = null;
 
         /// <inheritdoc />
@@ -162,14 +162,17 @@ namespace FracView.Algorithms
 
             _pointsEvaluated = false;
 
-            ProgressCallback(new ProgressReport(
-                0,
-                0,
-                TotalSteps,
-                $"{nameof(EscapeAlgorithm)}.{nameof(EvaluatePoints)}"
-                ));
+            if (!object.ReferenceEquals(null, ProgressCallback))
+            {
+                ProgressCallback(new ProgressReport(
+                    0,
+                    0,
+                    TotalSteps,
+                    $"{nameof(EscapeAlgorithm)}.{nameof(EvaluatePoints)}"
+                    ));
+            }
 
-            Parallel.ForEach(_consideredPoints, (evalPoint, loopState) => {
+            Parallel.ForEach(_consideredPoints!, (evalPoint, loopState) => {
 
                 if (token.IsCancellationRequested)
                 {

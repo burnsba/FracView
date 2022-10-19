@@ -22,38 +22,60 @@ using SkiaSharp;
 
 namespace FracViewWpf.ViewModels
 {
+    /// <summary>
+    /// Primary class of the application.
+    /// Handles all "backend" logic routed from main ui window.
+    /// </summary>
     public class MainWindowViewModel : WindowViewModelBase
     {
+        /// <summary>
+        /// Default file to save runtime settings to.
+        /// </summary>
         private const string SessionJsonFilename = "session.json";
+
+        /// <summary>
+        /// Default filename to save image to.
+        /// </summary>
         private const string SaveAsDefaultFilename = "mandelbrot";
+
+        /// <summary>
+        /// Default file extension when saving image.
+        /// </summary>
         private const string SaveAsDefaultExtension = ".png";
+
+        /// <summary>
+        /// Supported file extensions.
+        /// </summary>
         private const string SaveAsFilters =
             "PNG format|*.png" +
             "|Jpeg format|*.jpg" +
             "|BMP format|*.bmp" +
             "|Gif format|*.gif";
+        
+        /// <summary>
+        /// Progress report update interval.
+        /// </summary>
+        private readonly int _outputIntervalSec = 1;
+        private readonly IScene _scene;
+        private readonly RunSettings _uiRunData = new();
+        private readonly RunSettings _targetRunData = new();
 
-        private CancellationTokenSource _cancellationTokenCompute = new CancellationTokenSource();
-        private CancellationTokenSource _cancellationTokenColor = new CancellationTokenSource();
+        private CancellationTokenSource _cancellationTokenCompute = new();
+        private CancellationTokenSource _cancellationTokenColor = new();
         
         private ComputeState _computeState = ComputeState.NotRunning;
         private bool _hasRunData = false;
         private bool _anyChangeForReset = false;
         private DateTime _runDataTime;
 
-        private int _outputIntervalSec = 1;
+        private Stopwatch? _algorithmTimer;
 
-        private Stopwatch _algorithmTimer;
+        private IEscapeAlgorithm? _algorithm;
 
-        private IEscapeAlgorithm _algorithm;
-        private IScene _scene;
-
-        private SKBitmap _skbmp;
-        private ImageSource _imageSource;
+        private SKBitmap? _skbmp;
+        private ImageSource? _imageSource;
 
         private RunSettings _previousRunData;
-        private RunSettings _uiRunData = new RunSettings();
-        private RunSettings _targetRunData = new RunSettings();
 
         private string _textOriginX;
         private string _textOriginY;
@@ -63,305 +85,15 @@ namespace FracViewWpf.ViewModels
         private string _textStepHeight;
         private string _textMaxIterations;
 
-        public string TextOriginX
-        {
-            get => _textOriginX;
-
-            set
-            {
-                _textOriginX = value;
-
-                if (MathString.DecimalTryParseMathString(_textOriginX, out decimal d, out bool hasMath))
-                {
-                    _uiRunData.OriginX = d;
-                    OriginXIsValid = true;
-
-                    AnyChangeForReset = true;
-
-                    if (hasMath)
-                    {
-                        _textOriginX = _uiRunData.OriginX.ToString();
-                    }
-
-                    OnPropertyChanged(nameof(TextOriginX));
-                }
-                else
-                {
-                    OriginXIsValid = false;
-                }
-
-                OnPropertyChanged(nameof(OriginXIsValid));
-            }
-        }
-
-        public string TextOriginY
-        {
-            get => _textOriginY;
-
-            set
-            {
-                _textOriginY = value;
-
-                if (MathString.DecimalTryParseMathString(_textOriginY, out decimal d, out bool hasMath))
-                {
-                    _uiRunData.OriginY = d;
-                    OriginYIsValid = true;
-
-                    AnyChangeForReset = true;
-
-                    if (hasMath)
-                    {
-                        _textOriginY = _uiRunData.OriginY.ToString();
-                    }
-
-                    OnPropertyChanged(nameof(TextOriginY));
-                }
-                else
-                {
-                    OriginYIsValid = false;
-                }
-
-                OnPropertyChanged(nameof(OriginYIsValid));
-            }
-        }
-
-        public string TextFractalWidth
-        {
-            get => _textFractalWidth;
-
-            set
-            {
-                _textFractalWidth = value;
-
-                if (MathString.DecimalTryParseMathString(_textFractalWidth, out decimal d, out bool hasMath))
-                {
-                    _uiRunData.FractalWidth = d;
-                    FractalWidthIsValid = true;
-
-                    AnyChangeForReset = true;
-
-                    if (hasMath)
-                    {
-                        _textFractalWidth = _uiRunData.FractalWidth.ToString();
-                    }
-
-                    OnPropertyChanged(nameof(TextFractalWidth));
-                }
-                else
-                {
-                    FractalWidthIsValid = false;
-                }
-
-                OnPropertyChanged(nameof(FractalWidthIsValid));
-            }
-        }
-
-        public string TextFractalHeight
-        {
-            get => _textFractalHeight;
-
-            set
-            {
-                _textFractalHeight = value;
-
-                if (MathString.DecimalTryParseMathString(_textFractalHeight, out decimal d, out bool hasMath))
-                {
-                    _uiRunData.FractalHeight = d;
-                    FractalHeightIsValid = true;
-
-                    AnyChangeForReset = true;
-
-                    if (hasMath)
-                    {
-                        _textFractalHeight = _uiRunData.FractalHeight.ToString();
-                    }
-
-                    OnPropertyChanged(nameof(TextFractalHeight));
-                }
-                else
-                {
-                    FractalHeightIsValid = false;
-                }
-
-                OnPropertyChanged(nameof(FractalHeightIsValid));
-            }
-        }
-
-        public string TextStepWidth
-        {
-            get => _textStepWidth;
-
-            set
-            {
-                _textStepWidth = value;
-
-                if (MathString.IntTryParseMathString(_textStepWidth, out int i, out bool hasMath))
-                {
-                    _uiRunData.StepWidth = i;
-                    StepWidthIsValid = true;
-
-                    AnyChangeForReset = true;
-
-                    if (hasMath)
-                    {
-                        _textStepWidth = _uiRunData.StepWidth.ToString();
-                    }
-
-                    OnPropertyChanged(nameof(TextStepWidth));
-                }
-                else
-                {
-                    StepWidthIsValid = false;
-                }
-
-                OnPropertyChanged(nameof(StepWidthIsValid));
-            }
-        }
-
-        public int StepWidth => _previousRunData.StepWidth;
-
-        public string TextStepHeight
-        {
-            get => _textStepHeight;
-
-            set
-            {
-                _textStepHeight = value;
-
-                if (MathString.IntTryParseMathString(_textStepHeight, out int i, out bool hasMath))
-                {
-                    _uiRunData.StepHeight = i;
-                    StepHeightIsValid = true;
-
-                    //RecomputeImageScreenDimensions();
-
-                    AnyChangeForReset = true;
-
-                    if (hasMath)
-                    {
-                        _textStepHeight = _uiRunData.StepHeight.ToString();
-                    }
-
-                    OnPropertyChanged(nameof(TextStepHeight));
-                }
-                else
-                {
-                    StepHeightIsValid = false;
-                }
-
-                OnPropertyChanged(nameof(StepHeightIsValid));
-            }
-        }
-
-        public int StepHeight => _previousRunData.StepHeight;
-
-        public string TextMaxIterations
-        {
-            get => _textMaxIterations;
-
-            set
-            {
-                _textMaxIterations = value;
-
-                if (MathString.IntTryParseMathString(_textMaxIterations, out int i, out bool hasMath))
-                {
-                    _uiRunData.MaxIterations = i;
-                    MaxIterationsIsValid = true;
-
-                    AnyChangeForReset = true;
-
-                    if (hasMath)
-                    {
-                        _textMaxIterations = _uiRunData.MaxIterations.ToString();
-                    }
-
-                    OnPropertyChanged(nameof(TextMaxIterations));
-                }
-                else
-                {
-                    MaxIterationsIsValid = false;
-                }
-
-                OnPropertyChanged(nameof(MaxIterationsIsValid));
-            }
-        }
-
-        public bool UseHistogram
-        {
-            get => _uiRunData.UseHistogram;
-            set => _uiRunData.UseHistogram = value;
-        }
-
-        public bool OriginXIsValid { get; private set; }
-        public bool OriginYIsValid { get; private set; }
-        public bool FractalWidthIsValid { get; private set; }
-        public bool FractalHeightIsValid { get; private set; }
-        public bool StepWidthIsValid { get; private set; }
-        public bool StepHeightIsValid { get; private set; }
-        public bool MaxIterationsIsValid { get; private set; }
-
-        public string ComputeCommandText { get; private set; }
-
-        public string StatusBarCurrentWork { get; private set; }
-        public string StatusBarStepText { get; private set; }
-        public double StatusBarProgressValue { get; private set; }
-        public string StatusBarElapsedText { get; private set; }
-
-        public string TextPixelLeftTop { get; set; }
-        public string TextPixelCenter { get; set; }
-        public string TextPixelWidthHeight { get; set; }
-        public string TextViewWidthHeight { get; set; }
-
-        public string TextFractalLeftTop { get; set; }
-        public string TextFractalCenter { get; set; }
-        public string TextFractalWidthHeight { get; set; }
-
-        public string TextMousePixelXy { get; set; }
-        public string TextMouseFractalXy { get; set; }
-
-        public double UiScale { get; set; } = 1.0;
-
-        public bool HasRunData
-        {
-            get => _hasRunData;
-
-            set
-            {
-                _hasRunData = value;
-                OnPropertyChanged(nameof(HasRunData));
-            }
-        }
-
-        public bool AnyChangeForReset
-        {
-            get => _anyChangeForReset;
-
-            set
-            {
-                _anyChangeForReset = value;
-                OnPropertyChanged(nameof(AnyChangeForReset));
-            }
-        }
-
-        public bool ShowCrosshair { get; set; }
-        public string ShowCrosshairCommandText { get; set; }
-
-        public ICommand ComputeCommand { get; set; }
-
-        public ICommand ShowColorsWindowCommand { get; set; }
-        public ICommand RecolorCommand { get; set; }
-        public ICommand ResetToDefaultCommand { get; set; }
-        public ICommand ResetToPreviousCommand { get; set; }
-        public ICommand TargetFromViewCommand { get; set; }
-        public ICommand SaveAsCommand { get; set; }
-        public ICommand ToggleCrosshairCommand { get; set; }
-
-        public ImageSource ImageSource => _imageSource;
-
-        public event EventHandler<EventArgs>? AfterRunCompleted;
-
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public MainWindowViewModel(IScene scene)
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
+            if (object.ReferenceEquals(null, scene))
+            {
+                throw new NullReferenceException(nameof(scene));
+            }
+
             ResetToDefaultCommandHandler();
 
             _previousRunData = _uiRunData with { };
@@ -395,6 +127,472 @@ namespace FracViewWpf.ViewModels
             AnyChangeForReset = false;
         }
 
+        /// <summary>
+        /// Event after algorithm finishes calculating and rendering points.
+        /// Hooked by main window to reset UI scale.
+        /// </summary>
+        public event EventHandler<EventArgs>? AfterRunCompleted;
+
+        /// <summary>
+        /// Gets or sets the text field for world origin x.
+        /// </summary>
+        public string TextOriginX
+        {
+            get => _textOriginX;
+
+            set
+            {
+                _textOriginX = value;
+
+                if (MathString.DecimalTryParseMathString(_textOriginX, out decimal d, out bool hasMath))
+                {
+                    _uiRunData.OriginX = d;
+                    OriginXIsValid = true;
+
+                    AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textOriginX = _uiRunData.OriginX.ToString();
+                    }
+
+                    OnPropertyChanged(nameof(TextOriginX));
+                }
+                else
+                {
+                    OriginXIsValid = false;
+                }
+
+                OnPropertyChanged(nameof(OriginXIsValid));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the text field for world origin y.
+        /// </summary>
+        public string TextOriginY
+        {
+            get => _textOriginY;
+
+            set
+            {
+                _textOriginY = value;
+
+                if (MathString.DecimalTryParseMathString(_textOriginY, out decimal d, out bool hasMath))
+                {
+                    _uiRunData.OriginY = d;
+                    OriginYIsValid = true;
+
+                    AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textOriginY = _uiRunData.OriginY.ToString();
+                    }
+
+                    OnPropertyChanged(nameof(TextOriginY));
+                }
+                else
+                {
+                    OriginYIsValid = false;
+                }
+
+                OnPropertyChanged(nameof(OriginYIsValid));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the text field for world width range.
+        /// </summary>
+        public string TextFractalWidth
+        {
+            get => _textFractalWidth;
+
+            set
+            {
+                _textFractalWidth = value;
+
+                if (MathString.DecimalTryParseMathString(_textFractalWidth, out decimal d, out bool hasMath))
+                {
+                    _uiRunData.FractalWidth = d;
+                    FractalWidthIsValid = true;
+
+                    AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textFractalWidth = _uiRunData.FractalWidth.ToString();
+                    }
+
+                    OnPropertyChanged(nameof(TextFractalWidth));
+                }
+                else
+                {
+                    FractalWidthIsValid = false;
+                }
+
+                OnPropertyChanged(nameof(FractalWidthIsValid));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the text field for world height range.
+        /// </summary>
+        public string TextFractalHeight
+        {
+            get => _textFractalHeight;
+
+            set
+            {
+                _textFractalHeight = value;
+
+                if (MathString.DecimalTryParseMathString(_textFractalHeight, out decimal d, out bool hasMath))
+                {
+                    _uiRunData.FractalHeight = d;
+                    FractalHeightIsValid = true;
+
+                    AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textFractalHeight = _uiRunData.FractalHeight.ToString();
+                    }
+
+                    OnPropertyChanged(nameof(TextFractalHeight));
+                }
+                else
+                {
+                    FractalHeightIsValid = false;
+                }
+
+                OnPropertyChanged(nameof(FractalHeightIsValid));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the text field for pixel width.
+        /// </summary>
+        public string TextStepWidth
+        {
+            get => _textStepWidth;
+
+            set
+            {
+                _textStepWidth = value;
+
+                if (MathString.IntTryParseMathString(_textStepWidth, out int i, out bool hasMath))
+                {
+                    _uiRunData.StepWidth = i;
+                    StepWidthIsValid = true;
+
+                    AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textStepWidth = _uiRunData.StepWidth.ToString();
+                    }
+
+                    OnPropertyChanged(nameof(TextStepWidth));
+                }
+                else
+                {
+                    StepWidthIsValid = false;
+                }
+
+                OnPropertyChanged(nameof(StepWidthIsValid));
+            }
+        }
+
+        /// <summary>
+        /// Gets the backing value for pixel width.
+        /// </summary>
+        public int StepWidth => _previousRunData.StepWidth;
+
+        /// <summary>
+        /// Gets or sets the text field for pixel height.
+        /// </summary>
+        public string TextStepHeight
+        {
+            get => _textStepHeight;
+
+            set
+            {
+                _textStepHeight = value;
+
+                if (MathString.IntTryParseMathString(_textStepHeight, out int i, out bool hasMath))
+                {
+                    _uiRunData.StepHeight = i;
+                    StepHeightIsValid = true;
+
+                    //RecomputeImageScreenDimensions();
+
+                    AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textStepHeight = _uiRunData.StepHeight.ToString();
+                    }
+
+                    OnPropertyChanged(nameof(TextStepHeight));
+                }
+                else
+                {
+                    StepHeightIsValid = false;
+                }
+
+                OnPropertyChanged(nameof(StepHeightIsValid));
+            }
+        }
+
+        /// <summary>
+        /// Gets the backing value for pixel height.
+        /// </summary>
+        public int StepHeight => _previousRunData.StepHeight;
+
+        /// <summary>
+        /// Gets or sets the text field for max iterations.
+        /// </summary>
+        public string TextMaxIterations
+        {
+            get => _textMaxIterations;
+
+            set
+            {
+                _textMaxIterations = value;
+
+                if (MathString.IntTryParseMathString(_textMaxIterations, out int i, out bool hasMath))
+                {
+                    _uiRunData.MaxIterations = i;
+                    MaxIterationsIsValid = true;
+
+                    AnyChangeForReset = true;
+
+                    if (hasMath)
+                    {
+                        _textMaxIterations = _uiRunData.MaxIterations.ToString();
+                    }
+
+                    OnPropertyChanged(nameof(TextMaxIterations));
+                }
+                else
+                {
+                    MaxIterationsIsValid = false;
+                }
+
+                OnPropertyChanged(nameof(MaxIterationsIsValid));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether histogram data should be computed or not.
+        /// </summary>
+        public bool UseHistogram
+        {
+            get => _uiRunData.UseHistogram;
+            set => _uiRunData.UseHistogram = value;
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether <see cref="TextOriginX"/> is valid.
+        /// </summary>
+        public bool OriginXIsValid { get; private set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether <see cref="TextOriginY"/> is valid.
+        /// </summary>
+        public bool OriginYIsValid { get; private set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether <see cref="TextFractalWidth"/> is valid.
+        /// </summary>
+        public bool FractalWidthIsValid { get; private set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether <see cref="TextFractalHeight"/> is valid.
+        /// </summary>
+        public bool FractalHeightIsValid { get; private set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether <see cref="TextStepWidth"/> is valid.
+        /// </summary>
+        public bool StepWidthIsValid { get; private set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether <see cref="TextStepHeight"/> is valid.
+        /// </summary>
+        public bool StepHeightIsValid { get; private set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether <see cref="TextMaxIterations"/> is valid.
+        /// </summary>
+        public bool MaxIterationsIsValid { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the text of the button to start/stop computing points.
+        /// </summary>
+        public string ComputeCommandText { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the text of the status bar "current work" section.
+        /// </summary>
+        public string StatusBarCurrentWork { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the text of the status bar "current step count" section.
+        /// </summary>
+        public string StatusBarStepText { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the status bar progress bar percent.
+        /// </summary>
+        public double StatusBarProgressValue { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the status bar "elapsed time" section.
+        /// </summary>
+        public string StatusBarElapsedText { get; private set; }
+
+        /// <summary>
+        /// Gets or sets stats area pixel left/top description.
+        /// </summary>
+        public string TextPixelLeftTop { get; set; }
+
+        /// <summary>
+        /// Gets or sets stats area center pixel description.
+        /// </summary>
+        public string TextPixelCenter { get; set; }
+
+        /// <summary>
+        /// Gets or sets stats area pixel width/height description.
+        /// </summary>
+        public string TextPixelWidthHeight { get; set; }
+
+        /// <summary>
+        /// Gets or sets stats area view area world width/height.
+        /// </summary>
+        public string TextViewWidthHeight { get; set; }
+
+        /// <summary>
+        /// Gets or sets stats area world left/top.
+        /// </summary>
+        public string TextFractalLeftTop { get; set; }
+
+        /// <summary>
+        /// Gets or sets stats area center world description.
+        /// </summary>
+        public string TextFractalCenter { get; set; }
+
+        /// <summary>
+        /// Gets or sets stats area world width/height description.
+        /// </summary>
+        public string TextFractalWidthHeight { get; set; }
+
+        /// <summary>
+        /// Gets or sets stats area mouse pixel position.
+        /// </summary>
+        public string TextMousePixelXy { get; set; }
+
+        /// <summary>
+        /// Gets or sets stats area mouse world position.
+        /// </summary>
+        public string TextMouseFractalXy { get; set; }
+
+        /// <summary>
+        /// Gets or sets current user interface scale.
+        /// </summary>
+        public double UiScale { get; set; } = 1.0;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the algorithm
+        /// has run data associated with it.
+        /// </summary>
+        public bool HasRunData
+        {
+            get => _hasRunData;
+
+            set
+            {
+                _hasRunData = value;
+                OnPropertyChanged(nameof(HasRunData));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether it should be possible
+        /// to reset the "standard" settings back to default.
+        /// </summary>
+        public bool AnyChangeForReset
+        {
+            get => _anyChangeForReset;
+
+            set
+            {
+                _anyChangeForReset = value;
+                OnPropertyChanged(nameof(AnyChangeForReset));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the overlay crosshair
+        /// should be shown or not.
+        /// </summary>
+        public bool ShowCrosshair { get; set; }
+
+        /// <summary>
+        /// Gets or sets the text of the button to show or hide the crosshair.
+        /// </summary>
+        public string ShowCrosshairCommandText { get; set; }
+
+        /// <summary>
+        /// Gets or sets the command to start/top computing points.
+        /// </summary>
+        public ICommand ComputeCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the command to show the colors management windows.
+        /// </summary>
+        public ICommand ShowColorsWindowCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the command to apply coloramp to the current run data.
+        /// </summary>
+        public ICommand RecolorCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the command to reset settings to default.
+        /// </summary>
+        public ICommand ResetToDefaultCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the command to reset settings to the last run data.
+        /// </summary>
+        public ICommand ResetToPreviousCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the command to update the run settings based
+        /// on the currently viewed area.
+        /// </summary>
+        public ICommand TargetFromViewCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the command to save the result as an image.
+        /// </summary>
+        public ICommand SaveAsCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the commandto show or hide the crosshair.
+        /// </summary>
+        public ICommand ToggleCrosshairCommand { get; set; }
+
+        /// <summary>
+        /// Gets or sets the image containing the rendered results.
+        /// </summary>
+        public ImageSource? ImageSource => _imageSource;
+
+        /// <summary>
+        /// Updates stats area text properties for view info based on the scrollviewer values and current ui zoom.
+        /// </summary>
+        /// <param name="scrollInfo">Scroll view values.</param>
         public void UpdateImagePositionStats(ScrollScaleInfo scrollInfo)
         {
             if (scrollInfo.ExtentWidth == 0 || scrollInfo.ExtentHeight == 0)
@@ -428,9 +626,6 @@ namespace FracViewWpf.ViewModels
             double scalePixelCenterY = scalePixelTop + (scaleViewHeight / 2);
 
             //
-
-            decimal fractalToPixelConversionX = _previousRunData.FractalWidth / (decimal)(scrollInfo.DesiredSizeX - System.Windows.SystemParameters.VerticalScrollBarWidth);
-            decimal fractalToPixelConversionY = _previousRunData.FractalHeight / (decimal)(scrollInfo.DesiredSizeY - System.Windows.SystemParameters.HorizontalScrollBarHeight);
 
             decimal scaleFractalLeft = _previousRunData.OriginX - (_previousRunData.FractalWidth / 2)
                 + ((decimal)scalePixelLeft / _previousRunData.StepWidth) * _previousRunData.FractalWidth;
@@ -471,10 +666,14 @@ namespace FracViewWpf.ViewModels
             OnPropertyChanged(nameof(TextFractalWidthHeight));
         }
 
-        public void UpdateMousePositionStats(Point position, ScrollScaleInfo scrollInfo)
+        /// <summary>
+        /// Updates stats area text properties for mouse info based on the scrollviewer values and current ui zoom.
+        /// </summary>
+        /// <param name="scrollInfo">Scroll view values.</param>
+        public void UpdateMousePositionStats(Point position)
         {
-            decimal fractalMouseX = 0;
-            decimal fractalMouseY = 0;
+            decimal fractalMouseX;
+            decimal fractalMouseY;
 
             fractalMouseX = _previousRunData.OriginX
                 - (_previousRunData.FractalWidth / 2)
@@ -491,6 +690,9 @@ namespace FracViewWpf.ViewModels
             OnPropertyChanged(nameof(TextMouseFractalXy));
         }
 
+        /// <summary>
+        /// Attempts to load the default settings json file and set properties.
+        /// </summary>
         public void LoadSessionJson()
         {
             if (!System.IO.File.Exists(SessionJsonFilename))
@@ -499,7 +701,7 @@ namespace FracViewWpf.ViewModels
             }
 
             var fileContent = System.IO.File.ReadAllText(SessionJsonFilename);
-            SessionSettings? settings = null;
+            SessionSettings? settings;
 
             try
             {
@@ -540,6 +742,9 @@ namespace FracViewWpf.ViewModels
             }
         }
 
+        /// <summary>
+        /// Serializes <see cref="_previousRunData"/> and saves as json text file.
+        /// </summary>
         private void SaveSessionJson()
         {
             var settings = new SessionSettings()
@@ -557,6 +762,10 @@ namespace FracViewWpf.ViewModels
             System.IO.File.WriteAllText(SessionJsonFilename, json);
         }
 
+        /// <summary>
+        /// Command handler for primary "run" button.
+        /// Either triggers token cancellation, or starts a new run.
+        /// </summary>
         private void ComputeCommandHandler()
         {
             if (_computeState == ComputeState.RunningCompute)
@@ -580,6 +789,9 @@ namespace FracViewWpf.ViewModels
             }
         }
 
+        /// <summary>
+        /// Command handler to show the colors management window.
+        /// </summary>
         private void ShowColorsWindowCommandHandler()
         {
             var svm = ActivatorUtilities.CreateInstance<ColorWindowViewModel>(Workspace.Instance.ServiceProvider, this._scene);
@@ -589,6 +801,12 @@ namespace FracViewWpf.ViewModels
             Workspace.Instance.RecreateSingletonWindow<ColorWindow>(svm);
         }
 
+        /// <summary>
+        /// Callback when notified the scene has been changed.
+        /// Writes current settings to disk.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Svm_SceneChanged(object? sender, SceneEventArgs e)
         {
             if (object.ReferenceEquals(null, e) || object.ReferenceEquals(null, e.Scene))
@@ -601,6 +819,10 @@ namespace FracViewWpf.ViewModels
             SaveSessionJson();
         }
 
+        /// <summary>
+        /// Gets the text to display on the main "run" button.
+        /// </summary>
+        /// <returns></returns>
         private string GetComputeCommandText()
         {
             return _computeState switch
@@ -611,11 +833,16 @@ namespace FracViewWpf.ViewModels
             };
         }
 
+        /// <summary>
+        /// Main method to start a new run.
+        /// Saves current settings to disk, instantiates a new <see cref="_algorithm"/>,
+        /// then starts a new computation task in the background.
+        /// </summary>
         private void DoTheAlgorithm()
         {
             _previousRunData = _uiRunData with { };
 
-            // Save current settings, after setting _previousRunData
+            // Save current settings, only after setting _previousRunData
             SaveSessionJson();
 
             _algorithm = new MandelbrotDouble(
@@ -674,7 +901,7 @@ namespace FracViewWpf.ViewModels
 
                 _hasRunData = false;
                 _computeState = ComputeState.NotRunning;
-                _algorithmTimer.Stop();
+                _algorithmTimer!.Stop();
                 UiStatusCancelRun();
                 ComputeCommandText = GetComputeCommandText();
                 OnPropertyChanged(nameof(ComputeCommandText));
@@ -683,21 +910,49 @@ namespace FracViewWpf.ViewModels
             }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
+        /// <summary>
+        /// Updates associated UI text / status when a run is cancelled.
+        /// </summary>
         private void UiStatusCancelRun()
         {
+            if (object.ReferenceEquals(null, _algorithmTimer))
+            {
+                return;
+            }
+
             UiUpdateProgress(new ProgressReport(_algorithmTimer.Elapsed.TotalSeconds, 0, 0, "Cancelled."));
         }
 
+        /// <summary>
+        /// Updates associated UI text / status when a run is started.
+        /// </summary>
         private void UiStatusStartRun()
         {
+            if (object.ReferenceEquals(null, _algorithmTimer))
+            {
+                return;
+            }
+
             UiUpdateProgress(new ProgressReport(_algorithmTimer.Elapsed.TotalSeconds, 0, 0, "Started."));
         }
 
+        /// <summary>
+        /// Updates associated UI text / status after a run successfully completes.
+        /// </summary>
         private void UiStatusFinishRunSuccess()
         {
+            if (object.ReferenceEquals(null, _algorithmTimer))
+            {
+                return;
+            }
+
             UiUpdateProgress(new ProgressReport(_algorithmTimer.Elapsed.TotalSeconds, 0, 0, "Done."));
         }
 
+        /// <summary>
+        /// Callback to update UI status while a run is evaluating.
+        /// </summary>
+        /// <param name="progress"></param>
         private void UiUpdateProgress(ProgressReport progress)
         {
             var sb = new StringBuilder();
@@ -735,8 +990,18 @@ namespace FracViewWpf.ViewModels
             OnPropertyChanged(nameof(StatusBarElapsedText));
         }
 
+        /// <summary>
+        /// Method to update the main image container after a run completes.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <exception cref="NullReferenceException"></exception>
         private void RenderImageSource(CancellationToken token)
         {
+            if (object.ReferenceEquals(null, _algorithm))
+            {
+                throw new NullReferenceException(nameof(_algorithm));
+            }
+
             var bmp = _scene.ProcessPointsToPixels(_algorithm, token, _outputIntervalSec, UiUpdateProgress);
 
             if (object.ReferenceEquals(null, bmp) || token.IsCancellationRequested)
@@ -754,7 +1019,7 @@ namespace FracViewWpf.ViewModels
             Stream stream = encoded.AsStream();
 
             stream.Position = 0;
-            BitmapImage result = new BitmapImage();
+            BitmapImage result = new();
             result.BeginInit();
             // According to MSDN, "The default OnDemand cache option retains access to the stream until the image is needed."
             // Force the bitmap to load right now so we can dispose the stream.
@@ -767,6 +1032,10 @@ namespace FracViewWpf.ViewModels
             OnPropertyChanged(nameof(ImageSource));
         }
 
+        /// <summary>
+        /// Command handler for "recolor" button.
+        /// Either triggers token cancellation, or starts a new recolor action.
+        /// </summary>
         private void RecolorCommandHandler()
         {
             if (_computeState == ComputeState.NotRunning && _hasRunData)
@@ -778,7 +1047,7 @@ namespace FracViewWpf.ViewModels
                 .ContinueWith(err1 =>
                 {
                     _computeState = ComputeState.NotRunning;
-                    _algorithmTimer.Stop();
+                    _algorithmTimer!.Stop();
                     UiStatusCancelRun();
                     ComputeCommandText = GetComputeCommandText();
                     OnPropertyChanged(nameof(ComputeCommandText));
@@ -792,8 +1061,19 @@ namespace FracViewWpf.ViewModels
             }
         }
 
+        /// <summary>
+        /// Main method to (re)apply coloramp to run data.
+        /// Should only be called from a background task, either <see cref="RecolorCommandHandler"/>
+        /// or <see cref="ComputeCommandHandler"/>.
+        /// </summary>
+        /// <exception cref="NullReferenceException"></exception>
         private void RecolorAction()
         {
+            if (object.ReferenceEquals(null, _algorithm))
+            {
+                throw new NullReferenceException(nameof(_algorithm));
+            }
+
             _cancellationTokenColor = new CancellationTokenSource();
             _algorithmTimer = Stopwatch.StartNew();
             _computeState = ComputeState.RunningColor;
@@ -811,6 +1091,9 @@ namespace FracViewWpf.ViewModels
             }
         }
 
+        /// <summary>
+        /// Command handler to reset run settings to the default.
+        /// </summary>
         private void ResetToDefaultCommandHandler()
         {
             _uiRunData.OriginX = decimal.Parse("-0.5");
@@ -840,6 +1123,7 @@ namespace FracViewWpf.ViewModels
         }
 
         /// <summary>
+        /// Command handler to reset run settings to previous run data.
         /// Reset position information, but leave histogram unchanged.
         /// </summary>
         private void ResetToPreviousCommandHandler()
@@ -868,6 +1152,10 @@ namespace FracViewWpf.ViewModels
             AnyChangeForReset = false;
         }
 
+        /// <summary>
+        /// Command handler to set the run settings according
+        /// to the current view area.
+        /// </summary>
         private void TargetFromViewCommandHandler()
         {
             TextOriginX = _targetRunData.OriginX.ToString();
@@ -876,11 +1164,21 @@ namespace FracViewWpf.ViewModels
             TextFractalHeight = _targetRunData.FractalHeight.ToString();
         }
 
+        /// <summary>
+        /// <see cref="AfterRunCompleted"/> handler invocation.
+        /// </summary>
         private void OnAfterRunCompleted()
         {
             AfterRunCompleted?.Invoke(this, new EventArgs());
         }
 
+        /// <summary>
+        /// Command handler to save image data.
+        /// </summary>
+        /// <param name="writeMetadataFile">
+        /// Whether or not to write an additional text file containing the runtime settings.
+        /// This will use the same filename as the image, but with a text extension.
+        /// </param>
         private void SaveAsCommandHandler(bool writeMetadataFile = false)
         {
             if (!_hasRunData || object.ReferenceEquals(null, _skbmp))
@@ -888,24 +1186,26 @@ namespace FracViewWpf.ViewModels
                 return;
             }
 
-            var dialog = new Microsoft.Win32.SaveFileDialog();
-            dialog.FileName = SaveAsDefaultFilename + _runDataTime.ToString("yyyyMMdd-HHmmss"); // Default file name
-            dialog.DefaultExt = SaveAsDefaultExtension; // Default file extension
-            dialog.Filter = SaveAsFilters; // Filter files by extension
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = SaveAsDefaultFilename + _runDataTime.ToString("yyyyMMdd-HHmmss"), // Default file name
+                DefaultExt = SaveAsDefaultExtension, // Default file extension
+                Filter = SaveAsFilters // Filter files by extension
+            };
 
             // Show save file dialog box
             bool? result = dialog.ShowDialog();
 
             // Process save file dialog box results
-            if (result == true)
+            if (result == true && !string.IsNullOrEmpty(dialog.FileName))
             {
                 // Save document
                 string filename = dialog.FileName;
                 var extension = System.IO.Path.GetExtension(filename);
                 var format = FracView.Converters.SkiaConverters.ExtensionToFormat(extension);
 
-                using (MemoryStream memStream = new MemoryStream())
-                using (SKManagedWStream wstream = new SKManagedWStream(memStream))
+                using (MemoryStream memStream = new())
+                using (SKManagedWStream wstream = new(memStream))
                 {
                     _skbmp.Encode(wstream, format, 100);
                     byte[] data = memStream.ToArray();
@@ -915,7 +1215,7 @@ namespace FracViewWpf.ViewModels
                 if (writeMetadataFile)
                 {
                     var baseFilename = System.IO.Path.GetFileNameWithoutExtension(filename);
-                    var metadataFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(filename), baseFilename + ".txt");
+                    var metadataFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(filename)!, baseFilename + ".txt");
                     var sb = new StringBuilder();
                     sb.AppendLine($"runtime: {_runDataTime.ToLongDateString()} {_runDataTime.ToLongTimeString()}");
                     sb.AppendLine($"runtime.iso: {_runDataTime.ToString("yyyy-MM-ddTHH:mm:sszzz", System.Globalization.CultureInfo.InvariantCulture)}");
@@ -933,6 +1233,9 @@ namespace FracViewWpf.ViewModels
             }
         }
 
+        /// <summary>
+        /// Command handler to show/hide crosshair on the UI.
+        /// </summary>
         private void ToggleCrosshairCommandHandler()
         {
             if (ShowCrosshair)
