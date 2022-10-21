@@ -71,7 +71,7 @@ namespace FracView.Gfx
         /// <exception cref="InvalidOperationException">
         /// Thrown if algorithm has not computed points yet, or colorramp has not been set in this instance.
         /// </exception>
-        public SKBitmap ProcessPointsToPixels(IEscapeAlgorithm algorithm, CancellationToken token, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+        public SKBitmap? ProcessPointsToPixels(IEscapeAlgorithm algorithm, CancellationToken token, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
         {
             if (!ColorRamp.Keyframes.Any())
             {

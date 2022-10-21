@@ -153,15 +153,15 @@ namespace FracViewWpf.Converters
                 {
                     if (trimmed.Length == 4)
                     {
-                        r = Convert.ToInt32(value.Substring(1, 1), 16);
-                        g = Convert.ToInt32(value.Substring(2, 1), 16);
-                        b = Convert.ToInt32(value.Substring(3, 1), 16);
+                        r = Convert.ToInt32(value!.Substring(1, 1), 16);
+                        g = Convert.ToInt32(value!.Substring(2, 1), 16);
+                        b = Convert.ToInt32(value!.Substring(3, 1), 16);
                     }
                     else if (trimmed.Length == 7)
                     {
-                        r = Convert.ToInt32(value.Substring(1, 2), 16);
-                        g = Convert.ToInt32(value.Substring(3, 2), 16);
-                        b = Convert.ToInt32(value.Substring(5, 2), 16);
+                        r = Convert.ToInt32(value!.Substring(1, 2), 16);
+                        g = Convert.ToInt32(value!.Substring(3, 2), 16);
+                        b = Convert.ToInt32(value!.Substring(5, 2), 16);
                     }
                     else
                     {
@@ -172,17 +172,17 @@ namespace FracViewWpf.Converters
                 }
                 else if (trimmed.Length == 3)
                 {
-                    r = Convert.ToInt32(value.Substring(0, 1), 16);
-                    g = Convert.ToInt32(value.Substring(1, 1), 16);
-                    b = Convert.ToInt32(value.Substring(2, 1), 16);
+                    r = Convert.ToInt32(value!.Substring(0, 1), 16);
+                    g = Convert.ToInt32(value!.Substring(1, 1), 16);
+                    b = Convert.ToInt32(value!.Substring(2, 1), 16);
 
                     return new ValueTuple<byte, byte, byte>((byte)r, (byte)g, (byte)b);
                 }
                 else if (_sixDigits.IsMatch(trimmed))
                 {
-                    r = Convert.ToInt32(value.Substring(0, 2), 16);
-                    g = Convert.ToInt32(value.Substring(2, 2), 16);
-                    b = Convert.ToInt32(value.Substring(4, 2), 16);
+                    r = Convert.ToInt32(value!.Substring(0, 2), 16);
+                    g = Convert.ToInt32(value!.Substring(2, 2), 16);
+                    b = Convert.ToInt32(value!.Substring(4, 2), 16);
 
                     return new ValueTuple<byte, byte, byte>((byte)r, (byte)g, (byte)b);
                 }

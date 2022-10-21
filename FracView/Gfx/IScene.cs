@@ -26,8 +26,8 @@ namespace FracView.Gfx
         /// <param name="token">Cancellation token.</param>
         /// <param name="progressCallbackIntervalSec">Interval in seconds that progress should be reported.</param>
         /// <param name="progressCallback">Reporting callback method.</param>
-        /// <returns>Image with pixels set.</returns>
-        SKBitmap ProcessPointsToPixels(IEscapeAlgorithm algorithm, CancellationToken token, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null);
+        /// <returns>Image with pixels set. If safely cancelled, returns null.</returns>
+        SKBitmap? ProcessPointsToPixels(IEscapeAlgorithm algorithm, CancellationToken token, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null);
 
         /// <summary>
         /// Converts histogram percent value to color value.

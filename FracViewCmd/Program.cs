@@ -235,10 +235,13 @@ namespace FracViewCmd
 
             /* Done with error printing. Now print standard text. */
 
-            var helpText = new HelpText(HeadingInfo.Default, CopyrightInfo.Default);
-            helpText.AddDashesToOption = true;
-            helpText.MaximumDisplayWidth = 100;
-            helpText.AdditionalNewLineAfterOption = false;
+            HelpText helpText = new(HeadingInfo.Default, CopyrightInfo.Default)
+            {
+                AddDashesToOption = true,
+                MaximumDisplayWidth = 100,
+                AdditionalNewLineAfterOption = false
+            };
+
             helpText.AddOptions(result);
 
             var texty = helpText.ToString();
@@ -274,7 +277,7 @@ namespace FracViewCmd
 
             double donePercent = 100.0 * (double)progress.CurrentStep / (double)progress.TotalSteps;
             Console.WriteLine($"work: {progress.CurrentWorkName}");
-            Console.WriteLine($"elapsed: {sb.ToString()}");
+            Console.WriteLine($"elapsed: {sb}");
             Console.WriteLine($"pixels: {progress.CurrentStep} / {progress.TotalSteps} = {donePercent:N2}%");
             Console.WriteLine();
         }
@@ -299,7 +302,9 @@ namespace FracViewCmd
 
             try
             {
-                algorithm = (EscapeAlgorithm)Activator.CreateInstance(runSettings.AlgorithmType, new object[] { progressInterval, progressCallback });
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+                algorithm = (EscapeAlgorithm)Activator.CreateInstance(runSettings.AlgorithmType, new object[] { progressInterval, progressCallback! });
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             }
             catch (Exception ex)
             {
@@ -333,8 +338,14 @@ namespace FracViewCmd
 
             var bmp = scene.ProcessPointsToPixels(algorithm, cancellationToken.Token, progressInterval, progressCallback);
 
-            using (MemoryStream memStream = new MemoryStream())
-            using (SKManagedWStream wstream = new SKManagedWStream(memStream))
+            if (object.ReferenceEquals(null, bmp))
+            {
+                ConsoleLog($"Algorithm run cancelled (scene result is null).");
+                Environment.Exit(0);
+            }
+
+            using (MemoryStream memStream = new())
+            using (SKManagedWStream wstream = new(memStream))
             {
                 bmp.Encode(wstream, cmdSettings.OutputFormat, 100);
                 byte[] data = memStream.ToArray();
@@ -386,7 +397,7 @@ namespace FracViewCmd
 
                 sb.Append($"{elapsedSecondsD:N2} sec");
 
-                ConsoleLog($"done. Total runtime: {sb.ToString()}");
+                ConsoleLog($"done. Total runtime: {sb}");
             }
         }
 
@@ -398,7 +409,7 @@ namespace FracViewCmd
             }
             else
             {
-                Console.WriteLine($"{DateTime.Now.ToString("yyyy-MM-ddTHH:mm:sszzz")}: {msg}");
+                Console.WriteLine($"{DateTime.Now:yyyy-MM-ddTHH:mm:sszzz}: {msg}");
             }
         }
     }
