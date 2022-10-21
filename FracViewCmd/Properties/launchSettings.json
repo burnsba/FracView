@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "FracViewCmd": {
+      "commandName": "Project",
+      "commandLineArgs": "--fractalheight 0.250 --fractalwidth 0.250 --usehistogram --maxiterations 1000 --stepheight 512 --stepwidth 512 --originx 0.29999999799999 --originy 0.4491000000000016"
+    }
+  }
+}

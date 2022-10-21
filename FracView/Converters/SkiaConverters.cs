@@ -27,5 +27,23 @@ namespace FracView.Converters
                 _ => throw new NotSupportedException($"Unknown file extension: {extension}"),
             };
         }
+
+        /// <summary>
+        /// Converts image format to associated file extension.
+        /// </summary>
+        /// <param name="format">Format.</param>
+        /// <returns>Three letter file extension with leading period.</returns>
+        /// <exception cref="NotSupportedException">If the file extension could not be resolved.</exception>
+        public static string FormatToExtension(SKEncodedImageFormat format)
+        {
+            return (format) switch
+            {
+                SKEncodedImageFormat.Png => ".png",
+                SKEncodedImageFormat.Jpeg => ".jpg",
+                SKEncodedImageFormat.Bmp => ".bmp",
+                SKEncodedImageFormat.Gif => ".gif",
+                _ => throw new NotSupportedException($"Unsupported format: {format}"),
+            };
+        }
     }
 }
