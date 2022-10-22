@@ -1,4 +1,5 @@
 ﻿using FracView.Algorithms;
+using FracView.Dto;
 using SkiaSharp;
 
 namespace FracView.Gfx

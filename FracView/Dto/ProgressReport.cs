@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FracView.World;
 
-namespace FracView.Algorithms
+namespace FracView.Dto
 {
     /// <summary>
     /// Progress report container.

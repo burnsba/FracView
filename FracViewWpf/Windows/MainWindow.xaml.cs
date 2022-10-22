@@ -115,28 +115,6 @@ namespace FracViewWpf.Windows
             // scroll down
             else if (delta < 0)
             {
-                //// Can only zoom out if not already at max zoom.
-                //_imageZoomLittleScrollIndex--;
-                //if (_imageZoomLittleScrollIndex < 0)
-                //{
-                //    _imageZoomLittleScrollIndex = Views.ScrollValues.Count - 1;
-
-                //    _imageZoomBigScrollIndex--;
-                //    if (_imageZoomBigScrollIndex < 0)
-                //    {
-                //        _imageZoomLittleScrollIndex = 0;
-                //        _imageZoomBigScrollIndex = 0;
-                //    }
-                //    else
-                //    {
-                //        change = true;
-                //    }
-                //}
-                //else
-                //{
-                //    change = true;
-                //}
-
                 _imageZoomLittleScrollIndex--;
                 if (_imageZoomLittleScrollIndex < 0)
                 {
@@ -144,7 +122,7 @@ namespace FracViewWpf.Windows
                     _imageZoomBigScrollIndex--;
                 }
 
-                // You can always zoom in farther
+                // You can always zoom out farther
                 change = true;
             }
             // Reset zoom event.

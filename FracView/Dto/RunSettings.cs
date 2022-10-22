@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FracView.Algorithms
+namespace FracView.Dto
 {
     /// <summary>
     /// Container to desribe parameters used to render image.
