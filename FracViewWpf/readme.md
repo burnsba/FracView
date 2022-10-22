@@ -40,6 +40,8 @@ The origin, fractal width, and fractal height can be restored to the last used v
 
 After "targetting" a new location, or otherwise adjusting the settings, clicking "Go" will compute the points in the selected area. The zoom (user interface scale) will be reset to the default at this point.
 
+Note: when color information is "saved" or when point information is computed (clicking "Go"), the current settings are saved to disk. When the application starts it will attempt to reload the previous settings from "session.json" file (located in same directory as executable).
+
 ### Stats area
 
 ![new](doc/img/stats_area.jpg)
@@ -79,6 +81,8 @@ Here is an example of a validation error, and an expression this is about to div
 In the bottom left of the "settings area" are color options. See the colors section.
 
 In the bottom right of the "settings area" are three buttons. The "Go" command will calculate data for the provided parameters. Once calculation beings, this will change to say "Cancel". Clicking on the button while calculation is running will cancel the current calculation.
+
+Note: when color information is "saved" or when point information is computed (clicking "Go"), the current settings are saved to disk. When the application starts it will attempt to reload the previous settings from "session.json" file (located in same directory as executable).
 
 The "reset to default" button will change the "settings area" values back to the application default values.
 
@@ -124,7 +128,7 @@ At the bottom of the window are three buttons.
 
 The "Close without save" button ignores any changes since the previous save (or since the window was opened) and closes the color management window.
 
-The "Save" button saves the current color ramp. Saving will apply some simple validation. "Starting" values need to be smaller (or equal to) "ending" values. No gaps are allowed in the covered range. The application will automatically adjust the range values to resolve these issues when saving. Saving does not automatically apply the new colors to the rendered image, the "Recolor" button must be clicked in the "settings area."
+The "Save" button saves the current color ramp. Saving will apply some simple validation. "Starting" values need to be smaller (or equal to) "ending" values. No gaps are allowed in the covered range. The application will automatically adjust the range values to resolve these issues when saving. Saving does not automatically apply the new colors to the rendered image, the "Recolor" button must be clicked in the "settings area." Note: Saving color information saves all session settings to disk.
 
 The "Save and close" button saves the color information the same as the "save" button but also closes the color management window.
 
@@ -132,7 +136,7 @@ The "Save and close" button saves the color information the same as the "save" b
 
 Note that computing the points in the image is composed of a number of tasks, and each task will have to process a number of "items" (the points).
 
-The status bar shows progress for the current calculation. In the bottom left is a desecription of the current task, or what is currently being worked on in the task. Next is shown the current item being processed and the total number of items (points). Following is a graphical progress bar to process all the items (points) in the current task. Finally the total runtime for the current task is given. 
+The status bar shows progress for the current calculation. In the bottom left is a description of the current task, or what is currently being worked on in the task. Next is shown the current item being processed and the total number of items (points). Following is a graphical progress bar to process all the items (points) in the current task. Finally the total runtime for the current task is given. 
 
 ![new](doc/img/statusbar2.jpg)
 
