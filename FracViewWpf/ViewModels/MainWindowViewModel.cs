@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FracView.Algorithms;
+using FracView.Dto;
 using FracView.Gfx;
 using FracViewWpf.Converters;
 using FracViewWpf.Dto;

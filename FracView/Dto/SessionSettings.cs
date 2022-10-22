@@ -8,7 +8,7 @@ using FracView.Dto;
 using FracView.Gfx;
 using SkiaSharp;
 
-namespace FracViewWpf.Dto
+namespace FracView.Dto
 {
     /// <summary>
     /// Container to store/load entire state of the application (at least what's worth saving).

@@ -12,6 +12,9 @@ using CommandLine.Text;
 using System.Reflection.Metadata.Ecma335;
 using System.Diagnostics;
 using System.Reflection;
+using FracView.Dto;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace FracViewCmd
 {
@@ -58,34 +61,188 @@ namespace FracViewCmd
                     && typeof(FracView.Algorithms.EscapeAlgorithm).IsAssignableFrom(x))
                 .ToList();
 
-            var cmdSettings = new CmdRunSettings();
+            /*
+             * json settings can provide values not available to the command line like coloramp.
+             * It can also set the "runsettings" options.
+             * So it's possible json provides a setting that's required that CommandLineParser won't
+             * resolve on the command line. Therefore the options can't be marked required,
+             * so required options have to be resolved here.
+             */
+
+            var requiredRunSettingsProperties = new HashSet<string>()
+            {
+                nameof(RunSettings.OriginX),
+                nameof(RunSettings.OriginY),
+                nameof(RunSettings.FractalWidth),
+                nameof(RunSettings.FractalHeight),
+                nameof(RunSettings.StepWidth),
+                nameof(RunSettings.StepHeight),
+                nameof(RunSettings.MaxIterations),
+            };
+
+            var setRequiredRunSettingsProperties = new HashSet<string>();
+
+            /* resolve required: step 1, check for json and load if possible */
+            if (!string.IsNullOrEmpty(options.JsonSettings))
+            {
+                if (!File.Exists(options.JsonSettings))
+                {
+                    ConsoleColor.ConsoleWriteLineRed($"Error loading json settings, file does not exist: {options.JsonSettings}");
+                    Environment.Exit(1);
+                }
+
+                var fileContent = System.IO.File.ReadAllText(options.JsonSettings);
+                SessionSettings? settings = null;
+
+                try
+                {
+                    settings = JsonConvert.DeserializeObject<SessionSettings>(fileContent);
+                }
+                catch (Exception ex)
+                {
+                    ConsoleColor.ConsoleWriteLineRed($"Error reading json settings file: {ex.Message}");
+                    Environment.Exit(1);
+                }
+
+                if (!object.ReferenceEquals(null, settings))
+                {
+                    options.SessionSettings = settings;
+
+                    // Allow the RunSettings values to be optional.
+                    // Will need a way to resolve if it exists or not, vs being set to default(T).
+                    // Parse to generic JObject, and if the property exists mark as requirement being met.
+                    var jobj = JObject.Parse(fileContent);
+                    var runSettingsJtoken = jobj[nameof(RunSettings)];
+                    if (!object.ReferenceEquals(null, runSettingsJtoken))
+                    {
+                        var runSettingsProperties = typeof(RunSettings).GetProperties();
+                        foreach (var property in runSettingsProperties)
+                        {
+                            if (!object.ReferenceEquals(null, runSettingsJtoken[property.Name]))
+                            {
+                                // options.SessionSettings.RunSettings["property"] = settings.RunSettings["property"];
+                                //property.SetValue(options.SessionSettings.RunSettings, property.GetValue(settings.RunSettings));
+
+                                if (requiredRunSettingsProperties.Contains(property.Name))
+                                {
+                                    setRequiredRunSettingsProperties.Add(property.Name);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            /* resolve required: step 2, if command line options are present that can also be set from json, use those values instead. */
+            if (options.UserOriginX.HasValue)
+            {
+                options.SessionSettings.RunSettings.OriginX = options.UserOriginX.Value;
+                if (requiredRunSettingsProperties.Contains(nameof(options.SessionSettings.RunSettings.OriginX)))
+                {
+                    setRequiredRunSettingsProperties.Add(nameof(options.SessionSettings.RunSettings.OriginX));
+                }
+            }
+
+            if (options.UserOriginY.HasValue)
+            {
+                options.SessionSettings.RunSettings.OriginY = options.UserOriginY.Value;
+                if (requiredRunSettingsProperties.Contains(nameof(options.SessionSettings.RunSettings.OriginY)))
+                {
+                    setRequiredRunSettingsProperties.Add(nameof(options.SessionSettings.RunSettings.OriginY));
+                }
+            }
+
+            if (options.UserFractalWidth.HasValue)
+            {
+                options.SessionSettings.RunSettings.FractalWidth = options.UserFractalWidth.Value;
+                if (requiredRunSettingsProperties.Contains(nameof(options.SessionSettings.RunSettings.FractalWidth)))
+                {
+                    setRequiredRunSettingsProperties.Add(nameof(options.SessionSettings.RunSettings.FractalWidth));
+                }
+            }
+
+            if (options.UserFractalHeight.HasValue)
+            {
+                options.SessionSettings.RunSettings.FractalHeight = options.UserFractalHeight.Value;
+                if (requiredRunSettingsProperties.Contains(nameof(options.SessionSettings.RunSettings.FractalHeight)))
+                {
+                    setRequiredRunSettingsProperties.Add(nameof(options.SessionSettings.RunSettings.FractalHeight));
+                }
+            }
+
+            if (options.UserStepWidth.HasValue)
+            {
+                options.SessionSettings.RunSettings.StepWidth = options.UserStepWidth.Value;
+                if (requiredRunSettingsProperties.Contains(nameof(options.SessionSettings.RunSettings.StepWidth)))
+                {
+                    setRequiredRunSettingsProperties.Add(nameof(options.SessionSettings.RunSettings.StepWidth));
+                }
+            }
+
+            if (options.UserStepHeight.HasValue)
+            {
+                options.SessionSettings.RunSettings.StepHeight = options.UserStepHeight.Value;
+                if (requiredRunSettingsProperties.Contains(nameof(options.SessionSettings.RunSettings.StepHeight)))
+                {
+                    setRequiredRunSettingsProperties.Add(nameof(options.SessionSettings.RunSettings.StepHeight));
+                }
+            }
+
+            if (options.UserMaxIterations.HasValue)
+            {
+                options.SessionSettings.RunSettings.MaxIterations = options.UserMaxIterations.Value;
+                if (requiredRunSettingsProperties.Contains(nameof(options.SessionSettings.RunSettings.MaxIterations)))
+                {
+                    setRequiredRunSettingsProperties.Add(nameof(options.SessionSettings.RunSettings.MaxIterations));
+                }
+            }
+
+            /* resolve required: step 3, identify unset properties and error out if missing. */
+            var unsetRequiredProperties = requiredRunSettingsProperties.Except(setRequiredRunSettingsProperties).ToList();
+            if (unsetRequiredProperties.Any())
+            {
+                foreach (var missingRequired in unsetRequiredProperties)
+                {
+                    ConsoleColor.ConsoleWriteLineRed($"Error: missing required option: {missingRequired}");
+                }
+
+                ConsoleColor.ConsoleWriteLineRed(string.Empty);
+
+                DisplayHelp(result, new List<Error>());
+                Environment.Exit(1);
+            }
+
+            /* set non-required options */
+            options.SessionSettings.RunSettings.UseHistogram = options.UseHistogram;
 
             /* begin validation */
 
-            if (options.StepWidth < 0)
+            var runSettings = options.SessionSettings.RunSettings;
+
+            if (runSettings.StepWidth < 0)
             {
-                ConsoleColor.ConsoleWriteLineRed($"{nameof(options.StepWidth)} value must be positive integer: {options.StepWidth}");
+                ConsoleColor.ConsoleWriteLineRed($"{nameof(runSettings.StepWidth)} value must be positive integer: {runSettings.StepWidth}");
                 DisplayHelp(result, new List<Error>());
                 Environment.Exit(1);
             }
 
-            if (options.StepHeight < 0)
+            if (runSettings.StepHeight < 0)
             {
-                ConsoleColor.ConsoleWriteLineRed($"{nameof(options.StepHeight)} value must be positive integer: {options.StepHeight}");
+                ConsoleColor.ConsoleWriteLineRed($"{nameof(runSettings.StepHeight)} value must be positive integer: {runSettings.StepHeight}");
                 DisplayHelp(result, new List<Error>());
                 Environment.Exit(1);
             }
 
-            if (options.MaxIterations < 0)
+            if (runSettings.MaxIterations < 0)
             {
-                ConsoleColor.ConsoleWriteLineRed($"{nameof(options.MaxIterations)} value must be positive integer: {options.MaxIterations}");
+                ConsoleColor.ConsoleWriteLineRed($"{nameof(runSettings.MaxIterations)} value must be positive integer: {runSettings.MaxIterations}");
                 DisplayHelp(result, new List<Error>());
                 Environment.Exit(1);
             }
 
             /* validate filename and extension */
 
-            var outputFormat = options.OutputFormat;
+            var outputFormat = options.UserOutputFormat;
             if (!outputFormat.StartsWith('.'))
             {
                 outputFormat = "." + outputFormat;
@@ -93,21 +250,21 @@ namespace FracViewCmd
 
             try
             {
-                cmdSettings.OutputFormat = FracView.Converters.SkiaConverters.ExtensionToFormat(outputFormat);
+                options.OutputFormat = FracView.Converters.SkiaConverters.ExtensionToFormat(outputFormat);
             }
             catch (NotSupportedException)
             {
-                ConsoleColor.ConsoleWriteLineRed($"Unsupported format: {options.OutputFormat}");
+                ConsoleColor.ConsoleWriteLineRed($"Unsupported format: {options.UserOutputFormat}");
                 DisplayHelp(result, new List<Error>());
                 Environment.Exit(1);
             }
 
-            var expectedExtension = FracView.Converters.SkiaConverters.FormatToExtension(cmdSettings.OutputFormat);
+            var expectedExtension = FracView.Converters.SkiaConverters.FormatToExtension(options.OutputFormat);
 
             if (string.IsNullOrEmpty(options.UserOutputFilename))
             {
                 options.OutputFilename = SaveAsDefaultFilename
-                    + cmdSettings.RunTime.ToString("yyyyMMdd-HHmmss")
+                    + options.RunTime.ToString("yyyyMMdd-HHmmss")
                     + expectedExtension;
             }
             else
@@ -149,7 +306,7 @@ namespace FracViewCmd
 
             options.AlgorithmType = algorithmType;
 
-            DoTheRun(options, cmdSettings);
+            DoTheRun(options);
         }
 
         /// <summary>
@@ -287,13 +444,15 @@ namespace FracViewCmd
         /// </summary>
         /// <param name="runSettings"></param>
         /// <param name="cmdSettings"></param>
-        private static void DoTheRun(Options runSettings, CmdRunSettings cmdSettings)
+        private static void DoTheRun(Options options)
         {
-            int progressInterval = runSettings.Quiet ? 0 : runSettings.ProgressReportIntervalSeconds;
-            Action<ProgressReport>? progressCallback = runSettings.Quiet ? null : PrintProgress;
+            var runSettings = options.SessionSettings.RunSettings;
+
+            int progressInterval = options.Quiet ? 0 : options.ProgressReportIntervalSeconds;
+            Action<ProgressReport>? progressCallback = options.Quiet ? null : PrintProgress;
 
             var runStopWatch = System.Diagnostics.Stopwatch.StartNew();
-            if (!runSettings.Quiet)
+            if (!options.Quiet)
             {
                 ConsoleLog($"starting");
             }
@@ -302,9 +461,7 @@ namespace FracViewCmd
 
             try
             {
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-                algorithm = (EscapeAlgorithm)Activator.CreateInstance(runSettings.AlgorithmType, new object[] { progressInterval, progressCallback! });
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+                algorithm = Activator.CreateInstance(options.AlgorithmType, new object?[] { progressInterval, progressCallback }) as EscapeAlgorithm;
             }
             catch (Exception ex)
             {
@@ -330,7 +487,19 @@ namespace FracViewCmd
 
             var scene = new Scene();
 
-            scene.AddDefaultSceneKeyframes();
+            if (options.SessionSettings.ColorRampKeyframes != null && options.SessionSettings.ColorRampKeyframes.Any())
+            {
+                scene.ColorRamp.Keyframes = options.SessionSettings.GetColorRampKeyframes();
+            }
+            else
+            {
+                scene.AddDefaultSceneKeyframes();
+            }
+
+            if (!string.IsNullOrEmpty(options.SessionSettings.StableColor))
+            {
+                scene.StableColor = options.SessionSettings.GetStableColor();
+            }
 
             var cancellationToken = new CancellationTokenSource();
 
@@ -347,24 +516,24 @@ namespace FracViewCmd
             using (MemoryStream memStream = new())
             using (SKManagedWStream wstream = new(memStream))
             {
-                bmp.Encode(wstream, cmdSettings.OutputFormat, 100);
+                bmp.Encode(wstream, options.OutputFormat, 100);
                 byte[] data = memStream.ToArray();
-                System.IO.File.WriteAllBytes(runSettings.OutputFilename, data);
+                System.IO.File.WriteAllBytes(options.OutputFilename, data);
             }
 
-            if (!runSettings.Quiet)
+            if (!options.Quiet)
             {
-                ConsoleLog($"saved image to {runSettings.OutputFilename}");
+                ConsoleLog($"saved image to {options.OutputFilename}");
             }
 
-            if (runSettings.WriteMetaData)
+            if (options.WriteMetaData)
             {
-                var baseFilename = System.IO.Path.GetFileNameWithoutExtension(runSettings.OutputFilename);
-                var metadataFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(runSettings.OutputFilename)!, baseFilename + ".txt");
+                var baseFilename = System.IO.Path.GetFileNameWithoutExtension(options.OutputFilename);
+                var metadataFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(options.OutputFilename)!, baseFilename + ".txt");
                 var sb = new StringBuilder();
-                sb.AppendLine($"runtime: {cmdSettings.RunTime.ToLongDateString()} {cmdSettings.RunTime.ToLongTimeString()}");
-                sb.AppendLine($"runtime.iso: {cmdSettings.RunTime.ToString("yyyy-MM-ddTHH:mm:sszzz", System.Globalization.CultureInfo.InvariantCulture)}");
-                sb.AppendLine($"Algorithm: {runSettings.AlgorithmType.FullName}");
+                sb.AppendLine($"runtime: {options.RunTime.ToLongDateString()} {options.RunTime.ToLongTimeString()}");
+                sb.AppendLine($"runtime.iso: {options.RunTime.ToString("yyyy-MM-ddTHH:mm:sszzz", System.Globalization.CultureInfo.InvariantCulture)}");
+                sb.AppendLine($"Algorithm: {options.AlgorithmType.FullName}");
                 sb.AppendLine($"Origin.X: {runSettings.OriginX}");
                 sb.AppendLine($"Origin.Y: {runSettings.OriginY}");
                 sb.AppendLine($"FractalWidth: {runSettings.FractalWidth}");
@@ -376,14 +545,14 @@ namespace FracViewCmd
 
                 System.IO.File.WriteAllText(metadataFilename, sb.ToString());
 
-                if (!runSettings.Quiet)
+                if (!options.Quiet)
                 {
                     ConsoleLog($"saved metadata to {metadataFilename}");
                 }
             }
 
             runStopWatch.Stop();
-            if (!runSettings.Quiet)
+            if (!options.Quiet)
             {
                 var elapsedMinutes = (int)(runStopWatch.Elapsed.TotalSeconds / 60);
                 var elapsedSecondsD = runStopWatch.Elapsed.TotalSeconds;

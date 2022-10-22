@@ -1,0 +1,39 @@
+{
+  "RunSettings": {
+    "OriginX": 0.3400911291793750947561553029,
+    "OriginY": 0.5743346282087257566051136364,
+    "FractalWidth": 0.0013774104683195592286501377,
+    "FractalHeight": 0.0013774104683195592286501377,
+    "StepWidth": 2048,
+    "StepHeight": 2048,
+    "MaxIterations": 4000,
+    "UseHistogram": true
+  },
+  "StableColor": "#ffffff00",
+  "ColorRampKeyframes": [
+    {
+      "IntervalStart": 0.0,
+      "IntervalEnd": 0.88,
+      "ValueStart": "#ffff0000",
+      "ValueEnd": "#ff14fafa"
+    },
+    {
+      "IntervalStart": 0.88,
+      "IntervalEnd": 0.97,
+      "ValueStart": "#ff14fafa",
+      "ValueEnd": "#ffffff28"
+    },
+    {
+      "IntervalStart": 0.97,
+      "IntervalEnd": 0.99,
+      "ValueStart": "#ffffff28",
+      "ValueEnd": "#fffa8000"
+    },
+    {
+      "IntervalStart": 0.99,
+      "IntervalEnd": 1.0,
+      "ValueStart": "#fffa8000",
+      "ValueEnd": "#ff783c00"
+    }
+  ]
+}
