@@ -70,7 +70,7 @@ Whether or not to calculate colors according to histogram data can be controlled
 
 If invalid parameters are entered as an option a validation error will occur. The application will use the last valid setting for this parameter until this is resolved.
 
-The application supports very limited math operations with the "settings area." Supported operations are addition (+), subtraction (-), multiplication (*), and division (/). Operator precedence is not gauranteed. For example, to double a value, simply append "*2" (or prepeend "2*") in the textbox and then tab out. Once the textbox loses focus the text will attempt to be parsed. If a math operator is encountered, it will attempt to be applied.
+The application supports very limited math operations with the "settings area." Supported operations are addition (+), subtraction (-), multiplication (*), and division (/). Operator precedence is not gauranteed. For example, to double a value, simply append "\*2" (or prepend "2\*") in the textbox and then tab out. Once the textbox loses focus the text will attempt to be parsed. If a math operator is encountered, it will attempt to be applied.
 
 Here is an example of a validation error, and an expression this is about to divide the current value by 2.
 
@@ -130,7 +130,9 @@ The "Save and close" button saves the color information the same as the "save" b
 
 ### Status bar
 
-The status bar shows progress for the current calculation. In the bottom left is a desecription of the current task. Next is shown the current step and the total number of steps. Following is a graphical progress bar for the steps in the current task. Finally the total runtime for the current task is given. Note that computing the points in the image is composed of a number of steps.
+Note that computing the points in the image is composed of a number of tasks, and each task will have to process a number of "items" (the points).
+
+The status bar shows progress for the current calculation. In the bottom left is a desecription of the current task, or what is currently being worked on in the task. Next is shown the current item being processed and the total number of items (points). Following is a graphical progress bar to process all the items (points) in the current task. Finally the total runtime for the current task is given. 
 
 ![new](doc/img/statusbar2.jpg)
 
