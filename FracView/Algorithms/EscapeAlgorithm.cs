@@ -278,7 +278,7 @@ namespace FracView.Algorithms
                     0,
                     /* set not null from _isInit */
                     _consideredPoints!.Count,
-                    $"{nameof(EscapeAlgorithm)}.{nameof(ComputeHistogram)}, loop=1)"
+                    $"{nameof(EscapeAlgorithm)}.{nameof(ComputeHistogram)}, (loop=1)"
                     ));
             }
 
@@ -299,7 +299,7 @@ namespace FracView.Algorithms
                         totalTimer.Elapsed.TotalSeconds,
                         iterationCount,
                         _consideredPoints.Count,
-                        $"{nameof(EscapeAlgorithm)}.{nameof(ComputeHistogram)}, loop=1)"
+                        $"{nameof(EscapeAlgorithm)}.{nameof(ComputeHistogram)}, (loop=1)"
                         ));
 
                     reportTimer.Restart();
@@ -336,7 +336,7 @@ namespace FracView.Algorithms
                             totalTimer.Elapsed.TotalSeconds,
                             iterationCount,
                             _consideredPoints.Count,
-                            $"{nameof(EscapeAlgorithm)}.{nameof(ComputeHistogram)}, loop=3)"
+                            $"{nameof(EscapeAlgorithm)}.{nameof(ComputeHistogram)}, (loop=3)"
                             ));
 
                         reportTimer.Restart();
