@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -63,7 +64,9 @@ namespace FracViewWpf.ViewModels
 
         private CancellationTokenSource _cancellationTokenCompute = new();
         private CancellationTokenSource _cancellationTokenColor = new();
-        
+
+        private List<Type> _availableAlgorithmTypes;
+
         private ComputeState _computeState = ComputeState.NotRunning;
         private bool _hasRunData = false;
         private bool _anyChangeForReset = false;
@@ -94,6 +97,18 @@ namespace FracViewWpf.ViewModels
             {
                 throw new NullReferenceException(nameof(scene));
             }
+
+            _availableAlgorithmTypes = Assembly
+                .GetAssembly(typeof(FracView.Algorithms.EscapeAlgorithm))!
+                .GetTypes()
+                .Where(x =>
+                    !x.IsAbstract
+                    && typeof(FracView.Algorithms.EscapeAlgorithm).IsAssignableFrom(x))
+                .ToList();
+
+            AvailableAlgorithms = _availableAlgorithmTypes.Select(x => x.FullName).ToList()!;
+            SelectedAlgorithmName = _availableAlgorithmTypes.Select(x => x.FullName).First()!;
+            SelectedAlgorithmType = _availableAlgorithmTypes.First();
 
             ResetToDefaultCommandHandler();
 
@@ -551,6 +566,32 @@ namespace FracViewWpf.ViewModels
         public string ShowCrosshairCommandText { get; set; }
 
         /// <summary>
+        /// Gets or sets the UI names of available algorithms.
+        /// </summary>
+        public List<string> AvailableAlgorithms { get; set; }
+
+        /// <summary>
+        /// Gets or sets the UI currently selected algorithm name.
+        /// </summary>
+        public string? SelectedAlgorithmName
+        {
+            get => _uiRunData.AlgorithmName;
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    _uiRunData.AlgorithmName = value;
+                    SelectedAlgorithmType = _availableAlgorithmTypes.First(x => x.FullName == value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the type of the currently selected algorithm.
+        /// </summary>
+        public Type SelectedAlgorithmType { get; set; }
+
+        /// <summary>
         /// Gets or sets the command to start/top computing points.
         /// </summary>
         public ICommand ComputeCommand { get; set; }
@@ -857,10 +898,7 @@ namespace FracViewWpf.ViewModels
             // Save current settings, only after setting _previousRunData
             SaveSessionJson();
 
-            _algorithm = new MandelbrotDouble(
-                _previousRunData,
-                _outputIntervalSec,
-                UiUpdateProgress);
+            _algorithm = Activator.CreateInstance(SelectedAlgorithmType, new object?[] { _previousRunData, _outputIntervalSec, UiUpdateProgress }) as IEscapeAlgorithm;
 
             Task.Factory.StartNew(() =>
             {
@@ -1231,6 +1269,7 @@ namespace FracViewWpf.ViewModels
                     var sb = new StringBuilder();
                     sb.AppendLine($"runtime: {_runDataTime.ToLongDateString()} {_runDataTime.ToLongTimeString()}");
                     sb.AppendLine($"runtime.iso: {_runDataTime.ToString("yyyy-MM-ddTHH:mm:sszzz", System.Globalization.CultureInfo.InvariantCulture)}");
+                    sb.AppendLine($"Algorithm: {_previousRunData.AlgorithmName}");
                     sb.AppendLine($"Origin.X: {_previousRunData.OriginX}");
                     sb.AppendLine($"Origin.Y: {_previousRunData.OriginY}");
                     sb.AppendLine($"FractalWidth: {_previousRunData.FractalWidth}");

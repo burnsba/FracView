@@ -50,5 +50,10 @@ namespace FracView.Dto
         /// Gets or sets whether or not histogram was computed.
         /// </summary>
         public bool UseHistogram { get; set; }
+
+        /// <summary>
+        /// Gets or sets algorithm class name.
+        /// </summary>
+        public string? AlgorithmName { get; set; }
     }
 }

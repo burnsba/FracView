@@ -266,18 +266,36 @@
                         </TextBox.Background>
                     </TextBox>
 
-                    <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center">Step Width</Label>
-                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="UiPixelWidth" VerticalAlignment="Center" Text="{Binding Path=TextStepWidth}">
-                        <TextBox.Background>
-                            <SolidColorBrush Color="{Binding Path=StepWidthIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
-                        </TextBox.Background>
-                    </TextBox>
-                    <Label Grid.Row="2" Grid.Column="2" VerticalAlignment="Center">Step Height</Label>
-                    <TextBox Grid.Row="2" Grid.Column="3" x:Name="UiPixelHeight" VerticalAlignment="Center" Text="{Binding Path=TextStepHeight}">
-                        <TextBox.Background>
-                            <SolidColorBrush Color="{Binding Path=StepHeightIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
-                        </TextBox.Background>
-                    </TextBox>
+                    <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center">Step</Label>
+                    
+                    <Grid Grid.Row="2" Grid.Column="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" VerticalAlignment="Center">Width</Label>
+                        <TextBox Grid.Column="1" x:Name="UiPixelWidth" VerticalAlignment="Center" Text="{Binding Path=TextStepWidth}">
+                            <TextBox.Background>
+                                <SolidColorBrush Color="{Binding Path=StepWidthIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                            </TextBox.Background>
+                        </TextBox>
+                        <Label Grid.Column="2" VerticalAlignment="Center">Height</Label>
+                        <TextBox Grid.Column="3" x:Name="UiPixelHeight" VerticalAlignment="Center" Text="{Binding Path=TextStepHeight}">
+                            <TextBox.Background>
+                                <SolidColorBrush Color="{Binding Path=StepHeightIsValid, Converter={StaticResource BoolToValidationColorConverter}}"></SolidColorBrush>
+                            </TextBox.Background>
+                        </TextBox>
+                    </Grid>
+
+                    <Label Grid.Row="2" Grid.Column="2" VerticalAlignment="Center">Algorithm</Label>
+                    <ComboBox Grid.Row="2" Grid.Column="3" VerticalAlignment="Center"
+                              ItemsSource="{Binding Path=AvailableAlgorithms}"
+                              SelectedItem="{Binding Path=SelectedAlgorithmName}"
+                              IsEditable="true"
+                              IsReadOnly="true"
+                              ></ComboBox>
 
                     <Label Grid.Row="3" Grid.Column="0" VerticalAlignment="Center">Max Iterations</Label>
                     <TextBox Grid.Row="3" Grid.Column="1" x:Name="UiMaxIterations" VerticalAlignment="Center" Text="{Binding Path=TextMaxIterations}">
