@@ -36,6 +36,8 @@ namespace FracView.Algorithms
             double pa_x = eu_real;
             double pa_y = eu_imag;
 
+            double abs_start = Math.Sqrt(eu_real * eu_real + eu_imag * eu_imag);
+
             for (eu.IterationCount = 1; eu.IterationCount < MaxIterations; eu.IterationCount++)
             {
                 //convert to native types for performance. Avoids runtime overhead of creating so many records.
@@ -69,7 +71,7 @@ namespace FracView.Algorithms
                 pa_y = xy + xy + eu_imag;
 
                 if (pa_x != 0 && pa_y != 0 && 
-                    Math.Abs(Math.Sqrt(xsquare + ysquare) - Math.Sqrt(eu_real * eu_real + eu_imag * eu_imag)) > 4)
+                    Math.Abs(Math.Sqrt(xsquare + ysquare) - abs_start) > 4)
                 {
                     pa_x = 1 / pa_x;
                     pa_y = 1 / pa_y;

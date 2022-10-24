@@ -11,18 +11,18 @@ namespace FracView.Algorithms
     /// <summary>
     /// Fast implementation of Mandelbrot algorithm, using <see cref="double"/>.
     /// </summary>
-    public class MandelbrotDistNegate : EscapeAlgorithm
+    public class MandelbrotExp : EscapeAlgorithm
     {
         private double _iterationBreakDouble;
 
-        public MandelbrotDistNegate(int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+        public MandelbrotExp(int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
             : base(progressCallbackIntervalSec, progressCallback)
         {
             IterationBreak = 12;
             _iterationBreakDouble = (double)(IterationBreak * IterationBreak);
         }
 
-        public MandelbrotDistNegate(RunSettings settings, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+        public MandelbrotExp(RunSettings settings, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
             : base(settings, progressCallbackIntervalSec, progressCallback)
         {
             IterationBreak = 12;
@@ -36,7 +36,7 @@ namespace FracView.Algorithms
             double pa_x = eu_real;
             double pa_y = eu_imag;
 
-            double abs_start = Math.Sqrt(eu_real * eu_real + eu_imag * eu_imag);
+            double prev_mag = Math.Sqrt(eu_imag * eu_imag + eu_imag * eu_imag);
 
             for (eu.IterationCount = 1; eu.IterationCount < MaxIterations; eu.IterationCount++)
             {
@@ -70,14 +70,17 @@ namespace FracView.Algorithms
                 pa_x = xsquare - ysquare + eu_real;
                 pa_y = xy + xy + eu_imag;
 
-                if (pa_x != 0 && pa_y != 0 && 
-                    Math.Abs(Math.Sqrt(xsquare + ysquare) - abs_start) > 0.5)
+                xsquare += ysquare;
+
+                double mag = Math.Sqrt(xsquare);
+
+                if (mag > prev_mag)
                 {
-                    pa_x = eu_real - pa_x;
-                    pa_y = eu_imag - pa_y;
+                    pa_x -= 1 / pa_x;
+                    pa_y -= 1 / pa_y;
                 }
 
-                xsquare += ysquare;
+                prev_mag = mag;
 
                 if (xsquare >= _iterationBreakDouble || xsquare == 0)
                 {
