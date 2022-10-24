@@ -11,18 +11,18 @@ namespace FracView.Algorithms
     /// <summary>
     /// Fast implementation of Mandelbrot algorithm, using <see cref="double"/>.
     /// </summary>
-    public class MandelbrotDroplet : EscapeAlgorithm
+    public class MandelbrotUnlabledSplit1 : EscapeAlgorithm
     {
         private double _iterationBreakDouble;
 
-        public MandelbrotDroplet(int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+        public MandelbrotUnlabledSplit1(int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
             : base(progressCallbackIntervalSec, progressCallback)
         {
             IterationBreak = 12;
             _iterationBreakDouble = (double)(IterationBreak * IterationBreak);
         }
 
-        public MandelbrotDroplet(RunSettings settings, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
+        public MandelbrotUnlabledSplit1(RunSettings settings, int progressCallbackIntervalSec = 0, Action<ProgressReport>? progressCallback = null)
             : base(settings, progressCallbackIntervalSec, progressCallback)
         {
             IterationBreak = 12;
@@ -33,10 +33,11 @@ namespace FracView.Algorithms
         {
             double eu_real = (double)eu.WorldPos.Real;
             double eu_imag = (double)eu.WorldPos.Imag;
+
             double pa_x = eu_real;
             double pa_y = eu_imag;
 
-            double prev_mag = Math.Sqrt(eu_imag * eu_imag + eu_imag * eu_imag);
+            double prev_mag = Math.Sqrt(eu_real * eu_real + eu_imag + eu_imag);
 
             for (eu.IterationCount = 1; eu.IterationCount < MaxIterations; eu.IterationCount++)
             {
@@ -76,11 +77,12 @@ namespace FracView.Algorithms
 
                 if (mag > prev_mag)
                 {
-                    pa_x -= 1 / pa_x;
-                    pa_y -= 1 / pa_y;
+                    pa_x = Math.Cos(pa_x);
                 }
-
-                prev_mag = mag;
+                else
+                {
+                    pa_y = Math.Sin(pa_y);
+                }
 
                 if (xsquare >= _iterationBreakDouble || xsquare == 0)
                 {
