@@ -15,6 +15,8 @@ using System.Reflection;
 using FracView.Dto;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace FracViewCmd
 {
@@ -120,9 +122,6 @@ namespace FracViewCmd
                         {
                             if (!object.ReferenceEquals(null, runSettingsJtoken[property.Name]))
                             {
-                                // options.SessionSettings.RunSettings["property"] = settings.RunSettings["property"];
-                                //property.SetValue(options.SessionSettings.RunSettings, property.GetValue(settings.RunSettings));
-
                                 if (requiredRunSettingsProperties.Contains(property.Name))
                                 {
                                     setRequiredRunSettingsProperties.Add(property.Name);
@@ -134,36 +133,43 @@ namespace FracViewCmd
             }
 
             /* resolve required: step 2, if command line options are present that can also be set from json, use those values instead. */
-            if (options.UserOriginX.HasValue)
+
+            decimal? maybeDecimal;
+
+            maybeDecimal = AsDecimal(options.UserOriginX) ?? (decimal?)AsDouble(options.UserOriginX);
+            if (maybeDecimal.HasValue)
             {
-                options.SessionSettings.RunSettings.OriginX = options.UserOriginX.Value;
+                options.SessionSettings.RunSettings.OriginX = maybeDecimal.Value;
                 if (requiredRunSettingsProperties.Contains(nameof(options.SessionSettings.RunSettings.OriginX)))
                 {
                     setRequiredRunSettingsProperties.Add(nameof(options.SessionSettings.RunSettings.OriginX));
                 }
             }
 
-            if (options.UserOriginY.HasValue)
+            maybeDecimal = AsDecimal(options.UserOriginY) ?? (decimal?)AsDouble(options.UserOriginY);
+            if (maybeDecimal.HasValue)
             {
-                options.SessionSettings.RunSettings.OriginY = options.UserOriginY.Value;
+                options.SessionSettings.RunSettings.OriginY = maybeDecimal.Value;
                 if (requiredRunSettingsProperties.Contains(nameof(options.SessionSettings.RunSettings.OriginY)))
                 {
                     setRequiredRunSettingsProperties.Add(nameof(options.SessionSettings.RunSettings.OriginY));
                 }
             }
 
-            if (options.UserFractalWidth.HasValue)
+            maybeDecimal = AsDecimal(options.UserFractalWidth) ?? (decimal?)AsDouble(options.UserFractalWidth);
+            if (maybeDecimal.HasValue)
             {
-                options.SessionSettings.RunSettings.FractalWidth = options.UserFractalWidth.Value;
+                options.SessionSettings.RunSettings.FractalWidth = maybeDecimal.Value;
                 if (requiredRunSettingsProperties.Contains(nameof(options.SessionSettings.RunSettings.FractalWidth)))
                 {
                     setRequiredRunSettingsProperties.Add(nameof(options.SessionSettings.RunSettings.FractalWidth));
                 }
             }
 
-            if (options.UserFractalHeight.HasValue)
+            maybeDecimal = AsDecimal(options.UserFractalHeight) ?? (decimal?)AsDouble(options.UserFractalHeight);
+            if (maybeDecimal.HasValue)
             {
-                options.SessionSettings.RunSettings.FractalHeight = options.UserFractalHeight.Value;
+                options.SessionSettings.RunSettings.FractalHeight = maybeDecimal.Value;
                 if (requiredRunSettingsProperties.Contains(nameof(options.SessionSettings.RunSettings.FractalHeight)))
                 {
                     setRequiredRunSettingsProperties.Add(nameof(options.SessionSettings.RunSettings.FractalHeight));
@@ -240,6 +246,35 @@ namespace FracViewCmd
                 Environment.Exit(1);
             }
 
+            /* validate output directory. */
+
+            options.OutputDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+
+            if (!string.IsNullOrEmpty(options.UserOutputDirectory))
+            {
+                options.OutputDirectory = options.UserOutputDirectory;
+            }
+
+            if (!Directory.Exists(options.OutputDirectory))
+            {
+                try
+                {
+                    Directory.CreateDirectory(options.OutputDirectory);
+                }
+                catch (IOException)
+                {
+                    ConsoleColor.ConsoleWriteLineRed($"Error creating output directory: {options.OutputDirectory}");
+                    Environment.Exit(1);
+                }
+            }
+
+            if (!Directory.Exists(options.OutputDirectory))
+            {
+                ConsoleColor.ConsoleWriteLineRed($"Could not find/create output directory: {options.OutputDirectory}");
+                DisplayHelp(result, new List<Error>());
+                Environment.Exit(1);
+            }
+
             /* validate filename and extension */
 
             var outputFormat = options.UserOutputFormat;
@@ -261,32 +296,23 @@ namespace FracViewCmd
 
             var expectedExtension = FracView.Converters.SkiaConverters.FormatToExtension(options.OutputFormat);
 
+            options.OutputExtension = expectedExtension;
+
             if (string.IsNullOrEmpty(options.UserOutputFilename))
             {
-                options.OutputFilename = SaveAsDefaultFilename
-                    + options.RunTime.ToString("yyyyMMdd-HHmmss")
-                    + expectedExtension;
+                options.OutputBaseFilename = SaveAsDefaultFilename
+                    + options.RunTime.ToString("yyyyMMdd-HHmmss");
             }
             else
             {
-                options.OutputFilename = options.UserOutputFilename;
-            }
-
-            var currentExtension = System.IO.Path.GetExtension(options.OutputFilename);
-            if (!string.IsNullOrEmpty(currentExtension) && string.Compare(expectedExtension, expectedExtension, true) != 0)
-            {
-                int place = options.OutputFilename.LastIndexOf(currentExtension);
-                if (place > -1)
-                {
-                    options.OutputFilename = options.OutputFilename.Remove(place, currentExtension.Length).Insert(place, expectedExtension);
-                }
+                options.OutputBaseFilename = Path.GetFileNameWithoutExtension(options.UserOutputFilename);
             }
 
             /* check that filename is sane. */
-            File.Create(options.OutputFilename).Dispose();
-            if (File.Exists(options.OutputFilename))
+            File.Create(options.OutputFilenameWithExtension).Dispose();
+            if (File.Exists(options.OutputFilenameWithExtension))
             {
-                File.Delete(options.OutputFilename);
+                File.Delete(options.OutputFilenameWithExtension);
             }
 
             /* validate algorithm name */
@@ -513,23 +539,40 @@ namespace FracViewCmd
                 Environment.Exit(0);
             }
 
+            // If the command line program is called from a script, it's possible this could execute fast enough
+            // that multiple images are generated within the same second. If that happens, append a counter
+            // to the filename, and update the base filename for the metadata file.
+            string path = Path.Combine(options.OutputDirectory, options.OutputFilenameWithExtension);
+            int extendCount = 1;
+            string? updateOutputFilename = null;
+            while (File.Exists(path))
+            {
+                updateOutputFilename = options.OutputBaseFilename + $"-{extendCount:D4}" + options.OutputExtension;
+                path = Path.Combine(options.OutputDirectory, updateOutputFilename);
+                extendCount++;
+            }
+
+            if (!string.IsNullOrEmpty(updateOutputFilename))
+            {
+                options.OutputBaseFilename = Path.GetFileNameWithoutExtension(updateOutputFilename);
+            }
+
             using (MemoryStream memStream = new())
             using (SKManagedWStream wstream = new(memStream))
             {
                 bmp.Encode(wstream, options.OutputFormat, 100);
                 byte[] data = memStream.ToArray();
-                System.IO.File.WriteAllBytes(options.OutputFilename, data);
+                System.IO.File.WriteAllBytes(path, data);
             }
 
             if (!options.Quiet)
             {
-                ConsoleLog($"saved image to {options.OutputFilename}");
+                ConsoleLog($"saved image to {path}");
             }
 
             if (options.WriteMetaData)
             {
-                var baseFilename = System.IO.Path.GetFileNameWithoutExtension(options.OutputFilename);
-                var metadataFilename = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(options.OutputFilename)!, baseFilename + ".txt");
+                var metadataFilename = System.IO.Path.Combine(options.OutputDirectory, options.OutputBaseFilename + ".txt");
                 var sb = new StringBuilder();
                 sb.AppendLine($"runtime: {options.RunTime.ToLongDateString()} {options.RunTime.ToLongTimeString()}");
                 sb.AppendLine($"runtime.iso: {options.RunTime.ToString("yyyy-MM-ddTHH:mm:sszzz", System.Globalization.CultureInfo.InvariantCulture)}");
@@ -580,6 +623,28 @@ namespace FracViewCmd
             {
                 Console.WriteLine($"{DateTime.Now:yyyy-MM-ddTHH:mm:sszzz}: {msg}");
             }
+        }
+
+        private static Nullable<double> AsDouble(string s)
+        {
+            double d;
+            if (double.TryParse(s, out d))
+            {
+                return d;
+            }
+
+            return (Nullable<double>)null;
+        }
+
+        private static Nullable<decimal> AsDecimal(string s)
+        {
+            decimal d;
+            if (decimal.TryParse(s, out d))
+            {
+                return d;
+            }
+
+            return (Nullable<decimal>)null;
         }
     }
 }

@@ -15,17 +15,21 @@ namespace FracViewCmd
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public class Options
     {
+        // accept either decimal or double (scientific) format
         [Option('x', "originx", HelpText = "World origin x location.")]
-        public decimal? UserOriginX { get; set; }
+        public string UserOriginX { get; set; }
 
+        // accept either decimal or double (scientific) format
         [Option('y', "originy", HelpText = "World origin y location.")]
-        public decimal? UserOriginY { get; set; }
+        public string UserOriginY { get; set; }
 
+        // accept either decimal or double (scientific) format
         [Option("fractalwidth", HelpText = "Fractal width.")]
-        public decimal? UserFractalWidth { get; set; }
+        public string UserFractalWidth { get; set; }
 
+        // accept either decimal or double (scientific) format
         [Option("fractalheight", HelpText = "Fractal height.")]
-        public decimal? UserFractalHeight { get; set; }
+        public string UserFractalHeight { get; set; }
 
         [Option("stepwidth", HelpText = "Set output pixel resolution width.")]
         public int? UserStepWidth { get; set; }
@@ -61,8 +65,19 @@ namespace FracViewCmd
         [Option('j', "json", HelpText = "Path to json settings file. Compatible with wpf app saved session. Command line options will override json.")]
         public string JsonSettings { get; set; }
 
-        // Actual output filename used by the application.
-        public string OutputFilename { get; set; }
+        [Option('d', "dir", HelpText = "Default output directory")]
+        public string UserOutputDirectory { get; set; }
+
+        // Actual output filename used by the application, without extension.
+        public string OutputBaseFilename { get; set; }
+
+        // Actual output extension used by the application.
+        public string OutputExtension { get; set; }
+
+        public string OutputFilenameWithExtension => OutputBaseFilename + OutputExtension;
+
+        // Actual output directory used by the application.
+        public string OutputDirectory { get; set; }
 
         public Type AlgorithmType { get; set; }
 
@@ -81,10 +96,10 @@ namespace FracViewCmd
                 {
                     new Example("Example", new Options
                     {
-                        UserOriginX = 0.29999999799999m,
-                        UserOriginY = 0.4491000000000016m,
-                        UserFractalWidth = 0.250m,
-                        UserFractalHeight = 0.250m,
+                        UserOriginX = 0.29999999799999m.ToString(),
+                        UserOriginY = 0.4491000000000016m.ToString(),
+                        UserFractalWidth = 0.250m.ToString(),
+                        UserFractalHeight = 0.250m.ToString(),
                         UserStepWidth = 512,
                         UserStepHeight = 512,
                         UserMaxIterations = 1000,

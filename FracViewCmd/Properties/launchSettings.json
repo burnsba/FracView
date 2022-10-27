@@ -7,6 +7,10 @@
     "json session": {
       "commandName": "Project",
       "commandLineArgs": "--json ../../../test/session.json -m"
+    },
+    "command line test": {
+      "commandName": "Project",
+      "commandLineArgs": "--usehistogram --maxiterations 100 --stepheight 512 --stepwidth 512 --fractalwidth 6.942847589286316E-06 --fractalheight 6.942847589286316E-06 --originx 0.4335972614904746 --originy 0.22742890620639422"
     }
   }
 }
